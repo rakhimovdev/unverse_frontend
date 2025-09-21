@@ -1,0 +1,98 @@
+.students-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 📌 Jadval */
+.students-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.students-table th,
+.students-table td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: center;
+}
+
+.students-table th {
+    background-color: #4cafef;
+    color: white;
+    font-weight: bold;
+}
+
+.students-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.students-table tr:hover {
+    background-color: #eaf6ff;
+}
+
+
+
+/* 📌 Loading matni */
+.loading {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 20px;
+    color: #666;
+}
+
+.students-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: auto;
+    /* 📌 Jadval tashqariga chiqsa scroll ichida qoladi */
+}
+
+.students-table {
+    width: 100%;
+    min-width: 800px;
+    /* 📌 Juda siqilib ketmasin */
+    border-collapse: collapse;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.students-table th,
+.students-table td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    /* 📌 Paddingni biroz kamaytirdim */
+    text-align: center;
+    white-space: nowrap;
+    /* 📌 So‘zlar ustun tashqarisiga chiqmaydi */
+}
+
+/* 📌 Tugma */
+.delete-btn1 {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    /* 📌 Ixchamroq bo‘ldi */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.3s;
+}
+
+.delete-btn1:hover {
+    background-color: #d9363e;
+}

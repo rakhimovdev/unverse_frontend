@@ -1,0 +1,16 @@
+.sidebar {
+    width: 1000px;
+    height: 60px;
+    border: 2px solid red;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.sidebar button {
+    width: 150px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+}

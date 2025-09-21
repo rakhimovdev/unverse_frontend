@@ -1,0 +1,139 @@
+/* 🔥 Navbar umumiy style */
+nav {
+    display: flex;
+    width: 95%;
+    margin: auto;
+    height: 60px;
+    margin-top: 20px;
+    border-radius: 15px;
+
+    /* Glassmorphism */
+    background: rgba(0, 0, 0, 0.75);
+    /* qora shaffof */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+    transition: all 0.3s ease-in-out;
+}
+
+/* 🔥 Navbar ichki container */
+.in_nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 95%;
+    margin: auto;
+}
+
+/* 🔥 Logo */
+.logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    /* oq rang */
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.logo h1:hover {
+    transform: scale(1.05);
+}
+
+/* 🔥 Menu (ul) */
+ul {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+li {
+    list-style-type: none;
+    position: relative;
+}
+
+/* 🔥 Linklar */
+a {
+    text-decoration: none;
+    color: #f1f1f1;
+    /* oq rang */
+    font-size: 16px;
+    font-weight: 500;
+    position: relative;
+    padding: 5px 0;
+    transition: color 0.3s ease;
+}
+
+/* 🔥 Hover chiziq animatsiyasi */
+a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ff6a00, #ff0080);
+    /* rangli chiziq */
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+a:hover {
+    color: #ff6a00;
+    /* hoverda rang o‘zgaradi */
+}
+
+a:hover::after {
+    width: 100%;
+}
+
+/* 🔥 Tugmalar qismi */
+.logged-in,
+.register {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 🔥 Tugmalar */
+button {
+    padding: 8px 16px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ff6a00, #ff0080);
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effekti */
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn2 {
+    background: linear-gradient(135deg, #0072ff, #00c6ff);
+}
+
+/* 🔥 Responsive (mobil menyu) */
+@media (max-width: 768px) {
+    .in_nav {
+        flex-direction: column;
+        gap: 15px;
+        height: auto;
+        padding: 10px 0;
+    }
+
+    ul {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    button {
+        width: 100px;
+    }
+}

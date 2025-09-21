@@ -1,0 +1,270 @@
+.banner {
+    width: 96%;
+    min-height: 80vh;
+    background-color: white;
+    border-radius: 15px;
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-right: 30px;
+    position: absolute;
+    display: flex;
+    overflow: hidden;
+    padding: 2px;
+    gap: 10px;
+}
+
+.banner .left {
+    width: 25%;
+    height: 100%;
+    background-color: white;
+    border-radius: 15px;
+    flex-direction: column;
+    border: 1px solid rgb(163, 158, 158);
+    padding: 10px;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 100;
+    padding: 10px;
+}
+
+.banner .left .filter-heading {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    margin: 0 auto;
+}
+
+.banner .left .filter-section {
+    margin-bottom: 20px;
+}
+
+.banner .left .filter-section .filter-label {
+    font-size: 28px;
+}
+
+.banner .left .filter-section input {
+    height: 50px;
+}
+
+.banner .left .filter-section input::placeholder {
+    font-size: 15px;
+}
+
+.banner .left .filter-label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.banner .left .filter-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.banner .left .filter-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #e60000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.banner .right {
+    width: 85%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(163, 158, 158);
+    border-radius: 15px;
+    outline: none;
+    overflow: hidden;
+    padding: 6px;
+    gap: 6px;
+    margin: auto;
+}
+
+.banner .right .heading {
+    width: 100%;
+    height: 50px;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+}
+
+.banner .right .heading button {
+    border: 1px solid rgb(163, 158, 158);
+    padding: 8px 22px;
+    font-size: 18px;
+    border-radius: 10px;
+    background-color: white;
+    color: red;
+}
+
+.banner .right .box {
+    width: 100%;
+    min-height: 70vh;
+    font-size: 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    color: red;
+    gap: 10px;
+    padding: 20px;
+    border-radius: 15px;
+    max-height: 550px;
+    overflow-y: scroll;
+    margin: auto;
+}
+
+.banner .right .box .cart {
+    width: 250px;
+    height: 100px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    font-size: 18px;
+    color: #222;
+    gap: 10px;
+    padding: 16px 14px 12px 14px;
+    border-radius: 15px;
+    /* Yangi box-shadow: pastda gradient va yuqorida yumshoq soya */
+    box-shadow:
+        0 4px 24px 0 rgba(230, 0, 0, 0.10),
+        0 1.5px 6px 0 rgba(0, 0, 0, 0.07);
+    position: relative;
+    transition:
+        box-shadow 0.3s cubic-bezier(.4, 2, .6, 1),
+        transform 0.2s cubic-bezier(.4, 2, .6, 1);
+    will-change: transform, box-shadow;
+}
+
+.banner .right .box .cart:hover {
+    /* Hoverda yanada kuchli va rangli soya */
+    box-shadow:
+        0 8px 32px 0 rgba(230, 0, 0, 0.18),
+        0 3px 12px 0 rgba(0, 0, 0, 0.10);
+    border-color: #e60000;
+    transform: scale(1.04) translateY(-4px) rotateZ(-1deg);
+    z-index: 2;
+}
+
+.banner .right .box .cart p {
+    font-size: 20px;
+    font-weight: 600;
+    color: #e60000;
+    margin: 0 0 8px 0;
+    width: 100%;
+    word-break: break-word;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+}
+
+.cart-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+    align-items: center;
+}
+
+/* Delete button (icon) style */
+.banner .right .box .cart .delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: #fff;
+    color: #e60000;
+    border: 1.5px solid #e60000;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 4px;
+    margin-left: 0;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border-color 0.2s,
+        transform 0.15s cubic-bezier(.4, 2, .6, 1);
+    will-change: transform, background, color;
+}
+
+.banner .right .box .cart .delete-btn:hover {
+    background: #e60000;
+    color: #fff;
+    border-color: #e60000;
+    animation: shake 0.3s;
+    transform: scale(1.08) rotateZ(-2deg);
+}
+
+/* Take_test button style */
+.banner .right .box .cart button:not(.delete-btn) {
+    width: auto;
+    padding: 7px 18px;
+    background: linear-gradient(90deg, #e60000 60%, #ff4d4d 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 4px;
+    margin-left: 0;
+    box-shadow: 0 2px 8px rgba(230, 0, 0, 0.08);
+    transition:
+        background 0.2s,
+        transform 0.15s cubic-bezier(.4, 2, .6, 1),
+        box-shadow 0.2s;
+    will-change: transform, background;
+}
+
+.banner .right .box .cart button:not(.delete-btn):hover {
+    background: linear-gradient(90deg, #b80000 60%, #ff1a1a 100%);
+    transform: scale(1.09) translateY(-2px);
+    box-shadow: 0 6px 18px rgba(230, 0, 0, 0.16);
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-4px);
+    }
+
+    40% {
+        transform: translateX(4px);
+    }
+
+    60% {
+        transform: translateX(-3px);
+    }
+
+    80% {
+        transform: translateX(3px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
