@@ -20,6 +20,7 @@ import Listening from './Pages/Listening/Listening';
 import SelectT from './Pages/SelectTest/SelectT';
 import ListeningForm from './Pages/ListningForm/ListeningForm';
 import SolvingL from "./Pages/listeningSolving/Solving"
+import Writing from './Pages/Writing/Writing';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -42,8 +43,9 @@ root.render(
         <Route path='/students' element={<Students />} />
         <Route path='/selectt' element={<SelectT />} />
         <Route path='/listening' element={<Listening />} />
-        <Route path='/audio' element={<ListeningForm/>}/>
-        <Route path='/listening/audio/:id' element={<SolvingL/>}/>
+        <Route path='/audio' element={<ListeningForm />} />
+        <Route path='/listening/audio/:id' element={<SolvingL />} />
+        <Route path='/writing' element={<Writing />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

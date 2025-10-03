@@ -2,46 +2,50 @@
   padding: 20px;
 }
 
-.listening-box {
+.heading {
+  margin-bottom: 15px;
+}
+
+.box {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
 }
 
-.listening-card {
-  background: #fff;
+.cart {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
   padding: 15px;
   border-radius: 10px;
-  box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-  flex: 1 1 250px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  width: 250px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.audio-title {
+.cart p {
   font-weight: bold;
-  font-size: 16px;
+  margin-bottom: 10px;
 }
 
-.card-buttons {
+.cart-buttons {
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
 }
 
-.play-btn, .delete-btn {
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 6px;
-}
-
-.play-btn {
-  background: #4caf50;
+.cart button {
+  background: #007bff;
   color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .delete-btn {
-  background: #f44336;
-  color: white;
+  background: red;
+}
+
+.cart button:hover {
+  opacity: 0.9;
 }

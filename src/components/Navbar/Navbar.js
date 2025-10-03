@@ -36,6 +36,9 @@ const Navbar = () => {
                             <a href="/audio">Listening</a>
                         </li>
                         <li>
+                            <a href="#">Writing</a>
+                        </li>
+                        <li>
                             <a href="#">About Us</a>
                         </li>
                     </ul>

@@ -1,208 +1,207 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import axios from "../../Api/Axios";
 import "./Listening.css";
 
 function ListeningTest() {
     const [title, setTitle] = useState("");
-    const [testText, setTestText] = useState(
-        "1) Audio haqida savol: [[input]]\n2) Ha/Yo‘q savol: [[select:yn]]"
-    );
-    const [answers, setAnswers] = useState([]);
-    const [file, setFile] = useState(null);
+    const [file, setFile] = useState(null); // audio
+    const [image, setImage] = useState(null); // rasm
+    const [inputs, setInputs] = useState([]); // inputlar
+    const [draggingId, setDraggingId] = useState(null);
+    const [resizingId, setResizingId] = useState(null); // resize uchun
+    const offsetRef = useRef({ x: 0, y: 0 });
+    const startWidthRef = useRef(0);
 
-    // [[input]], [[select]], [[input:type]], [[select:yn]] larni topish
-    const inputMatches = [...testText.matchAll(/\[\[(input(?::(\w+))?|select(?::yn)?)\]\]/g)];
-    const inputCount = inputMatches.length;
+    // Rasm ref
+    const imageRef = useRef(null);
 
-    // ✅ answers massivini inputlarga moslashtirish
-    useEffect(() => {
-        setAnswers((prev) => {
-            const arr = [...prev];
-            while (arr.length < inputCount) {
-                const match = inputMatches[arr.length];
-                let type = "text";
-                let rawType = "text";
-
-                if (match[1].startsWith("input")) {
-                    type = match[2] || "text";
-                    rawType = "input:" + (match[2] || "text");
-                } else if (match[1].startsWith("select")) {
-                    type = "select";
-                    rawType = match[1];
-                }
-
-                arr.push({ value: "", type, rawType });
-            }
-            return arr.slice(0, inputCount);
-        });
-    }, [testText, inputCount]);
-
-    // ✅ Javobni o‘zgartirish
-    const handleAnswerChange = (idx, value) => {
-        setAnswers((prev) => {
-            const arr = [...prev];
-            arr[idx] = { ...arr[idx], value };
-            return arr;
-        });
+    // Input qo‘shish
+    const handleAddInput = () => {
+        setInputs(prev => [
+            ...prev,
+            { id: Date.now(), value: "", top: 50 + prev.length * 40, left: 50, width: 120 }
+        ]);
     };
 
-    // ✅ Tozalash
-    const handleClearInputs = () => {
-        setTitle("");
-        setTestText("");
-        setFile(null);
-        setAnswers([]);
+    // Input qiymatini o‘zgartirish
+    const handleAnswerChange = (id, value) => {
+        setInputs(prev =>
+            prev.map(inp => (inp.id === id ? { ...inp, value } : inp))
+        );
     };
 
-    // ✅ Savolni render qilish
-    const renderQuestion = () => {
-        const parts = testText.split(/\[\[(?:input(?::\w+)?|select(?::yn)?)\]\]/g);
-        const elements = [];
+    // Inputni o‘chirish
+    const handleDeleteInput = (id) => {
+        setInputs(prev => prev.filter(inp => inp.id !== id));
+    };
 
-        for (let i = 0; i < parts.length; i++) {
-            elements.push(<span key={`text-${i}`}>{parts[i]}</span>);
-            if (i < inputCount) {
-                const match = inputMatches[i];
-                let type = "text";
-                let rawType = "text";
+    // Drag boshlanishi
+    const handleMouseDown = (id, e) => {
+        if (e.target.classList.contains("resizer")) return; // resize bilan aralashmasin
+        const rect = imageRef.current.getBoundingClientRect();
+        setDraggingId(id);
+        offsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
 
-                if (match[1].startsWith("input")) {
-                    type = match[2] || "text";
-                    rawType = "input:" + (match[2] || "text");
-                } else if (match[1].startsWith("select")) {
-                    type = "select";
-                    rawType = match[1];
-                }
+    // Resize boshlanishi
+    const handleResizeMouseDown = (id, e) => {
+        e.stopPropagation();
+        setResizingId(id);
+        offsetRef.current.x = e.clientX;
+        const inp = inputs.find(inp => inp.id === id);
+        startWidthRef.current = inp ? inp.width : 120;
+    };
 
-                if (type === "text") {
-                    elements.push(
-                        <input
-                            key={`input-text-${i}`}
-                            type="text"
-                            className="blank-input"
-                            value={answers[i]?.value || ""}
-                            onChange={(e) => handleAnswerChange(i, e.target.value)}
-                            placeholder="Javob"
-                        />
-                    );
-                } else if (type === "select") {
-                    if (rawType === "select:yn") {
-                        elements.push(
-                            <select
-                                key={`input-select-yn-${i}`}
-                                value={answers[i]?.value || ""}
-                                onChange={(e) => handleAnswerChange(i, e.target.value)}
-                                className="choice-select"
-                            >
-                                <option value="">-- Tanlang --</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                                <option value="not given">Not Given</option>
-                            </select>
-                        );
-                    } else {
-                        elements.push(
-                            <select
-                                key={`input-select-${i}`}
-                                value={answers[i]?.value || ""}
-                                onChange={(e) => handleAnswerChange(i, e.target.value)}
-                                className="choice-select"
-                            >
-                                <option value="">-- Tanlang --</option>
-                                <option value="true">True</option>
-                                <option value="false">False</option>
-                                <option value="not given">Not Given</option>
-                            </select>
-                        );
-                    }
-                }
-            }
+    // Drag va resize davomida
+    const handleMouseMove = (e) => {
+        const rect = imageRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        // Drag
+        if (draggingId) {
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            setInputs(prev =>
+                prev.map(inp =>
+                    inp.id === draggingId
+                        ? { ...inp, left: mouseX - offsetRef.current.x + inp.width / 2, top: mouseY - offsetRef.current.y + 15 }
+                        : inp
+                )
+            );
         }
 
-        return elements;
+        // Resize
+        if (resizingId) {
+            const deltaX = e.clientX - offsetRef.current.x;
+            setInputs(prev =>
+                prev.map(inp =>
+                    inp.id === resizingId
+                        ? { ...inp, width: Math.max(30, startWidthRef.current + deltaX) } // minimal width 30px
+                        : inp
+                )
+            );
+        }
     };
 
-    // ✅ Serverga yuborish (audio + savollar + title)
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // Drag yoki resize tugagach
+    const handleMouseUp = () => {
+        setDraggingId(null);
+        setResizingId(null);
+    };
 
-        if (!file || !title) {
-            alert("Iltimos, title va audio faylni tanlang!");
+    // Tozalash
+    const handleClear = () => {
+        setTitle("");
+        setFile(null);
+        setImage(null);
+        setInputs([]);
+    };
+
+    // Full submit
+    const handleSubmitFull = async () => {
+        if (!title || !file || !image) {
+            alert("Iltimos, title, audio va rasm yuklang!");
             return;
         }
+
+        const rect = imageRef.current?.getBoundingClientRect();
+        if (!rect) return;
 
         const formData = new FormData();
         formData.append("title", title);
         formData.append("audio", file);
-        formData.append("questions", JSON.stringify(
-            answers.map((ans, idx) => ({
-                id: idx + 1,
-                value: ans.value,
-                type: ans.type,
-            }))
-        ));
+        formData.append("image", image);
+        formData.append(
+            "questions",
+            JSON.stringify(
+                inputs.map((inp) => ({
+                    value: inp.value,
+                    type: inp.type || "text",
+                    // 🔹 Rasmga nisbatan foizlarda saqlash
+                    top: inp.top / rect.height,
+                    left: inp.left / rect.width,
+                    width: inp.width / rect.width,
+                }))
+            )
+        );
 
         try {
-            await axios.post("/testl/upload", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-            alert("✅ Listening test va audio saqlandi!");
-            handleClearInputs();
+            await axios.post("/testl/full", formData, { headers: { "Content-Type": "multipart/form-data" } });
+            alert("✅ Listening test saqlandi!");
+            handleClear();
         } catch (err) {
             alert("❌ Xatolik: " + (err.response?.data?.message || err.message));
         }
     };
 
     return (
-        <div className="container">
-            <h2>🎧 Listening Test</h2>
+        <div className="container" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+            <h2>🎧 Listening Test (Image + Drag & Resize Inputs)</h2>
 
             <input
                 type="text"
-                className="test-name-input"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={e => setTitle(e.target.value)}
                 placeholder="Listening test nomi"
                 style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
             />
 
-            <label style={{ display: "block", marginTop: 8, marginBottom: 6 }}>Audio fayl:</label>
+            <label>Audio fayl:</label>
             <input
                 type="file"
                 accept="audio/*"
-                onChange={(e) => setFile(e.target.files[0])}
+                onChange={e => setFile(e.target.files[0])}
                 style={{ marginBottom: "12px" }}
             />
 
-            <label style={{ display: "block", marginTop: 8, marginBottom: 6 }}>Savol matni:</label>
-            <textarea
-                className="test-textarea"
-                rows={5}
-                value={testText}
-                onChange={(e) => setTestText(e.target.value)}
-                placeholder="Savolingizni yozing va [[input]] yoki [[select]], [[select:yn]] qo‘shing"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
+            <label>Test rasmi:</label>
+            <input
+                type="file"
+                accept="image/*"
+                onChange={e => setImage(e.target.files[0])}
+                style={{ marginBottom: "12px" }}
             />
 
-            <div className="question-preview" style={{ whiteSpace: "pre-wrap" }}>
-                <strong>Ko‘rinishi:</strong>
-                <div className="view" style={{ marginTop: "1rem" }}>{renderQuestion()}</div>
+            {image && (
+                <div className="test-container" style={{ position: "relative", border: "1px solid #ddd", marginTop: "10px", padding: "10px" }}>
+                    <img ref={imageRef} src={URL.createObjectURL(image)} alt="Test" style={{ display: "block" }} className="img_upload" />
+                    {inputs.map(inp => (
+                        <div
+                            key={inp.id}
+                            style={{ position: "absolute", top: inp.top, left: inp.left, display: "flex", alignItems: "center", cursor: "move", gap: "5px" }}
+                            onMouseDown={e => handleMouseDown(inp.id, e)}
+                        >
+                            <input
+                                type="text"
+                                value={inp.value}
+                                onChange={e => handleAnswerChange(inp.id, e.target.value)}
+                                style={{ width: inp.width, border: "1px solid #000", padding: "3px" }}
+                                placeholder="Javob"
+                            />
+                            {/* Resizer */}
+                            <div
+                                className="resizer"
+                                onMouseDown={e => handleResizeMouseDown(inp.id, e)}
+                                style={{ width: "6px", height: "100%", background: "blue", cursor: "ew-resize" }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => handleDeleteInput(inp.id)}
+                                style={{ background: "red", color: "white", border: "none", borderRadius: "4px", padding: "2px 6px", cursor: "pointer" }}
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div style={{ marginTop: "12px", display: "flex", gap: "10px" }}>
+                <button type="button" onClick={handleAddInput}>➕ Input qo‘shish</button>
+                <button type="button" onClick={handleClear}>🗑 Tozalash</button>
+                <button type="button" onClick={handleSubmitFull}>💾 Saqlash</button>
             </div>
-
-            <form onSubmit={handleSubmit}>
-                <button
-                    type="button"
-                    onClick={handleClearInputs}
-                    className="clear-btn"
-                    style={{ marginTop: 12, marginRight: 10 }}
-                >
-                    Tozalash
-                </button>
-
-                <button type="submit" className="upload-btn" style={{ marginTop: 12 }}>
-                    Yuborish
-                </button>
-            </form>
         </div>
     );
 }

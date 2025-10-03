@@ -1,0 +1,11 @@
+.test-image img {
+    width: 1000px;
+}
+
+.test-image {
+    width: 100%;
+    border: 2px solid red;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}

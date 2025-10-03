@@ -1,77 +1,90 @@
-import React, { useEffect, useState } from "react";
-import axios from "../../Api/Axios"; 
+import React, { useState, useEffect } from "react";
 import "./ListeningForm.css";
-import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "../../Api/Axios";
+import { FaTrash } from "react-icons/fa";
 
 function ListeningForm() {
-    const [audios, setAudios] = useState([]);
+    const [uploadedTests, setUploadedTests] = useState([]);
     const navigate = useNavigate();
+
+    // LocalStorage’dan token va role olish
+    const isAuthenticated = !!localStorage.getItem("token");
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
-    // 🔹 Audiosni olish
-    const fetchAudios = async () => {
-        try {
-            const res = await axios.get("/testl/all");
-            setAudios(res.data);
-        } catch (err) {
-            console.error("Audiosni olishda xatolik:", err);
-        }
+    // Testlarni olish
+    const fetchTests = () => {
+        axios
+            .get("/testl/all")
+            .then((res) => {
+                setUploadedTests(res.data || []);
+            })
+            .catch(() => setUploadedTests([]));
     };
 
     useEffect(() => {
-        fetchAudios();
+        fetchTests();
     }, []);
 
-    // 🔹 Audio o‘chirish
+    // Testni o‘chirish
     const handleDelete = async (id) => {
-        if (!window.confirm("Haqiqatan ham o‘chirmoqchimisiz?")) return;
-
-        try {
-            await axios.delete(`/testl/${id}`);
-            setAudios((prev) => prev.filter((a) => a._id !== id));
-        } catch (err) {
-            console.error("Audio o‘chirishda xato:", err);
+        if (userRole === "teacher" || userRole === "admin") {
+            if (window.confirm("Testni o‘chirishni istaysizmi?")) {
+                try {
+                    await axios.delete(`/testl/${id}`);
+                    fetchTests(); // qayta yuklash
+                } catch (err) {
+                    alert("❌ O‘chirishda xatolik yuz berdi!");
+                }
+            }
+        } else {
+            alert("Siz testni o‘chira olmaysiz!");
         }
     };
 
-    // 🔹 Testni ishlash
+    // Testni ishlash
     const handleTakeTest = (id) => {
-        navigate(`/listening/audio/${id}`);
+        if (!isAuthenticated) {
+            if (
+                window.confirm(
+                    "Testni ishlash uchun akkauntga kirishingiz kerak. Login sahifasiga o‘tishni xohlaysizmi?"
+                )
+            ) {
+                navigate("/sign_in");
+            }
+        } else {
+            navigate(`/listening/audio/${id}`);
+        }
     };
 
     return (
         <div className="listening-form">
-            <h2>Uploaded Listening Tests</h2>
-            <div className="listening-box">
-                {audios.length === 0 ? (
-                    <p>Hozircha audio yuklanmagan...</p>
-                ) : (
-                    audios.map((audio) => (
-                        <div className="listening-card" key={audio._id}>
-                            <p className="audio-title">{audio.title}</p>
-                            <div className="card-buttons">
-                                {/* Take Test tugmasi */}
-                                <button
-                                    className="take-btn"
-                                    onClick={() => handleTakeTest(audio._id)}
-                                >
-                                    Take Test
-                                </button>
-
-                                {/* Faqat teacher va admin uchun delete tugmasi */}
+            <div className="heading">
+                <h2>Uploaded Listening Tests</h2>
+            </div>
+            <div className="box">
+                {uploadedTests.length > 0 ? (
+                    uploadedTests.map((test) => (
+                        <div className="cart" key={test._id}>
+                            <p>{test.title}</p>
+                            <div className="cart-buttons">
+                                {/* Take Test */}
+                                <button onClick={() => handleTakeTest(test._id)}>Take Test</button>
                                 {(userRole === "teacher" || userRole === "admin") && (
                                     <button
-                                        className="delete-btn"
-                                        onClick={() => handleDelete(audio._id)}
+                                        className='deletebtn'
+                                        onClick={() => handleDelete(test._id)}
                                         title="Delete"
                                     >
                                         <FaTrash />
                                     </button>
                                 )}
+
                             </div>
                         </div>
                     ))
+                ) : (
+                    <p>No listening tests found.</p>
                 )}
             </div>
         </div>
