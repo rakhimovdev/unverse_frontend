@@ -17,6 +17,7 @@ function ReadingForm() {
     const [buttonPos, setButtonPos] = useState(null);
 
     const toggleDropdown = () => setOpen(!open);
+    // console.log(data)
 
     // Barcha testlarni olish
     useEffect(() => {
@@ -212,7 +213,7 @@ function ReadingForm() {
                         onMouseUp={handleMouseUp}
                     >
                         {data.length > 0 ? (
-                            <p>{data[0].readingText}</p>
+                            <p>{test.readingText}</p>
                         ) : (
                             <p style={{ color: "orange" }}>Reading matni mavjud emas</p>
                         )}

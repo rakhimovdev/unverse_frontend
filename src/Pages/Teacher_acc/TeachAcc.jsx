@@ -8,7 +8,7 @@ function TeachAcc() {
                 <Link to="/students">
                     <button>Your Students</button>
                 </Link>
-                <Link to="/solving">
+                <Link to="/selectt">
                     <button>Add New Test</button>
                 </Link>
             </div>
