@@ -118,8 +118,8 @@ function ListeningTest() {
                                 key={i}
                                 style={{
                                     position: "absolute",
-                                    top: q.top * imgSize.height + -10,  // % → px
-                                    left: q.left * imgSize.width + 15, // % → px
+                                    top: q.top * imgSize.height + -5,  // % → px
+                                    left: q.left * imgSize.width + 299, // % → px
                                     width: q.width * imgSize.width, // % → px
                                 }}
                             >
