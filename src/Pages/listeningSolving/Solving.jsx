@@ -119,7 +119,7 @@ function ListeningTest() {
                                 style={{
                                     position: "absolute",
                                     top: q.top * imgSize.height + -5,  // % → px
-                                    left: q.left * imgSize.width + 299, // % → px
+                                    left: q.left * imgSize.width + 15, // % → px
                                     width: q.width * imgSize.width, // % → px
                                 }}
                             >
