@@ -109,7 +109,6 @@ function ListeningTest() {
                             src={test.imageUrl}
                             alt="listening"
                             onLoad={handleImageLoad}
-                            style={{ maxWidth: "100%", height: "auto" }}
                         />
 
                         {/* 🔹 Inputlarni joylashuv bo‘yicha chiqarish */}
@@ -118,9 +117,9 @@ function ListeningTest() {
                                 key={i}
                                 style={{
                                     position: "absolute",
-                                    top: q.top * imgSize.height + -5,  // % → px
-                                    left: q.left * imgSize.width + 15, // % → px
-                                    width: q.width * imgSize.width, // % → px
+                                    top: `${q.top * 100 + -.8}%`,
+                                    left: `${q.left * 100 + -15.5}%`,
+                                    width: `${q.width * 100}%`,
                                 }}
                             >
                                 {q.type === "text" ? (

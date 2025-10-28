@@ -1,11 +1,12 @@
-.test-image img {
+.test-image {
+    position: relative;
     width: 1000px;
+    /* rasm kengligi doim shu */
+    margin: 0 auto;
 }
 
-.test-image {
+.test-image img {
     width: 100%;
-    border: 2px solid red;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
+    height: auto;
+    display: block;
 }
