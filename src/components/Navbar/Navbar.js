@@ -1,5 +1,6 @@
 import React from "react";
 import "./Navbar.css";
+import img1 from "../../Images/image.png";
 
 const Navbar = () => {
     const token = localStorage.getItem("token");
@@ -18,28 +19,30 @@ const Navbar = () => {
         <div>
             <nav>
                 <div className="in_nav">
-                    <a href="/">
-                        <div className="logo">
-                            <h1>Logo</h1>
+                    <a className="logo_a" href="/">
+                        <img className="logo" src={img1} alt="" />
+                        <div className="logoText">
+                            <p>Universe</p>
+                            <p>Language School</p>
                         </div>
                     </a>
 
                     {/* Student uchun menyular */}
                     <ul>
                         <li>
-                            <a href="/">Home</a>
+                            <a className="a" href="/">Home</a>
                         </li>
                         <li>
-                            <a href="/read">Reading</a>
+                            <a className="a" href="/read">Reading</a>
                         </li>
                         <li>
-                            <a href="/audio">Listening</a>
+                            <a className="a" href="/audio">Listening</a>
                         </li>
                         <li>
-                            <a href="#">Writing</a>
+                            <a className="a" href="/writing">Writing</a>
                         </li>
                         <li>
-                            <a href="#">About Us</a>
+                            <a className="a" href="#">About Us</a>
                         </li>
                     </ul>
 
@@ -49,10 +52,10 @@ const Navbar = () => {
                                 {/* 🔥 Agar teacher bo‘lsa Sign In / Sign Up chiqmaydi */}
                                 {role !== "teacher" && (
                                     <>
-                                        <a href="/sign_in">
+                                        <a className="a" href="/sign_in">
                                             <button>Sign In</button>
                                         </a>
-                                        <a href="/sign_up">
+                                        <a className="a" href="/sign_up">
                                             <button className="btn2">Sign Up</button>
                                         </a>
                                     </>

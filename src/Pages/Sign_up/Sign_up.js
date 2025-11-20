@@ -22,7 +22,6 @@ function Sign_up() {
         setLoading(true);
         setErrorMsg('');
 
-        // oddiy validation
         if (userData.password.length < 6) {
             setErrorMsg("Password must be at least 6 characters long ❌");
             setLoading(false);
@@ -30,17 +29,23 @@ function Sign_up() {
         }
 
         try {
-            const response = await axios.post('/student/register', userData);
+            // 1️⃣ Avval ro‘yxatdan o‘tish
+            await axios.post('/student/register', userData);
 
-            if (response.data.token) {
-                localStorage.setItem("token", response.data.token); // ✅
-                localStorage.setItem("role", "student");
-                localStorage.setItem("user", JSON.stringify(response.data.user));
-            }
+            // 2️⃣ So‘ng avtomatik login qilish
+            const loginRes = await axios.post('/student/login', {
+                username: userData.username,
+                password: userData.password
+            });
 
+            // 3️⃣ Tokenni saqlash
+            localStorage.setItem("token", loginRes.data.token);
+            localStorage.setItem("role", loginRes.data.user.role);
+            localStorage.setItem("user", JSON.stringify(loginRes.data.user));
 
-            alert("Student registration successful! 🎉");
-            navigate("/account"); // student account sahifaga
+            alert("Registration successful! 🎉");
+            navigate("/account");
+
         } catch (error) {
             console.error('Registration error:', error);
             setErrorMsg(error.response?.data?.message || "Registration failed ❌");
@@ -48,6 +53,7 @@ function Sign_up() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="signup-page">

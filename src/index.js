@@ -21,6 +21,7 @@ import SelectT from './Pages/SelectTest/SelectT';
 import ListeningForm from './Pages/ListningForm/ListeningForm';
 import SolvingL from "./Pages/listeningSolving/Solving"
 import Writing from './Pages/Writing/Writing';
+import Home from './Pages/Home/Home';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -28,7 +29,7 @@ root.render(
     <BrowserRouter>
       <Navbar />
       <Routes>
-        <Route path='/' element={<App />} />
+        <Route path='/' element={<Home />} />
         <Route path='/sign_in' element={<Sign_in />} />
         <Route path='/sign_up' element={<Sign_up />} />
         <Route path='/reading/:testId' element={<ReadingForm />} />

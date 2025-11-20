@@ -1,4 +1,4 @@
-/* .container {
+.container {
     width: 100%;
     border: 2px solid red;
     display: flex;
@@ -10,24 +10,24 @@
     width: 47%;
     border: 2px solid red;
     height: 85vh;
-    /* display: flex; */
-/* flex-direction: column; */
-/* align-items: center; */
-/* } */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-/* .container2 {
+.container2 {
     width: 47%;
     border: 2px solid red;
     height: 85vh;
     display: flex;
-    /* flex-direction: column; */
-/* align-items: center; */
-/* }
+    flex-direction: column;
+    align-items: center;
+}
 
 .writingText {
     width: 95%;
     margin: auto;
     height: 95%;
-    padding: 10px;s
+    padding: 10px;
     font-size: 18px;
-}  */
+}

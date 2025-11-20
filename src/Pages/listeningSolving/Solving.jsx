@@ -70,7 +70,7 @@ function ListeningTest() {
         try {
             await axios.post(
                 "/scorel/add",
-                { testId: test._id, score },
+                { listeningId: test._id, score }, // ✅ to‘g‘rilandi
                 { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
             );
             console.log("Score saqlandi ✅");
@@ -162,7 +162,7 @@ function ListeningTest() {
                                     (results[i] ? (
                                         <span style={{ color: "green", marginLeft: "8px" }}>✅</span>
                                     ) : (
-                                        <span style={{ color: "red", marginLeft: "8px" }}>
+                                        <span style={{ color: "red", marginLeft: "8px", backgroundColor: "#ccccccd5", }}>
                                             ❌ To‘g‘ri javob: <b>{test.questions[i]?.value}</b>
                                         </span>
                                     ))}
