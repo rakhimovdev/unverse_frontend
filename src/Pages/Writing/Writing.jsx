@@ -1,20 +1,41 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../../Api/Axios';
 import "./Writing.css";
 
 function Writing() {
-
     const [image, setImage] = useState(null);
-    const [text, setText] = useState("");
+    const [topic, setTopic] = useState("");
+    const [preview, setPreview] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        setImage(file);
+        if (file) {
+            setPreview(URL.createObjectURL(file));
+        }
+    };
 
     const handleSubmit = async () => {
+        if (!image) {
+            setError("Rasm tanlang!");
+            return;
+        }
+        if (!topic.trim()) {
+            setError("Topic yozing!");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
         const formData = new FormData();
-        formData.append("image", image);       // backend: upload.single("image")
-        formData.append("content", text);      // backend: req.body.content
-        formData.append("title", "my title");  // agar title kerak bo'lsa
+        formData.append("image", image);
+        formData.append("topic", topic); // ← TOPIC qo‘shildi
 
         try {
-            await axios.post("/posts/writing", formData, {
+            await axios.post("/posts/upload", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
@@ -22,39 +43,56 @@ function Writing() {
 
             alert("Saved!");
 
-        } catch (error) {
-            console.log(error);
-            alert("Error occurred!");
+            // Reset
+            setTopic("");
+            setImage(null);
+            setPreview(null);
+
+        } catch (err) {
+            console.error(err);
+            setError("Xatolik yuz berdi!");
         }
+
+        setLoading(false);
     };
 
     return (
-        <div>
+        <div className="writing-wrapper">
             <div className="container">
-
-                {/* Rasm yuklash */}
                 <div className="container1">
+
+                    {/* Topic input */}
+                    <div className="topic">
+                        <input
+                            type="text"
+                            placeholder="Topic yozing..."
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Rasm tanlash */}
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setImage(e.target.files[0])}
+                        onChange={handleImageChange}
                     />
-                </div>
 
-                {/* Text yozish */}
-                <div className="container2">
-                    <textarea
-                        placeholder='Write your answer'
-                        className='writingText'
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                    ></textarea>
+                    {/* Preview */}
+                    {preview && (
+                        <img
+                            src={preview}
+                            alt="preview"
+                            className="image-preview"
+                        />
+                    )}
                 </div>
-
             </div>
 
-            <button onClick={handleSubmit} className="saveBtn">
-                Save
+            {error && <p className="error">{error}</p>}
+
+            <button onClick={handleSubmit} className="saveBtn" disabled={loading}>
+                {loading ? "Saving..." : "Save"}
             </button>
         </div>
     );
