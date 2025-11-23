@@ -34,7 +34,7 @@ function Index() {
             <div className="left_panel">
                 <h2>{test.topic}</h2>
                 <img
-                    src={`https://unverse-backend.onrender.comuploads/${test.image}`}
+                    src={`${axios.defaults.baseURL}uploads/${test.image}`}
                     alt="writing task"
                 />
             </div>
