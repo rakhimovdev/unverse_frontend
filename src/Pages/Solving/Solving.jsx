@@ -1,3 +1,4 @@
+// Updated FillInTheBlankTest component with "Full Test" or "Part" select before saving
 import React, { useState, useEffect } from "react";
 import axios from "../../Api/Axios";
 import "./Solving.css";
@@ -10,7 +11,9 @@ function FillInTheBlankTest() {
     const [answers, setAnswers] = useState([]);
     const [readingText, setReadingText] = useState("");
 
-    // ✅ Serverdan oxirgi testni olish
+    // NEW → Saving mode: full-test or part
+    const [saveMode, setSaveMode] = useState("full");
+
     useEffect(() => {
         axios
             .get("/user/tests/last")
@@ -32,11 +35,9 @@ function FillInTheBlankTest() {
             .catch(() => { });
     }, []);
 
-    // [[input]], [[select]], [[input:type]], [[select:yn]] larni topish
     const inputMatches = [...testText.matchAll(/\[\[(input(?::(\w+))?|select(?::yn)?)\]\]/g)];
     const inputCount = inputMatches.length;
 
-    // ✅ answers massivini inputlarga moslashtirish
     useEffect(() => {
         setAnswers((prev) => {
             const arr = [...prev];
@@ -49,8 +50,8 @@ function FillInTheBlankTest() {
                     type = match[2] || "text";
                     rawType = "input:" + (match[2] || "text");
                 } else if (match[1].startsWith("select")) {
-                    type = "select";       // backend faqat "select" ko‘radi
-                    rawType = match[1];    // "select" yoki "select:yn"
+                    type = "select";
+                    rawType = match[1];
                 }
 
                 arr.push({ value: "", type, rawType });
@@ -59,7 +60,6 @@ function FillInTheBlankTest() {
         });
     }, [testText, inputCount]);
 
-    // ✅ Javob o‘zgarishi
     const handleAnswerChange = (idx, value) => {
         setAnswers((prev) => {
             const arr = [...prev];
@@ -68,14 +68,12 @@ function FillInTheBlankTest() {
         });
     };
 
-    // ✅ Tozalash tugmasi
     const handleClearInputs = () => {
         setTestName("");
         setReadingText("");
         setTestText("");
     };
 
-    // ✅ Savolni inputlar bilan render qilish
     const renderQuestion = () => {
         const parts = testText.split(/\[\[(?:input(?::\w+)?|select(?::yn)?)\]\]/g);
         const elements = [];
@@ -108,7 +106,6 @@ function FillInTheBlankTest() {
                     );
                 } else if (type === "select") {
                     if (rawType === "select:yn") {
-                        // ✅ Yes / No / Not Given
                         elements.push(
                             <select
                                 key={`input-select-yn-${i}`}
@@ -123,7 +120,6 @@ function FillInTheBlankTest() {
                             </select>
                         );
                     } else {
-                        // ✅ True / False / Not Given
                         elements.push(
                             <select
                                 key={`input-select-${i}`}
@@ -145,17 +141,17 @@ function FillInTheBlankTest() {
         return elements;
     };
 
-    // ✅ Testni serverga yuborish
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             await axios.post("/test/upload", {
                 name: testName,
                 testText,
+                mode: saveMode, // NEW → send full or part to backend
                 questions: answers.map((ans, idx) => ({
                     id: idx + 1,
                     value: ans.value,
-                    type: ans.type, // faqat "text" yoki "select" boradi
+                    type: ans.type,
                 })),
                 readingText,
             });
@@ -169,40 +165,48 @@ function FillInTheBlankTest() {
         <div className="container">
             <h2>To‘ldirish uchun savol</h2>
 
+            {/* NEW → Save type selection */}
+            <label>Saqlash turi:</label>
+            <select
+                value={saveMode}
+                onChange={(e) => setSaveMode(e.target.value)}
+                className="save-mode-select"
+                style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
+            >
+                <option value="full">Full Test</option>
+                <option value="part">Part</option>
+            </select>
+
             <input
                 type="text"
                 className="test-name-input"
                 value={testName}
                 onChange={(e) => setTestName(e.target.value)}
                 placeholder="Test nomini kiriting"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
             />
 
-            <label style={{ display: "block", marginTop: 8, marginBottom: 6 }}>Reading matni:</label>
-            <textarea
-                className="reading-textarea"
-                rows={6}
-                value={readingText}
-                onChange={(e) => setReadingText(e.target.value)}
-                placeholder="Bu yerga reading matnini yozing..."
-                style={{
-                    width: "100%",
-                    margin: "6px 0 12px",
-                    padding: "8px",
-                    fontSize: "16px",
-                    background: "#f9f9f9",
-                }}
-            />
-
-            <label style={{ display: "block", marginTop: 8, marginBottom: 6 }}>Savol matni:</label>
-            <textarea
-                className="test-textarea"
-                rows={5}
-                value={testText}
-                onChange={(e) => setTestText(e.target.value)}
-                placeholder="Savolingizni yozing va [[input]] yoki [[select]], [[select:yn]] joyiga javob uchun maydon qo‘shing"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
-            />
+            <div className="out_textarea">
+                <div className="textarea1">
+                    <label>Reading matni:</label>
+                    <textarea
+                        className="reading-textarea"
+                        rows={6}
+                        value={readingText}
+                        onChange={(e) => setReadingText(e.target.value)}
+                        placeholder="Reading matnini yozing..."
+                    />
+                </div>
+                <div className="textarea2">
+                    <label>Savol matni:</label>
+                    <textarea
+                        className="test-textarea"
+                        rows={5}
+                        value={testText}
+                        onChange={(e) => setTestText(e.target.value)}
+                        placeholder="Savolingizni yozing..."
+                    />
+                </div>
+            </div>
 
             <div className="question-preview" style={{ whiteSpace: "pre-wrap" }}>
                 <strong>Ko‘rinishi:</strong>
@@ -210,16 +214,11 @@ function FillInTheBlankTest() {
             </div>
 
             <form onSubmit={handleSubmit}>
-                <button
-                    type="button"
-                    onClick={handleClearInputs}
-                    className="clear-btn"
-                    style={{ marginTop: 12, marginRight: 10 }}
-                >
+                <button type="button" onClick={handleClearInputs} className="clear-btn">
                     Tozalash
                 </button>
 
-                <button type="submit" className="upload-btn" style={{ marginTop: 12 }}>
+                <button type="submit" className="upload-btn">
                     Yuborish
                 </button>
             </form>

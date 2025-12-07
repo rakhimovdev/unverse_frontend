@@ -33,6 +33,7 @@ function ReadingForm() {
     }, []);
 
     // Bitta testni olish
+    // Bitta testni olish
     useEffect(() => {
         axios
             .get(`/test/${testId}`)
@@ -41,15 +42,29 @@ function ReadingForm() {
                     setError("Test ma'lumotlari topilmadi.");
                     return;
                 }
-                setTest(res.data);
+
+                const testData = res.data;
+                setTest(testData);
+
+                // === TEST MODE => TIMER ===
+                if (testData.mode === "full") {
+                    setSecondsLeft(3600); // 60 minut
+                } else {
+                    setSecondsLeft(1200); // 20 minut
+                }
+                // ===========================
+
+                // input/select joylari bo‘yicha javoblar massivini yaratish
                 const answerCount =
-                    res.data.testText.match(/\[\[(input|select(?::yn)?)\]\]/g) || [];
+                    testData.testText.match(/\[\[(input|select(?::yn)?)\]\]/g) || [];
+
                 setUserAnswers(Array(answerCount.length).fill(""));
             })
             .catch(() => {
                 setError("Test yuklashda xatolik yuz berdi.");
             });
     }, [testId]);
+
 
     // Timer
     useEffect(() => {
