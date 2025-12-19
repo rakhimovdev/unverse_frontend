@@ -1,83 +1,44 @@
-import axios from "../../Api/Axios";
-import { useEffect, useState } from "react";
-import "./Students.css"; // 👉 CSS alohida faylga chaqirilgan
+import { useState } from "react";
+import Reading from "./ReadingR";
+import Listening from "./ListeningR";
+import Writing from "./WritingR";
+import "./Students.css";
 
-function Students() {
-    const [data, setData] = useState([]);
-    const token = localStorage.getItem("token");
-
-    // 📌 Barcha scorelarni olish
-    const fetchScores = () => {
-        axios.get("/score/all", {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((res) => setData(res.data))
-            .catch((err) => console.error(err.response?.data || err.message));
-    };
-
-    // 📌 Score o‘chirish
-    const deleteScore = async (id) => {
-        if (!window.confirm("Rostdan ham o‘chirmoqchimisiz?")) return;
-
-        try {
-            await axios.delete(`/score/delete/${id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            // O‘chirilgandan keyin listni yangilash
-            setData(data.filter((s) => s._id !== id));
-        } catch (err) {
-            console.error(err.response?.data || err.message);
-        }
-    };
-
-    useEffect(() => {
-        fetchScores();
-    }, []);
+function StudentsTabs() {
+    const [activeTab, setActiveTab] = useState("reading"); // default tab
 
     return (
         <div className="students-container">
             <h1 className="title">📊 Student Scores</h1>
 
-            {data.length > 0 ? (
-                <table className="students-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Lastname</th>
-                            <th>Email</th>
-                            <th>Test</th>
-                            <th>Score</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((student, index) => (
-                            <tr key={student._id}>
-                                <td>{index + 1}</td>
-                                <td>{student.student?.name || "N/A"}</td>
-                                <td>{student.student?.lastname || "N/A"}</td>
-                                <td>{student.student?.email || "N/A"}</td>
-                                <td>{student.test?.name || "N/A"}</td>
-                                <td>{student.score}</td>
-                                <td>
+            {/* Karusel tugmalari */}
+            <div className="carousel-tabs">
+                <button
+                    className={activeTab === "reading" ? "active" : ""}
+                    onClick={() => setActiveTab("reading")}
+                >
+                    📘 Reading
+                </button>
+                <button
+                    className={activeTab === "listening" ? "active" : ""}
+                    onClick={() => setActiveTab("listening")}
+                >
+                    🎧 Listening
+                </button>
+                <button
+                    className={activeTab === "writing" ? "active" : ""}
+                    onClick={() => setActiveTab("writing")}
+                >
+                    ✍️ Writing
+                </button>
+            </div>
 
-                                    <button
-                                        className="delete-btn1"
-                                        onClick={() => deleteScore(student._id)}>
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p className="loading">Loading...</p>
-            )}
+            {/* Karuselga mos komponent */}
+            {activeTab === "reading" && <Reading />}
+            {activeTab === "listening" && <Listening />}
+            {activeTab === "writing" && <Writing />}
         </div>
     );
 }
 
-export default Students;
+export default StudentsTabs;

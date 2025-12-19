@@ -24,6 +24,7 @@ import Writing from './Pages/Writing/Writing';
 import Home from './Pages/Home/Home';
 import WritingForm from './Pages/WritingForm/Writing';
 import WritingPage from './Pages/WritingPage/Index';
+import WResault from './Pages/Writing_resault/wResault';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -51,6 +52,7 @@ root.render(
         <Route path='/writing' element={<Writing />} />
         <Route path='/writingform' element={<WritingForm />} />
         <Route path='/writingpage/:id' element={<WritingPage />} />
+        <Route path='/wresault' element={<WResault />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

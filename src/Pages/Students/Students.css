@@ -53,7 +53,7 @@
 }
 
 .students-container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 40px auto;
     padding: 20px;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -95,4 +95,24 @@
 
 .delete-btn1:hover {
     background-color: #d9363e;
+}
+
+.carousel-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.carousel-tabs button {
+    padding: 10px 18px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    background: #eee;
+    font-weight: 600;
+}
+
+.carousel-tabs button.active {
+    background: #2563eb;
+    color: white;
 }
