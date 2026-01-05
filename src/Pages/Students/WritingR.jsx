@@ -9,7 +9,7 @@ function WritingR() {
 
     // 📌 Barcha scorelarni olish
     const fetchScores = () => {
-        axios.get("/posts/all", {
+        axios.get("/scorew/all", {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => setData(res.data))

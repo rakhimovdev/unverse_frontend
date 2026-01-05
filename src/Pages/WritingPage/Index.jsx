@@ -6,8 +6,9 @@ import "./App.css";
 function Index() {
     const { id } = useParams();
     const navigate = useNavigate();
-
+    const [score, setScore] = useState("");
     const [test, setTest] = useState(null);
+    const [writing, setWriting] = useState("");
     const [answer, setAnswer] = useState("");
 
     const userId = "6655abc12345678900000000"; // vaqtincha
@@ -25,19 +26,16 @@ function Index() {
         getTest();
     }, [id]);
 
-    const handleSave = async () => {
+    const handleSubmit = async () => {
         try {
-            await axios.post("/posts/response", {
-                writingId: test._id,
-                topic: test.topic,
-                userId,
-                answer
-            });
-
-            alert("Saved successfully!");
-            setAnswer("");
-        } catch (error) {
-            console.error("Save error:", error.response?.data || error.message);
+            await axios.post(
+                "/posts/response",
+                { writingId: test._id, score, writing }, // ✅ to‘g‘rilandi
+                { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+            );
+            console.log("Score saqlandi ✅");
+        } catch (err) {
+            console.error("Score saqlashda xato:", err.response?.data || err);
         }
     };
 
@@ -62,7 +60,7 @@ function Index() {
                     onChange={(e) => setAnswer(e.target.value)}
                     placeholder="Write here..."
                 />
-                <button onClick={handleSave}>Save</button>
+                <button onClick={handleSubmit}>Save</button>
             </div>
         </div>
     );
