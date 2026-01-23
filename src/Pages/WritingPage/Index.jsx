@@ -29,13 +29,22 @@ function Index() {
     const handleSubmit = async () => {
         try {
             await axios.post(
-                "/posts/response",
-                { writingId: test._id, score, writing }, // ✅ to‘g‘rilandi
-                { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+                "/scorew/response",
+                {
+                    writingId: test._id,
+                    topic: test.topic,
+                    userId: userId,
+                    answer: answer
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
+                }
             );
-            console.log("Score saqlandi ✅");
+            console.log("Response saqlandi ✅");
         } catch (err) {
-            console.error("Score saqlashda xato:", err.response?.data || err);
+            console.error("Response saqlashda xato:", err.response?.data || err);
         }
     };
 
@@ -43,25 +52,23 @@ function Index() {
 
     return (
         <div className="test_screen">
-            <button onClick={() => navigate("/writing")}>← Back</button>
-
-            <div className="left_panel">
-                <h2>{test.topic}</h2>
-                <img
-                    src={`${axios.defaults.baseURL}/uploads/${test.image}`}
-                    alt="task"
-                />
+            <div className="w_screen">
+                <div className="left_panel">
+                    <h2>{test.topic}</h2>
+                    <img
+                        src={`${axios.defaults.baseURL}uploads/${test.image}`} alt="task" />
+                </div>
+                <div className="right_panel">
+                    <h3>Your Response</h3>
+                    <textarea
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        placeholder="Write here..."
+                    />
+                </div>
             </div>
-
-            <div className="right_panel">
-                <h3>Your Response</h3>
-                <textarea
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    placeholder="Write here..."
-                />
-                <button onClick={handleSubmit}>Save</button>
-            </div>
+            <button onClick={handleSubmit}>Save</button>
+            <button>Task 2</button>
         </div>
     );
 }

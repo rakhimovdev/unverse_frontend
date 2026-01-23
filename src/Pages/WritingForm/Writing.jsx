@@ -5,20 +5,40 @@ import "./Writing.css";
 
 function Writing() {
     const [tests, setTests] = useState([]);
+    const [uploadedTests, setUploadedTests] = useState([]);
+    console.log(uploadedTests);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchTests = async () => {
-            try {
-                const res = await axios.get("/posts/all");
-                setTests(res.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
+    const isAuthenticated = !!localStorage.getItem("token");
+    const userRole = localStorage.getItem("role"); // student | teacher | admin
 
+    const fetchTests = () => {
+        axios
+            .get("/posts/all")
+            .then((res) => {
+                setUploadedTests(res.data || []);
+            })
+            .catch(() => setUploadedTests([]));
+    };
+
+    useEffect(() => {
         fetchTests();
     }, []);
+    const handleDelete = async (id) => {
+        if (userRole === "teacher" || userRole === "admin") {
+            if (window.confirm("Testni o‘chirishni istaysizmi?")) {
+                try {
+                    await axios.delete(`/posts/delete/${id}`);
+                    fetchTests(); // qayta yuklash
+                } catch (err) {
+                    alert("❌ O‘chirishda xatolik yuz berdi!");
+                }
+            } else {
+                alert("Siz testni o‘chira olmaysiz!");
+            }
+        }
+
+    }
 
     return (
         <div className="writing_page">
@@ -26,7 +46,7 @@ function Writing() {
                 <h1>IELTS Writing Tests</h1>
 
                 <div className="card_container">
-                    {tests.map((item) => (
+                    {uploadedTests.map((item) => (
                         <div className="test_card" key={item._id}>
                             <h3>{item.topic}</h3>
 
@@ -36,6 +56,7 @@ function Writing() {
                             >
                                 Start
                             </button>
+                            <button onClick={() => handleDelete(item._id)}>Delete</button>
                         </div>
                     ))}
                 </div>

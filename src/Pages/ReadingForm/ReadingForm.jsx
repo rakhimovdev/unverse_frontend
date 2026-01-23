@@ -253,7 +253,7 @@ function ReadingForm() {
                                         onChange={(e) => handleChange(e.target.value, i)}
                                         disabled={!!results}
                                     >
-                                        <option value="">-- Tanlang --</option>
+                                        <option value=""></option>
                                         <option value="yes">Yes</option>
                                         <option value="no">No</option>
                                         <option value="not given">Not Given</option>
@@ -264,7 +264,7 @@ function ReadingForm() {
                                         onChange={(e) => handleChange(e.target.value, i)}
                                         disabled={!!results}
                                     >
-                                        <option value="">-- Tanlang --</option>
+                                        <option value=""></option>
                                         <option value="true">True</option>
                                         <option value="false">False</option>
                                         <option value="not given">Not Given</option>
