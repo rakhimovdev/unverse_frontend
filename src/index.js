@@ -31,9 +31,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Navbar />
-      <div>
-        <marquee behavior="" direction="">Ushbu Sayt Test Rejimida Ishlamoqda</marquee>
-      </div>
+      <App />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/sign_in' element={<Sign_in />} />
