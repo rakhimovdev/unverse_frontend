@@ -9,6 +9,7 @@ function ListeningTest() {
     const [userAnswers, setUserAnswers] = useState([]);
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
+    const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
 
     const imgRef = useRef(null);
 
