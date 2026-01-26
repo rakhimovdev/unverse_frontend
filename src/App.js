@@ -4,9 +4,10 @@ import "./App.css"
 
 function App() {
   return (
-    <div className='app'>
-      <marquee behavior="" direction="">Ushbu Sayt Test Rejimida Ishlamoqda</marquee>
+    <div className="marquee">
+      <span>Ushbu Sayt Test Rejimida Ishlamoqda</span>
     </div>
+
   )
 }
 
