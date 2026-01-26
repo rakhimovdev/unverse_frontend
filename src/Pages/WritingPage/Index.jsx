@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "../../Api/Axios";
 import "./App.css";
 
 function Index() {
     const { id } = useParams();
-    const navigate = useNavigate();
-    const [score, setScore] = useState("");
     const [test, setTest] = useState(null);
-    const [writing, setWriting] = useState("");
     const [answer, setAnswer] = useState("");
 
     const userId = "6655abc12345678900000000"; // vaqtincha
@@ -56,7 +53,9 @@ function Index() {
                 <div className="left_panel">
                     <h2>{test.topic}</h2>
                     <img
-                        src={`${axios.defaults.baseURL}uploads/${test.image}`} alt="task" />
+                        src={`${axios.defaults.baseURL}uploads/${test.image}`}
+                        alt="task"
+                    />
                 </div>
                 <div className="right_panel">
                     <h3>Your Response</h3>
