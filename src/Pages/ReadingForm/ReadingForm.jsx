@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./ReadingForm.css";
 import { FaClock } from "react-icons/fa6";
 import { Link, useParams } from "react-router-dom";
@@ -17,7 +17,6 @@ function ReadingForm() {
     const [buttonPos, setButtonPos] = useState(null);
 
     const toggleDropdown = () => setOpen(!open);
-    // console.log(data)
 
     // Barcha testlarni olish
     useEffect(() => {
@@ -26,45 +25,70 @@ function ReadingForm() {
                 const res = await axios.get(`/test/all`);
                 setData(res.data);
             } catch {
-                console.error("xato");
+                console.error("Barcha testlarni olishda xatolik");
             }
         };
         getApi();
     }, []);
 
     // Bitta testni olish
-    // Bitta testni olish
     useEffect(() => {
-        axios
-            .get(`/test/${testId}`)
-            .then((res) => {
+        const getTest = async () => {
+            try {
+                const res = await axios.get(`/test/${testId}`);
                 if (!res.data) {
                     setError("Test ma'lumotlari topilmadi.");
                     return;
                 }
-
                 const testData = res.data;
                 setTest(testData);
 
-                // === TEST MODE => TIMER ===
-                if (testData.mode === "full") {
-                    setSecondsLeft(3600); // 60 minut
-                } else {
-                    setSecondsLeft(1200); // 20 minut
-                }
-                // ===========================
+                // TEST MODE => TIMER
+                setSecondsLeft(testData.mode === "full" ? 3600 : 1200);
 
                 // input/select joylari bo‘yicha javoblar massivini yaratish
                 const answerCount =
                     testData.testText.match(/\[\[(input|select(?::yn)?)\]\]/g) || [];
-
                 setUserAnswers(Array(answerCount.length).fill(""));
-            })
-            .catch(() => {
+            } catch {
                 setError("Test yuklashda xatolik yuz berdi.");
-            });
+            }
+        };
+        getTest();
     }, [testId]);
 
+    const normalizeAnswer = (ans) => {
+        ans = ans.trim().toLowerCase();
+        if (ans === "yes") return "true";
+        if (ans === "no") return "false";
+        return ans;
+    };
+
+    // Submit funksiyasi
+    const handleSubmit = useCallback(async () => {
+        if (!test?.questions) return;
+
+        const check = userAnswers.map((ans, idx) => {
+            const correct = normalizeAnswer(
+                test.questions[idx]?.value?.trim().toLowerCase() || ""
+            );
+            return normalizeAnswer(ans) === correct;
+        });
+
+        setResults(check);
+        const score = check.filter((r) => r).length;
+
+        try {
+            await axios.post(
+                "/score/add",
+                { testId: test._id, score },
+                { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+            );
+            console.log("Score saqlandi ✅");
+        } catch (err) {
+            console.error("Score saqlashda xato:", err.response?.data || err);
+        }
+    }, [test, userAnswers]);
 
     // Timer
     useEffect(() => {
@@ -77,7 +101,7 @@ function ReadingForm() {
             setSecondsLeft((prev) => prev - 1);
         }, 1000);
         return () => clearInterval(timerId);
-    }, [secondsLeft, results]);
+    }, [secondsLeft, results, handleSubmit]);
 
     const formatTime = (sec) => {
         const m = Math.floor(sec / 60);
@@ -91,46 +115,7 @@ function ReadingForm() {
         setUserAnswers(updated);
     };
 
-    const normalizeAnswer = (ans) => {
-        ans = ans.trim().toLowerCase();
-        if (ans === "yes") return "true";   // yes → true
-        if (ans === "no") return "false";   // no → false
-        return ans;
-    };
-
-    const handleSubmit = async () => {
-        if (!test?.questions) return;
-        const check = userAnswers.map((ans, idx) => {
-            const correct = normalizeAnswer(
-                test.questions[idx]?.value?.trim().toLowerCase() || ""
-            );
-            return normalizeAnswer(ans) === correct;
-        });
-        setResults(check);
-        const score = check.filter((r) => r).length;
-        console.log(localStorage.getItem("token"))
-
-        try {
-            await axios.post(
-                "/score/add",
-                { testId: test._id, score },
-                {
-
-                    headers: {
-
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
-            console.log("Score saqlandi ✅");
-            console.log(localStorage.getItem("token"))
-        } catch (err) {
-            console.error("Score saqlashda xato:", err.response?.data || err);
-        }
-
-    };
-
-    // Highlight funksiyasi
+    // Highlight funksiyalari
     const handleMouseUp = () => {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) {
@@ -192,7 +177,7 @@ function ReadingForm() {
 
     while ((match = regex.exec(test.testText)) !== null) {
         parts.push(test.testText.substring(lastIndex, match.index));
-        inputTypes.push(match[1]); // input, select, select:yn
+        inputTypes.push(match[1]);
         lastIndex = regex.lastIndex;
     }
     parts.push(test.testText.substring(lastIndex));
@@ -204,7 +189,7 @@ function ReadingForm() {
                 <h1>
                     <FaClock /> {formatTime(secondsLeft)}
                 </h1>
-                <div className="bar-icon" onClick={toggleDropdown}>
+                <div className="bar-icon" onClick={() => setOpen(!open)}>
                     &#9776;
                 </div>
                 {open && (
@@ -244,13 +229,17 @@ function ReadingForm() {
                                     <input
                                         type="text"
                                         value={userAnswers[i] || ""}
-                                        onChange={(e) => handleChange(e.target.value, i)}
+                                        onChange={(e) =>
+                                            handleChange(e.target.value, i)
+                                        }
                                         disabled={!!results}
                                     />
                                 ) : inputTypes[i] === "select:yn" ? (
                                     <select
                                         value={userAnswers[i] || ""}
-                                        onChange={(e) => handleChange(e.target.value, i)}
+                                        onChange={(e) =>
+                                            handleChange(e.target.value, i)
+                                        }
                                         disabled={!!results}
                                     >
                                         <option value=""></option>
@@ -261,7 +250,9 @@ function ReadingForm() {
                                 ) : (
                                     <select
                                         value={userAnswers[i] || ""}
-                                        onChange={(e) => handleChange(e.target.value, i)}
+                                        onChange={(e) =>
+                                            handleChange(e.target.value, i)
+                                        }
                                         disabled={!!results}
                                     >
                                         <option value=""></option>
@@ -273,7 +264,9 @@ function ReadingForm() {
 
                             {results &&
                                 (results[i] ? (
-                                    <span style={{ color: "green", marginLeft: "8px" }}>✅</span>
+                                    <span style={{ color: "green", marginLeft: "8px" }}>
+                                        ✅
+                                    </span>
                                 ) : (
                                     <span style={{ color: "red", marginLeft: "8px" }}>
                                         ❌ To‘g‘ri javob:{" "}

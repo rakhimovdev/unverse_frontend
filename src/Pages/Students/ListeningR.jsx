@@ -1,5 +1,5 @@
 import axios from "../../Api/Axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "./Students.css"; // 👉 CSS alohida faylga chaqirilgan
 
 function ListeningR() {
@@ -7,13 +7,14 @@ function ListeningR() {
     const token = localStorage.getItem("token");
 
     // 📌 Barcha scorelarni olish
-    const fetchScores = () => {
-        axios.get("/scorel/all", {
-            headers: { Authorization: `Bearer ${token}` },
-        })
+    const fetchScores = useCallback(() => {
+        axios
+            .get("/scorel/all", {
+                headers: { Authorization: `Bearer ${token}` },
+            })
             .then((res) => setData(res.data))
             .catch((err) => console.error(err.response?.data || err.message));
-    };
+    }, [token]);
 
     // 📌 Score o‘chirish
     const deleteScore = async (id) => {
@@ -23,17 +24,17 @@ function ListeningR() {
             await axios.delete(`/scorel/delete/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
             // O‘chirilgandan keyin listni yangilash
-            setData(data.filter((s) => s._id !== id));
+            setData((prev) => prev.filter((s) => s._id !== id));
         } catch (err) {
             console.error(err.response?.data || err.message);
         }
     };
 
+    // useEffect dependency’da fetchScores qo‘shildi
     useEffect(() => {
         fetchScores();
-    }, []);
+    }, [fetchScores]);
 
     return (
         <div className="students-container">
@@ -58,10 +59,10 @@ function ListeningR() {
                                 <td>{student.testName || "N/A"}</td>
                                 <td>{student.score}</td>
                                 <td>
-
                                     <button
                                         className="delete-btn1"
-                                        onClick={() => deleteScore(student._id)}>
+                                        onClick={() => deleteScore(student._id)}
+                                    >
                                         Delete
                                     </button>
                                 </td>

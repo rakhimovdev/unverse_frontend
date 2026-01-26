@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "../../Api/Axios";
 import "./Solving.css";
@@ -9,38 +9,26 @@ function ListeningTest() {
     const [userAnswers, setUserAnswers] = useState([]);
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
-    const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
-
     const imgRef = useRef(null);
 
     // 🔹 Testni olish
     useEffect(() => {
-        axios
-            .get(`/testl/info/${id}`)
-            .then((res) => {
+        const fetchTest = async () => {
+            try {
+                const res = await axios.get(`/testl/info/${id}`);
                 if (!res.data) {
                     setError("Test ma'lumotlari topilmadi.");
                     return;
                 }
-                console.log("Test ma'lumotlari:", res.data);
                 setTest(res.data);
                 setUserAnswers(Array((res.data.questions || []).length).fill(""));
-            })
-            .catch((err) => {
+            } catch (err) {
                 console.error("Test yuklashda xatolik:", err);
                 setError("Test yuklashda xatolik yuz berdi.");
-            });
+            }
+        };
+        fetchTest();
     }, [id]);
-
-    // 🔹 Rasm yuklanganda o‘lcham olish
-    const handleImageLoad = () => {
-        if (imgRef.current) {
-            setImgSize({
-                width: imgRef.current.offsetWidth,
-                height: imgRef.current.offsetHeight,
-            });
-        }
-    };
 
     const handleChange = (val, index) => {
         const updated = [...userAnswers];
@@ -56,28 +44,30 @@ function ListeningTest() {
     };
 
     // 🔹 Javoblarni tekshirish
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         if (!test?.questions || results) return;
+
         const check = userAnswers.map((ans, idx) => {
             const correct = normalizeAnswer(
                 test.questions[idx]?.value?.trim().toLowerCase() || ""
             );
             return normalizeAnswer(ans) === correct;
         });
+
         setResults(check);
         const score = check.filter((r) => r).length;
 
         try {
             await axios.post(
                 "/scorel/add",
-                { listeningId: test._id, score }, // ✅ to‘g‘rilandi
+                { listeningId: test._id, score },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
             );
             console.log("Score saqlandi ✅");
         } catch (err) {
             console.error("Score saqlashda xato:", err.response?.data || err);
         }
-    };
+    }, [test, userAnswers, results]);
 
     if (error) return <p style={{ color: "red" }}>{error}</p>;
     if (!test) return <p>Loading test...</p>;
@@ -101,24 +91,22 @@ function ListeningTest() {
                     </audio>
                 </div>
 
-                {/* Rasm + joylashtirilgan inputlar */}
+                {/* Rasm + Inputlar */}
                 {test.imageUrl && (
                     <div className="test-image" style={{ position: "relative" }}>
                         <img
                             ref={imgRef}
                             src={test.imageUrl}
                             alt="listening"
-                            onLoad={handleImageLoad}
                         />
 
-                        {/* 🔹 Inputlarni joylashuv bo‘yicha chiqarish */}
                         {(test.questions || []).map((q, i) => (
                             <div
                                 key={i}
                                 style={{
                                     position: "absolute",
-                                    top: `${q.top * 100 + -.8}%`,
-                                    left: `${q.left * 100 + -15.5}%`,
+                                    top: `${q.top * 100}%`,
+                                    left: `${q.left * 100}%`,
                                     width: `${q.width * 100}%`,
                                 }}
                             >
@@ -162,7 +150,7 @@ function ListeningTest() {
                                     (results[i] ? (
                                         <span style={{ color: "green", marginLeft: "8px" }}>✅</span>
                                     ) : (
-                                        <span style={{ color: "red", marginLeft: "8px", backgroundColor: "#ccccccd5", }}>
+                                        <span style={{ color: "red", marginLeft: "8px", backgroundColor: "#ccccccd5" }}>
                                             ❌ To‘g‘ri javob: <b>{test.questions[i]?.value}</b>
                                         </span>
                                     ))}

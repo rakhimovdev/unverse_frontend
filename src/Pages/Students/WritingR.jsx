@@ -1,40 +1,41 @@
 import axios from "../../Api/Axios";
-import { useEffect, useState } from "react";
-import "./Students.css"; // 👉 CSS alohida faylga chaqirilgan
+import { useEffect, useState, useCallback } from "react";
+import "./Students.css";
 
 function WritingR() {
     const [data, setData] = useState([]);
     const token = localStorage.getItem("token");
-    console.log(data)
 
     // 📌 Barcha scorelarni olish
-    const fetchScores = () => {
-        axios.get("/scorew/all", {
-            headers: { Authorization: `Bearer ${token}` },
-        })
+    const fetchScores = useCallback(() => {
+        axios
+            .get("/scorew/all", {
+                headers: { Authorization: `Bearer ${token}` },
+            })
             .then((res) => setData(res.data))
             .catch((err) => console.error(err.response?.data || err.message));
-    };
+    }, [token]);
 
     // 📌 Score o‘chirish
     const deleteScore = async (id) => {
         if (!window.confirm("Rostdan ham o‘chirmoqchimisiz?")) return;
 
         try {
-            await axios.delete(`/scorel/delete/${id}`, {
+            await axios.delete(`/scorew/delete/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             // O‘chirilgandan keyin listni yangilash
-            setData(data.filter((s) => s._id !== id));
+            setData((prev) => prev.filter((s) => s._id !== id));
         } catch (err) {
             console.error(err.response?.data || err.message);
         }
     };
 
+    // useEffect dependency’da fetchScores qo‘shildi
     useEffect(() => {
         fetchScores();
-    }, []);
+    }, [fetchScores]);
 
     return (
         <div className="students-container">
@@ -59,10 +60,10 @@ function WritingR() {
                                 <td>{student.topic || "N/A"}</td>
                                 <td>{student.score}</td>
                                 <td>
-
                                     <button
                                         className="delete-btn1"
-                                        onClick={() => deleteScore(student._id)}>
+                                        onClick={() => deleteScore(student._id)}
+                                    >
                                         Delete
                                     </button>
                                 </td>
