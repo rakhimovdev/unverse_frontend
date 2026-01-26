@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "../../Api/Axios";
 import "./Solving.css";
 
@@ -11,10 +11,11 @@ function FillInTheBlankTest() {
     const [readingText, setReadingText] = useState("");
     const [saveMode, setSaveMode] = useState("full");
 
+    // Oxirgi testni olish
     useEffect(() => {
-        axios
-            .get("/user/tests/last")
-            .then((res) => {
+        const fetchLastTest = async () => {
+            try {
+                const res = await axios.get("/user/tests/last");
                 const d = res.data || {};
                 if (d.testText) setTestText(d.testText);
                 if (d.name) setTestName(d.name);
@@ -28,13 +29,22 @@ function FillInTheBlankTest() {
                         }))
                     );
                 }
-            })
-            .catch(() => { });
+            } catch {
+                console.error("Oxirgi testni olishda xatolik yuz berdi");
+            }
+        };
+        fetchLastTest();
     }, []);
 
-    const inputMatches = [...testText.matchAll(/\[\[(input(?::(\w+))?|select(?::yn)?)\]\]/g)];
+    // input/select joylarini aniqlash (ESLint warning tuzatildi)
+    const inputMatches = useMemo(
+        () => [...testText.matchAll(/\[\[(input(?::(\w+))?|select(?::yn)?)\]\]/g)],
+        [testText]
+    );
+
     const inputCount = inputMatches.length;
 
+    // answers massivini inputCount ga moslash
     useEffect(() => {
         setAnswers((prev) => {
             const arr = [...prev];
@@ -55,8 +65,9 @@ function FillInTheBlankTest() {
             }
             return arr.slice(0, inputCount);
         });
-    }, [testText, inputCount, inputMatches]);
+    }, [inputMatches, inputCount]);
 
+    // Javob o‘zgartirish
     const handleAnswerChange = (idx, value) => {
         setAnswers((prev) => {
             const arr = [...prev];
@@ -65,12 +76,14 @@ function FillInTheBlankTest() {
         });
     };
 
+    // Barcha inputlarni tozalash
     const handleClearInputs = () => {
         setTestName("");
         setReadingText("");
         setTestText("");
     };
 
+    // Savol ko‘rinishi
     const renderQuestion = () => {
         const parts = testText.split(/\[\[(?:input(?::\w+)?|select(?::yn)?)\]\]/g);
         const elements = [];
@@ -79,16 +92,8 @@ function FillInTheBlankTest() {
             elements.push(<span key={`text-${i}`}>{parts[i]}</span>);
             if (i < inputCount) {
                 const match = inputMatches[i];
-                let type = "text";
-                let rawType = "text";
-
-                if (match[1].startsWith("input")) {
-                    type = match[2] || "text";
-                    rawType = "input:" + (match[2] || "text");
-                } else if (match[1].startsWith("select")) {
-                    type = "select";
-                    rawType = match[1];
-                }
+                let type = match[1].startsWith("input") ? (match[2] || "text") : "select";
+                let rawType = match[1].startsWith("input") ? "input:" + (match[2] || "text") : match[1];
 
                 if (type === "text") {
                     elements.push(
@@ -141,6 +146,7 @@ function FillInTheBlankTest() {
         return elements;
     };
 
+    // Testni yuborish
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {

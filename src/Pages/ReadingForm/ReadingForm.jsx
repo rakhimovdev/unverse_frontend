@@ -16,8 +16,6 @@ function ReadingForm() {
     const textRef = useRef(null);
     const [buttonPos, setButtonPos] = useState(null);
 
-    const toggleDropdown = () => setOpen(!open);
-
     // Barcha testlarni olish
     useEffect(() => {
         const getApi = async () => {
@@ -233,6 +231,7 @@ function ReadingForm() {
                                             handleChange(e.target.value, i)
                                         }
                                         disabled={!!results}
+                                        aria-label={`Answer ${i + 1}`}
                                     />
                                 ) : inputTypes[i] === "select:yn" ? (
                                     <select
@@ -241,6 +240,7 @@ function ReadingForm() {
                                             handleChange(e.target.value, i)
                                         }
                                         disabled={!!results}
+                                        aria-label={`Choice ${i + 1}`}
                                     >
                                         <option value=""></option>
                                         <option value="yes">Yes</option>
@@ -254,6 +254,7 @@ function ReadingForm() {
                                             handleChange(e.target.value, i)
                                         }
                                         disabled={!!results}
+                                        aria-label={`Choice ${i + 1}`}
                                     >
                                         <option value=""></option>
                                         <option value="true">True</option>
