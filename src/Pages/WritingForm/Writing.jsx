@@ -4,12 +4,9 @@ import { useNavigate } from "react-router-dom";
 import "./Writing.css";
 
 function Writing() {
-    const [tests, setTests] = useState([]);
     const [uploadedTests, setUploadedTests] = useState([]);
-    console.log(uploadedTests);
     const navigate = useNavigate();
 
-    const isAuthenticated = !!localStorage.getItem("token");
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
     const fetchTests = () => {
@@ -24,6 +21,7 @@ function Writing() {
     useEffect(() => {
         fetchTests();
     }, []);
+
     const handleDelete = async (id) => {
         if (userRole === "teacher" || userRole === "admin") {
             if (window.confirm("Testni o‘chirishni istaysizmi?")) {
@@ -33,11 +31,10 @@ function Writing() {
                 } catch (err) {
                     alert("❌ O‘chirishda xatolik yuz berdi!");
                 }
-            } else {
-                alert("Siz testni o‘chira olmaysiz!");
             }
+        } else {
+            alert("Siz testni o‘chira olmaysiz!");
         }
-
     }
 
     return (
