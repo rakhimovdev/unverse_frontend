@@ -1,4 +1,3 @@
-// Updated FillInTheBlankTest component with "Full Test" or "Part" select before saving
 import React, { useState, useEffect } from "react";
 import axios from "../../Api/Axios";
 import "./Solving.css";
@@ -10,8 +9,6 @@ function FillInTheBlankTest() {
     );
     const [answers, setAnswers] = useState([]);
     const [readingText, setReadingText] = useState("");
-
-    // NEW → Saving mode: full-test or part
     const [saveMode, setSaveMode] = useState("full");
 
     useEffect(() => {
@@ -58,7 +55,7 @@ function FillInTheBlankTest() {
             }
             return arr.slice(0, inputCount);
         });
-    }, [testText, inputCount]);
+    }, [testText, inputCount, inputMatches]);
 
     const handleAnswerChange = (idx, value) => {
         setAnswers((prev) => {
@@ -102,6 +99,7 @@ function FillInTheBlankTest() {
                             value={answers[i]?.value || ""}
                             onChange={(e) => handleAnswerChange(i, e.target.value)}
                             placeholder="Javob"
+                            aria-label={`Answer ${i + 1}`}
                         />
                     );
                 } else if (type === "select") {
@@ -112,6 +110,7 @@ function FillInTheBlankTest() {
                                 value={answers[i]?.value || ""}
                                 onChange={(e) => handleAnswerChange(i, e.target.value)}
                                 className="choice-select"
+                                aria-label={`Choice ${i + 1}`}
                             >
                                 <option value="">-- Tanlang --</option>
                                 <option value="yes">Yes</option>
@@ -126,6 +125,7 @@ function FillInTheBlankTest() {
                                 value={answers[i]?.value || ""}
                                 onChange={(e) => handleAnswerChange(i, e.target.value)}
                                 className="choice-select"
+                                aria-label={`Choice ${i + 1}`}
                             >
                                 <option value="">-- Tanlang --</option>
                                 <option value="true">True</option>
@@ -147,7 +147,7 @@ function FillInTheBlankTest() {
             await axios.post("/test/upload", {
                 name: testName,
                 testText,
-                mode: saveMode, // NEW → send full or part to backend
+                mode: saveMode,
                 questions: answers.map((ans, idx) => ({
                     id: idx + 1,
                     value: ans.value,
@@ -165,13 +165,11 @@ function FillInTheBlankTest() {
         <div className="container">
             <h2>To‘ldirish uchun savol</h2>
 
-            {/* NEW → Save type selection */}
             <label>Saqlash turi:</label>
             <select
                 value={saveMode}
                 onChange={(e) => setSaveMode(e.target.value)}
                 className="save-mode-select"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
             >
                 <option value="full">Full Test</option>
                 <option value="part">Part</option>
