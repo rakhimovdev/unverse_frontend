@@ -4,15 +4,15 @@ import './index.css';
 import App from './App';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import SignIn from './Pages/Sign_in/SignIn';
-import SignUp from './Pages/Sign_up/SignUp';
+import SignIn from './Pages/Sign_in/Sign_in';
+import SignUp from './Pages/Sign_up/Sign_up';
 import ReadingForm from './Pages/ReadingForm/ReadingForm';
 import Reading from './Pages/Reading/Banner';
 import Navbar from './components/Navbar/Navbar';
 import Account from './Pages/Account/Account';
 import Select from './Pages/Select/Select';
-import TeacherIn from './Pages/Teacher_up/TeacherIn';
-import SelectIn from './Pages/Select_in/SelectIn';
+import TeacherIn from './Pages/Teacher_up/Teacher_in';
+import SelectIn from './Pages/Select_in/Select_in';
 import Teacher from './Pages/Teacher/Teacher';
 import TeachAcc from './Pages/Teacher_acc/TeachAcc';
 import Solving from './Pages/Solving/Solving';
@@ -25,7 +25,7 @@ import Writing from './Pages/Writing/Writing';
 import Home from './Pages/Home/Home';
 import WritingForm from './Pages/WritingForm/Writing';
 import WritingPage from './Pages/WritingPage/Index';
-import WResult from './Pages/Writing_resault/WResult';
+import WResult from './Pages/Writing_resault/wResault';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
