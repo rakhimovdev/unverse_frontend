@@ -1,233 +1,422 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import axios from "../../Api/Axios";
+
 import "./Solving.css";
 
-function FillInTheBlankTest() {
-    const [testName, setTestName] = useState("");
-    const [testText, setTestText] = useState(
-        "2 + 2 = [[input]]\nBu gap rostmi? [[select]]\nYoki: [[input:text]]\nHa/Yo‘q savol: [[select:yn]]"
-    );
+/* ================= PREVIEW ================= */
+
+function Preview({ passage, testName }) {
     const [answers, setAnswers] = useState([]);
-    const [readingText, setReadingText] = useState("");
-    const [saveMode, setSaveMode] = useState("full");
 
-    // Oxirgi testni olish
+    const html = passage.testText || "";
+  const markerRegex =
+    /\[\[(input|select(?::yn)?|radio(?::[^\]]+)?|redio(?::[^\]]+)?)\]\]/g;
+
+    const renderQuestionHTML = () => {
+        let index = 0;
+        let lastIndex = 0;
+        const nodes = [];
+        let match;
+
+    while ((match = markerRegex.exec(html))) {
+      const token = match[1].replace(/^redio/, "radio");
+
+      nodes.push(
+        <span
+          key={`text-${index}`}
+          dangerouslySetInnerHTML={{
+            __html: html.slice(lastIndex, match.index),
+          }}
+        />
+      );
+
+      if (token === "input") {
+        nodes.push(
+          <input
+            key={`input-${index}`}
+            value={answers[index] || ""}
+            onChange={(e) => {
+                            const copy = [...answers];
+                            copy[index] = e.target.value;
+                            setAnswers(copy);
+                        }}
+                    />
+                );
+            }
+
+      if (token.startsWith("select")) {
+        nodes.push(
+          <select
+            key={`select-${index}`}
+            value={answers[index] || ""}
+            onChange={(e) => {
+              const copy = [...answers];
+              copy[index] = e.target.value;
+              setAnswers(copy);
+            }}
+          >
+            <option value=""></option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+            <option value="not given">Not Given</option>
+          </select>
+        );
+      }
+
+      if (token.startsWith("radio")) {
+        const optionString = token.startsWith("radio:")
+          ? token.slice("radio:".length)
+          : "A|B|C|D";
+        const options = optionString
+          .split("|")
+          .map((opt) => opt.trim())
+          .filter(Boolean);
+
+        nodes.push(
+          <span key={`radio-${index}`}>
+            {options.map((opt, optIndex) => (
+              <label key={`radio-${index}-${optIndex}`}>
+                <input
+                  type="radio"
+                  name={`radio-${index}`}
+                  value={opt}
+                  checked={answers[index] === opt}
+                  onChange={(e) => {
+                    const copy = [...answers];
+                    copy[index] = e.target.value;
+                    setAnswers(copy);
+                  }}
+                />
+                {opt}
+              </label>
+            ))}
+          </span>
+        );
+      }
+
+      lastIndex = markerRegex.lastIndex;
+      index++;
+    }
+
+        nodes.push(
+            <span
+                key="end"
+                dangerouslySetInnerHTML={{
+                    __html: html.slice(lastIndex),
+                }}
+            />
+        );
+
+        return nodes;
+    };
+
     useEffect(() => {
-        const fetchLastTest = async () => {
-            try {
-                const res = await axios.get("/user/tests/last");
-                const d = res.data || {};
-                if (d.testText) setTestText(d.testText);
-                if (d.name) setTestName(d.name);
-                if (d.readingText) setReadingText(d.readingText);
-                if (Array.isArray(d.questions)) {
-                    setAnswers(
-                        d.questions.map((q) => ({
-                            value: q.value || "",
-                            type: q.type || "text",
-                            rawType: q.type || "text",
-                        }))
-                    );
-                }
-            } catch {
-                console.error("Oxirgi testni olishda xatolik yuz berdi");
-            }
-        };
-        fetchLastTest();
-    }, []);
-
-    // input/select joylarini aniqlash (ESLint warning tuzatildi)
-    const inputMatches = useMemo(
-        () => [...testText.matchAll(/\[\[(input(?::(\w+))?|select(?::yn)?)\]\]/g)],
-        [testText]
-    );
-
-    const inputCount = inputMatches.length;
-
-    // answers massivini inputCount ga moslash
-    useEffect(() => {
-        setAnswers((prev) => {
-            const arr = [...prev];
-            while (arr.length < inputCount) {
-                const match = inputMatches[arr.length];
-                let type = "text";
-                let rawType = "text";
-
-                if (match[1].startsWith("input")) {
-                    type = match[2] || "text";
-                    rawType = "input:" + (match[2] || "text");
-                } else if (match[1].startsWith("select")) {
-                    type = "select";
-                    rawType = match[1];
-                }
-
-                arr.push({ value: "", type, rawType });
-            }
-            return arr.slice(0, inputCount);
-        });
-    }, [inputMatches, inputCount]);
-
-    // Javob o‘zgartirish
-    const handleAnswerChange = (idx, value) => {
-        setAnswers((prev) => {
-            const arr = [...prev];
-            arr[idx] = { ...arr[idx], value };
-            return arr;
-        });
-    };
-
-    // Barcha inputlarni tozalash
-    const handleClearInputs = () => {
-        setTestName("");
-        setReadingText("");
-        setTestText("");
-    };
-
-    // Savol ko‘rinishi
-    const renderQuestion = () => {
-        const parts = testText.split(/\[\[(?:input(?::\w+)?|select(?::yn)?)\]\]/g);
-        const elements = [];
-
-        for (let i = 0; i < parts.length; i++) {
-            elements.push(<span key={`text-${i}`}>{parts[i]}</span>);
-            if (i < inputCount) {
-                const match = inputMatches[i];
-                let type = match[1].startsWith("input") ? (match[2] || "text") : "select";
-                let rawType = match[1].startsWith("input") ? "input:" + (match[2] || "text") : match[1];
-
-                if (type === "text") {
-                    elements.push(
-                        <input
-                            key={`input-text-${i}`}
-                            type="text"
-                            className="blank-input"
-                            value={answers[i]?.value || ""}
-                            onChange={(e) => handleAnswerChange(i, e.target.value)}
-                            placeholder="Javob"
-                            aria-label={`Answer ${i + 1}`}
-                        />
-                    );
-                } else if (type === "select") {
-                    if (rawType === "select:yn") {
-                        elements.push(
-                            <select
-                                key={`input-select-yn-${i}`}
-                                value={answers[i]?.value || ""}
-                                onChange={(e) => handleAnswerChange(i, e.target.value)}
-                                className="choice-select"
-                                aria-label={`Choice ${i + 1}`}
-                            >
-                                <option value="">-- Tanlang --</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                                <option value="not given">Not Given</option>
-                            </select>
-                        );
-                    } else {
-                        elements.push(
-                            <select
-                                key={`input-select-${i}`}
-                                value={answers[i]?.value || ""}
-                                onChange={(e) => handleAnswerChange(i, e.target.value)}
-                                className="choice-select"
-                                aria-label={`Choice ${i + 1}`}
-                            >
-                                <option value="">-- Tanlang --</option>
-                                <option value="true">True</option>
-                                <option value="false">False</option>
-                                <option value="not given">Not Given</option>
-                            </select>
-                        );
-                    }
-                }
-            }
-        }
-
-        return elements;
-    };
-
-    // Testni yuborish
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post("/test/upload", {
-                name: testName,
-                testText,
-                mode: saveMode,
-                questions: answers.map((ans, idx) => ({
-                    id: idx + 1,
-                    value: ans.value,
-                    type: ans.type,
-                })),
-                readingText,
-            });
-            alert("✅ Test va javoblar yuklandi!");
-        } catch (err) {
-            alert("❌ Xatolik: " + (err.response?.data?.error || err.message));
-        }
-    };
+        const count = (html.match(markerRegex) || []).length;
+        setAnswers(Array(count).fill(""));
+    }, [html]);
 
     return (
-        <div className="container">
-            <h2>To‘ldirish uchun savol</h2>
+        <div className="readingform-blue">
+            <header className="reading-header">
+                <h1>{testName}</h1>
+                <div className="timer">⏱ 60:00</div>
+            </header>
 
-            <label>Saqlash turi:</label>
-            <select
-                value={saveMode}
-                onChange={(e) => setSaveMode(e.target.value)}
-                className="save-mode-select"
-            >
-                <option value="full">Full Test</option>
-                <option value="part">Part</option>
-            </select>
+            <div className="container-blue">
+                <div
+                    className="reading-half"
+                    dangerouslySetInnerHTML={{
+                        __html: passage.readingText,
+                    }}
+                />
 
-            <input
-                type="text"
-                className="test-name-input"
-                value={testName}
-                onChange={(e) => setTestName(e.target.value)}
-                placeholder="Test nomini kiriting"
-            />
-
-            <div className="out_textarea">
-                <div className="textarea1">
-                    <label>Reading matni:</label>
-                    <textarea
-                        className="reading-textarea"
-                        rows={6}
-                        value={readingText}
-                        onChange={(e) => setReadingText(e.target.value)}
-                        placeholder="Reading matnini yozing..."
-                    />
-                </div>
-                <div className="textarea2">
-                    <label>Savol matni:</label>
-                    <textarea
-                        className="test-textarea"
-                        rows={5}
-                        value={testText}
-                        onChange={(e) => setTestText(e.target.value)}
-                        placeholder="Savolingizni yozing..."
-                    />
-                </div>
+                <div className="test-half">{renderQuestionHTML()}</div>
             </div>
-
-            <div className="question-preview" style={{ whiteSpace: "pre-wrap" }}>
-                <strong>Ko‘rinishi:</strong>
-                <div className="view" style={{ marginTop: "1rem" }}>{renderQuestion()}</div>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-                <button type="button" onClick={handleClearInputs} className="clear-btn">
-                    Tozalash
-                </button>
-
-                <button type="submit" className="upload-btn">
-                    Yuborish
-                </button>
-            </form>
         </div>
     );
 }
 
-export default FillInTheBlankTest;
+/* ================= MAIN ================= */
+
+const emptyPassage = {
+    readingText: "",
+    testText: "",
+};
+
+export default function CreateReadingTest() {
+    const [testName, setTestName] = useState("");
+    const [activePassage, setActivePassage] = useState(0);
+    const [showPreview, setShowPreview] = useState(false);
+
+    const [passages, setPassages] = useState([
+        { ...emptyPassage },
+        { ...emptyPassage },
+        { ...emptyPassage },
+    ]);
+
+    const editorRef = useRef(null);
+    const questionEditorRef = useRef(null);
+
+    const [toolbar, setToolbar] = useState(null);
+    const [toolbarPos, setToolbarPos] = useState({
+        top: 0,
+        left: 0,
+    });
+
+    const current = passages[activePassage];
+
+    /* ================= ENTER FIX ================= */
+
+    const handleEnter = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+
+            const range = sel.getRangeAt(0);
+            const br = document.createElement("br");
+
+            range.insertNode(br);
+            range.setStartAfter(br);
+            range.setEndAfter(br);
+
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    };
+
+    /* ================= SHORTCUTS ================= */
+
+    const handleKeyDown = (e) => {
+        if (e.ctrlKey && e.key === "b") {
+            e.preventDefault();
+            applyFormat("bold");
+        }
+
+        if (e.key === "Enter") {
+            handleEnter(e);
+        }
+    };
+
+    /* ================= SELECT ================= */
+
+    const handleSelect = () => {
+        setTimeout(() => {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+
+            const range = sel.getRangeAt(0);
+
+            if (range.collapsed) {
+                setToolbar(null);
+                return;
+            }
+
+            const rect = range.getBoundingClientRect();
+
+            setToolbar(true);
+
+            setToolbarPos({
+                top: rect.top - 40,
+                left: rect.left,
+            });
+        }, 0);
+    };
+
+    /* ================= APPLY FORMAT ================= */
+
+    const applyFormat = (type) => {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+
+        const range = sel.getRangeAt(0);
+        const span = document.createElement("span");
+
+        if (type === "bold") span.className = "highlight-bold";
+        if (type === "large") span.className = "highlight-large";
+
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
+
+        sel.removeAllRanges();
+
+        setToolbar(null);
+    };
+
+    /* ================= REMOVE FORMAT ================= */
+
+    const removeFormat = () => {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+
+        const range = sel.getRangeAt(0);
+        let node = range.commonAncestorContainer;
+
+        if (node.nodeType === 3) node = node.parentNode;
+
+        if (
+            node.classList &&
+            (node.classList.contains("highlight-bold") ||
+                node.classList.contains("highlight-large"))
+        ) {
+            const parent = node.parentNode;
+
+            while (node.firstChild) {
+                parent.insertBefore(node.firstChild, node);
+            }
+
+            parent.removeChild(node);
+        }
+
+        setToolbar(null);
+    };
+
+    /* ================= SAVE ================= */
+
+    const saveCurrentPassage = () => {
+        setPassages((prev) => {
+            const copy = [...prev];
+
+            copy[activePassage] = {
+                readingText: editorRef.current.innerHTML,
+                testText: questionEditorRef.current.innerHTML,
+            };
+
+            return copy;
+        });
+    };
+
+    useEffect(() => {
+        editorRef.current.innerHTML = current.readingText;
+        questionEditorRef.current.innerHTML = current.testText;
+    }, [activePassage]);
+
+    const handleSave = async () => {
+        saveCurrentPassage();
+
+        await axios.post("/test/upload", {
+            name: testName,
+            passages,
+        });
+
+        alert("Saved");
+    };
+
+    /* ================= UI ================= */
+
+    return (
+        <div className="create-test-container">
+            <h1>IELTS Reading Test Creator</h1>
+
+            {/* PASSAGE TABS */}
+            <div className="passage-tabs">
+                {passages.map((_, i) => (
+                    <button
+                        key={i}
+                        className={i === activePassage ? "active" : ""}
+                        onClick={() => {
+                            saveCurrentPassage();
+                            setActivePassage(i);
+                        }}
+                    >
+                        Passage {i + 1}
+                    </button>
+                ))}
+            </div>
+
+            {/* TEST NAME */}
+            <div className="test-name-container">
+                <label className="test-name-label">Test Name</label>
+
+                <input
+                    type="text"
+                    className="test-name-input"
+                    placeholder="Enter test name..."
+                    value={testName}
+                    onChange={(e) => setTestName(e.target.value)}
+                />
+            </div>
+
+            {/* EDITORS */}
+            <div className="split-screen">
+                <div className="left">
+                    <h3>Reading</h3>
+
+                    <div
+                        ref={editorRef}
+                        className="reading-editor"
+                        contentEditable
+                        onMouseUp={handleSelect}
+                        onKeyDown={handleKeyDown}
+                    />
+                </div>
+
+                <div className="right">
+                    <h3>Questions</h3>
+
+                    <div
+                        ref={questionEditorRef}
+                        className="question-editor"
+                        contentEditable
+                        onMouseUp={handleSelect}
+                        onKeyDown={handleKeyDown}
+                    />
+                </div>
+            </div>
+
+            {/* TOOLBAR */}
+            {toolbar && (
+                <div className="selection-buttons" style={toolbarPos}>
+                    <button
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            removeFormat();
+                        }}
+                    >
+                        Oddiy
+                    </button>
+
+                    <button
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyFormat("bold");
+                        }}
+                    >
+                        Bold
+                    </button>
+
+                    <button
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyFormat("large");
+                        }}
+                    >
+                        Large
+                    </button>
+                </div>
+            )}
+
+            {/* ACTIONS */}
+            <div className="actions">
+                <button className="save-btn" onClick={handleSave}>
+                    Save
+                </button>
+
+                <button
+                    className="preview-btn"
+                    onClick={() => {
+                        saveCurrentPassage();
+                        setShowPreview(!showPreview);
+                    }}
+                >
+                    Preview
+                </button>
+            </div>
+
+            {/* PREVIEW */}
+            {showPreview && <Preview testName={testName} passage={current} />}
+        </div>
+    );
+}

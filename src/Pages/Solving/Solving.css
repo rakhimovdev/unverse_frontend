@@ -1,40 +1,267 @@
-.container {
-    width: 100%;
-    height: 90vh;
+/* ================= LAYOUT ================= */
+
+.create-test-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* ================= PASSAGE TABS ================= */
+
+.passage-tabs {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f0f0;
-    border: 2px solid #ccc;
-    flex-direction: column;
+    gap: 10px;
+    margin: 15px 0 20px;
 }
 
-.out_textarea {
+.passage-tabs button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: #e5e7eb;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.passage-tabs button.active {
+    background: #2563eb;
+    color: #fff;
+}
+
+/* ================= SPLIT SCREEN ================= */
+
+.split-screen {
     display: flex;
-    width: 95%;
-    height: 900px;
-    border: 2px solid red;
-    align-items: center;
-    justify-content: space-around;
+    gap: 20px;
 }
 
-.textarea1 {
-    width: 48%;
+/* ================= EDITOR CONTAINERS ================= */
+
+.left,
+.right {
+    width: 50%;
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 10px;
 }
 
-.textarea2 {
-    width: 48%;
+/* ================= EDITORS ================= */
+
+.reading-editor,
+.question-editor {
+    min-height: 240px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    outline: none;
 }
 
-.reading-textarea,
-.test-textarea {
-    width: 100%;
-    height: 700px;
-    padding: 8px;
+/* paragraph spacing */
+.reading-editor div,
+.question-editor div {
+    margin-bottom: 10px;
+}
+
+/* ================= TEXT FORMATTING ================= */
+
+.highlight-bold {
+    font-weight: 800;
+}
+
+.highlight-large {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: block;
+    margin-top: 12px;
+}
+
+/* ================= SELECTION TOOLBAR ================= */
+/* 🔥 ENG MUHIM QISM */
+
+.selection-buttons {
+    position: fixed;
+    /* viewportga nisbatan */
+    display: flex;
+    gap: 6px;
+    background: #2563eb;
+    padding: 6px;
+    border-radius: 6px;
+    z-index: 999999;
+    /* hammasidan ustun */
+}
+
+.selection-buttons button {
+    background: #ffffff;
+    color: #2563eb;
+    border: none;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    pointer-events: all;
+    /* selection yo‘qolmasin */
+}
+
+.selection-buttons button:hover {
+    background: #e5e7eb;
+}
+
+/* ================= ACTION BUTTONS ================= */
+
+.actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.save-btn {
+    padding: 10px 18px;
     font-size: 16px;
-    background: #f9f9f9;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
-.reading-textarea {
-    /* margin-top: -10px; */
+.preview-btn {
+    padding: 10px 18px;
+    font-size: 16px;
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* ================= PREVIEW ================= */
+
+.readingform-blue {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f4f7fb;
+    border-radius: 12px;
+}
+
+.reading-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.reading-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.timer {
+    font-size: 14px;
+    color: #374151;
+}
+
+/* preview layout */
+
+.container-blue {
+    display: flex;
+    gap: 20px;
+}
+
+.container-blue .reading-half,
+.container-blue .test-half {
+    width: 50%;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+/* preview inputs */
+
+.container-blue input,
+.container-blue select {
+    margin-left: 6px;
+    padding: 4px 6px;
+    font-size: 14px;
+}
+
+/* preview highlight */
+
+.container-blue .highlight-bold {
+    font-weight: 800;
+}
+
+.container-blue .highlight-large {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: block;
+    margin-top: 12px;
+}
+
+
+.reading-editor,
+.question-editor {
+
+    min-height: 240px;
+
+    padding: 12px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+
+    background: #fff;
+
+    line-height: 1.7;
+
+    outline: none;
+}
+
+
+.highlight-bold {
+
+    font-weight: bold;
+}
+
+
+.highlight-large {
+
+    font-size: 22px;
+
+    font-weight: bold;
+}
+
+
+.selection-buttons {
+
+    position: fixed;
+
+    background: #2563eb;
+
+    padding: 6px;
+
+    border-radius: 6px;
+
+    display: flex;
+
+    gap: 5px;
+
+    z-index: 9999;
+}
+
+
+.selection-buttons button {
+    background: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-weight: bold;
 }

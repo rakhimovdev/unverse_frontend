@@ -1,317 +1,203 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import "./ReadingForm.css";
+import React, { useCallback, useEffect, useState } from "react";
+
 import { FaClock } from "react-icons/fa6";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+
 import axios from "../../Api/Axios";
+
+import "./ReadingForm.css";
 
 function ReadingForm() {
     const { testId } = useParams();
-    const [open, setOpen] = useState(false);
+
+    /* ================= STATE ================= */
+
     const [test, setTest] = useState(null);
+    const [activePassage, setActivePassage] = useState(0);
     const [userAnswers, setUserAnswers] = useState([]);
-    const [results, setResults] = useState(null);
-    const [error, setError] = useState(null);
-    const [data, setData] = useState([]);
-    const [secondsLeft, setSecondsLeft] = useState(1200);
-    const textRef = useRef(null);
-    const [buttonPos, setButtonPos] = useState(null);
+    const [secondsLeft, setSecondsLeft] = useState(3600);
 
-    // Barcha testlarni olish
+    /* ================= LOAD TEST ================= */
+
     useEffect(() => {
-        const getApi = async () => {
-            try {
-                const res = await axios.get(`/test/all`);
-                setData(res.data);
-            } catch {
-                console.error("Barcha testlarni olishda xatolik");
-            }
-        };
-        getApi();
-    }, []);
+        axios
+            .get(`/test/${testId}`)
+            .then((res) => {
+                const data = res.data;
+                setTest(data);
 
-    // Bitta testni olish
-    useEffect(() => {
-        const getTest = async () => {
-            try {
-                const res = await axios.get(`/test/${testId}`);
-                if (!res.data) {
-                    setError("Test ma'lumotlari topilmadi.");
-                    return;
-                }
-                const testData = res.data;
-                setTest(testData);
+        const regex =
+          /\[\[(input|select(?::yn)?|radio(?::[^\]]+)?|redio(?::[^\]]+)?)\]\]/g;
 
-                // TEST MODE => TIMER
-                setSecondsLeft(testData.mode === "full" ? 3600 : 1200);
+                const answers = data.passages.map((p) => {
+                    const count = (p.testText.match(regex) || []).length;
+                    return Array(count).fill("");
+                });
 
-                // input/select joylari bo‘yicha javoblar massivini yaratish
-                const answerCount =
-                    testData.testText.match(/\[\[(input|select(?::yn)?)\]\]/g) || [];
-                setUserAnswers(Array(answerCount.length).fill(""));
-            } catch {
-                setError("Test yuklashda xatolik yuz berdi.");
-            }
-        };
-        getTest();
+                setUserAnswers(answers);
+            })
+            .catch((err) => {
+                console.log("LOAD ERROR:", err.response?.data || err);
+            });
     }, [testId]);
 
-    const normalizeAnswer = (ans) => {
-        ans = ans.trim().toLowerCase();
-        if (ans === "yes") return "true";
-        if (ans === "no") return "false";
-        return ans;
-    };
+    /* ================= TIMER ================= */
 
-    // Submit funksiyasi
-    const handleSubmit = useCallback(async () => {
-        if (!test?.questions) return;
-
-        const check = userAnswers.map((ans, idx) => {
-            const correct = normalizeAnswer(
-                test.questions[idx]?.value?.trim().toLowerCase() || ""
-            );
-            return normalizeAnswer(ans) === correct;
-        });
-
-        setResults(check);
-        const score = check.filter((r) => r).length;
-
-        try {
-            await axios.post(
-                "/score/add",
-                { testId: test._id, score },
-                { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-            );
-            console.log("Score saqlandi ✅");
-        } catch (err) {
-            console.error("Score saqlashda xato:", err.response?.data || err);
-        }
-    }, [test, userAnswers]);
-
-    // Timer
     useEffect(() => {
-        if (results) return;
-        if (secondsLeft <= 0) {
-            handleSubmit();
-            return;
-        }
-        const timerId = setInterval(() => {
+        if (secondsLeft <= 0) return;
+
+        const timer = setInterval(() => {
             setSecondsLeft((prev) => prev - 1);
         }, 1000);
-        return () => clearInterval(timerId);
-    }, [secondsLeft, results, handleSubmit]);
+
+        return () => clearInterval(timer);
+    }, [secondsLeft]);
+
+    /* ================= FORMAT TIME ================= */
 
     const formatTime = (sec) => {
-        const m = Math.floor(sec / 60);
+        const min = Math.floor(sec / 60);
         const s = sec % 60;
-        return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+        return `${String(min).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     };
 
-    const handleChange = (val, index) => {
-        const updated = [...userAnswers];
-        updated[index] = val;
-        setUserAnswers(updated);
-    };
+    /* ================= ANSWER CHANGE ================= */
 
-    // Highlight funksiyalari
-    const handleMouseUp = () => {
-        const selection = window.getSelection();
-        if (!selection || selection.isCollapsed) {
-            setButtonPos(null);
-            return;
-        }
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        setButtonPos({
-            top: rect.top + window.scrollY - 50,
-            left: rect.left + window.scrollX,
+    const handleChange = (value, index) => {
+        setUserAnswers((prev) => {
+            const copy = [...prev];
+            copy[activePassage][index] = value;
+            return copy;
         });
     };
 
-    const handleHighlight = (color) => {
-        const selection = window.getSelection();
-        if (!selection || selection.isCollapsed) return;
+    /* ================= SUBMIT ================= */
 
-        const range = selection.getRangeAt(0);
-        const span = document.createElement("span");
-        span.className = `highlighted ${color}`;
-        span.textContent = selection.toString();
+    const handleSubmit = useCallback(() => {
+        console.log("Submitted answers:", userAnswers[activePassage]);
+        alert(`Passage ${activePassage + 1} submitted`);
+    }, [userAnswers, activePassage]);
 
-        range.deleteContents();
-        range.insertNode(span);
+    /* ================= SAFE CHECK ================= */
 
-        selection.removeAllRanges();
-        setButtonPos(null);
-    };
+    if (!test) return <p>Loading...</p>;
 
-    const handleRemove = () => {
-        const selection = window.getSelection();
-        if (!selection || selection.isCollapsed) return;
+    const passage = test.passages[activePassage];
 
-        const range = selection.getRangeAt(0);
-        const selectedNode = range.startContainer.parentNode;
+    /* ================= PARSE TEST TEXT ================= */
 
-        if (
-            selectedNode.tagName === "SPAN" &&
-            selectedNode.classList.contains("highlighted")
-        ) {
-            const textNode = document.createTextNode(selectedNode.textContent);
-            selectedNode.replaceWith(textNode);
-        }
-
-        selection.removeAllRanges();
-        setButtonPos(null);
-    };
-
-    if (error) return <p style={{ color: "red" }}>{error}</p>;
-    if (!test) return <p>Loading test...</p>;
-
-    // testText dan input/select joylarini ajratib olish
-    const regex = /\[\[(input|select(?::yn)?)\]\]/g;
+  const regex =
+    /\[\[(input|select(?::yn)?|radio(?::[^\]]+)?|redio(?::[^\]]+)?)\]\]/g;
     const parts = [];
+    const types = [];
     let lastIndex = 0;
     let match;
-    const inputTypes = [];
 
-    while ((match = regex.exec(test.testText)) !== null) {
-        parts.push(test.testText.substring(lastIndex, match.index));
-        inputTypes.push(match[1]);
+    while ((match = regex.exec(passage.testText))) {
+        parts.push(passage.testText.slice(lastIndex, match.index));
+    types.push(match[1].replace(/^redio/, "radio"));
         lastIndex = regex.lastIndex;
     }
-    parts.push(test.testText.substring(lastIndex));
+
+    parts.push(passage.testText.slice(lastIndex));
+
+    /* ================= UI ================= */
 
     return (
-        <div className="readingform">
-            <header>
-                <h1>{test.name || "Test"}</h1>
-                <h1>
-                    <FaClock /> {formatTime(secondsLeft)}
-                </h1>
-                <div className="bar-icon" onClick={() => setOpen(!open)}>
-                    &#9776;
+        <div className="readingform-blue">
+            {/* HEADER */}
+            <header className="reading-header">
+                <h1>{test.name}</h1>
+
+                <div className="timer">
+                    <FaClock />
+                    {formatTime(secondsLeft)}
                 </div>
-                {open && (
-                    <div className="dropdown-menu">
-                        <button className="menu-item">Enter Focus Mode</button>
-                        <Link to="/read" className="menu-item">
-                            All IELTS Reading Tests
-                        </Link>
-                        <Link to="/" className="menu-item">
-                            Go to Homepage
-                        </Link>
-                    </div>
-                )}
             </header>
 
-            <div className="contain">
-                <div className="reading-half">
-                    <div
-                        className="reading_text"
-                        ref={textRef}
-                        onMouseUp={handleMouseUp}
+            {/* PASSAGE TABS */}
+            <div className="passage-tabs">
+                {test.passages.map((_, i) => (
+                    <button
+                        key={i}
+                        className={activePassage === i ? "active" : ""}
+                        onClick={() => setActivePassage(i)}
                     >
-                        {data.length > 0 ? (
-                            <p>{test.readingText}</p>
-                        ) : (
-                            <p style={{ color: "orange" }}>Reading matni mavjud emas</p>
-                        )}
-                    </div>
-                </div>
+                        Passage {i + 1}
+                    </button>
+                ))}
+            </div>
 
+            {/* CONTENT */}
+            <div className="container-blue">
+                {/* READING TEXT */}
+                <div
+                    className="reading-half"
+                    dangerouslySetInnerHTML={{ __html: passage.readingText }}
+                />
+
+                {/* QUESTIONS */}
                 <div className="test-half">
-                    {parts.map((part, i) => (
-                        <div key={i} style={{ marginBottom: "8px" }}>
-                            {part}
-                            {i < inputTypes.length &&
-                                (inputTypes[i] === "input" ? (
-                                    <input
-                                        type="text"
-                                        value={userAnswers[i] || ""}
-                                        onChange={(e) =>
-                                            handleChange(e.target.value, i)
-                                        }
-                                        disabled={!!results}
-                                        aria-label={`Answer ${i + 1}`}
-                                    />
-                                ) : inputTypes[i] === "select:yn" ? (
-                                    <select
-                                        value={userAnswers[i] || ""}
-                                        onChange={(e) =>
-                                            handleChange(e.target.value, i)
-                                        }
-                                        disabled={!!results}
-                                        aria-label={`Choice ${i + 1}`}
-                                    >
-                                        <option value=""></option>
-                                        <option value="yes">Yes</option>
-                                        <option value="no">No</option>
-                                        <option value="not given">Not Given</option>
-                                    </select>
-                                ) : (
-                                    <select
-                                        value={userAnswers[i] || ""}
-                                        onChange={(e) =>
-                                            handleChange(e.target.value, i)
-                                        }
-                                        disabled={!!results}
-                                        aria-label={`Choice ${i + 1}`}
-                                    >
-                                        <option value=""></option>
-                                        <option value="true">True</option>
-                                        <option value="false">False</option>
-                                        <option value="not given">Not Given</option>
-                                    </select>
-                                ))}
+                    {parts.map((text, index) => (
+                        <span key={index}>
+                            <span dangerouslySetInnerHTML={{ __html: text }} />
 
-                            {results &&
-                                (results[i] ? (
-                                    <span style={{ color: "green", marginLeft: "8px" }}>
-                                        ✅
-                                    </span>
-                                ) : (
-                                    <span style={{ color: "red", marginLeft: "8px" }}>
-                                        ❌ To‘g‘ri javob:{" "}
-                                        <b>{test.questions[i]?.value}</b>
-                                    </span>
-                                ))}
-                        </div>
+                            {types[index] === "input" && (
+                                <input
+                                    value={userAnswers[activePassage]?.[index] || ""}
+                                    onChange={(e) => handleChange(e.target.value, index)}
+                                />
+                            )}
+
+              {types[index]?.startsWith("select") && (
+                <select
+                  value={userAnswers[activePassage]?.[index] || ""}
+                  onChange={(e) => handleChange(e.target.value, index)}
+                >
+                  <option value=""></option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                  <option value="not given">Not Given</option>
+                </select>
+              )}
+
+              {types[index]?.startsWith("radio") && (() => {
+                const optionString = types[index].startsWith("radio:")
+                  ? types[index].slice("radio:".length)
+                  : "A|B|C|D";
+                const options = optionString
+                  .split("|")
+                  .map((opt) => opt.trim())
+                  .filter(Boolean);
+
+                return (
+                  <span>
+                    {options.map((opt, optIndex) => (
+                      <label key={`radio-${index}-${optIndex}`}>
+                        <input
+                          type="radio"
+                          name={`radio-${index}`}
+                          value={opt}
+                          checked={userAnswers[activePassage]?.[index] === opt}
+                          onChange={(e) =>
+                            handleChange(e.target.value, index)
+                          }
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </span>
+                );
+              })()}
+                        </span>
                     ))}
 
-                    {!results && (
-                        <button className="submit-btn" onClick={handleSubmit}>
-                            Javobni yuborish
-                        </button>
-                    )}
-                </div>
+                    <br />
 
-                {buttonPos && (
-                    <div
-                        className="highlight-toolbar"
-                        style={{ top: buttonPos.top, left: buttonPos.left }}
-                    >
-                        <button
-                            className="highlight-blue"
-                            onClick={() => handleHighlight("blue")}
-                        >
-                            A
-                        </button>
-                        <button
-                            className="highlight-green"
-                            onClick={() => handleHighlight("green")}
-                        >
-                            A
-                        </button>
-                        <button
-                            className="highlight-pink"
-                            onClick={() => handleHighlight("pink")}
-                        >
-                            A
-                        </button>
-                        <button className="highlight-remove" onClick={handleRemove}>
-                            🩹
-                        </button>
-                    </div>
-                )}
+                    <button className="submit-btn" onClick={handleSubmit}>
+                        Submit Passage {activePassage + 1}
+                    </button>
+                </div>
             </div>
         </div>
     );
