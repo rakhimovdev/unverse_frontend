@@ -81,6 +81,24 @@
     margin-top: 20px;
 }
 
+/* ===== SCORE BOX ===== */
+.score-box {
+    margin-top: 16px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 8px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.score-note {
+    color: #6b7280;
+    font-size: 12px;
+}
+
 /* ===== LAYOUT ===== */
 .readingform-blue {
     padding: 20px;

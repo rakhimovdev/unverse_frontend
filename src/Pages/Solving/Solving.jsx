@@ -4,104 +4,268 @@ import axios from "../../Api/Axios";
 
 import "./Solving.css";
 
+const MARKER_REGEX = /\[\[([^\]]+)\]\]/g;
+const TFNG_OPTIONS = ["True", "False", "Not Given"];
+const YNNG_OPTIONS = ["Yes", "No", "Not Given"];
+const DEFAULT_MC_OPTIONS = ["A", "B", "C", "D"];
+
+const normalizeTokenType = (rawType) =>
+    rawType
+        .toLowerCase()
+        .replace(/&nbsp;/g, " ")
+        .replace(/[^a-z]/g, "");
+
+const normalizeOptionsString = (rawOptions) =>
+    rawOptions ? rawOptions.replace(/&nbsp;/g, " ").trim() : "";
+
+const parseOptions = (rawOptions, fallbackOptions) => {
+    const cleaned = normalizeOptionsString(rawOptions);
+    if (!cleaned) return fallbackOptions;
+
+    const keyword = cleaned.toLowerCase().replace(/[^a-z]/g, "");
+
+    if (
+        keyword === "tfng" ||
+        keyword === "truefalse" ||
+        keyword === "truefalsenotgiven"
+    ) {
+        return TFNG_OPTIONS;
+    }
+
+    if (
+        keyword === "yn" ||
+        keyword === "ynng" ||
+        keyword === "yesno" ||
+        keyword === "yesnonotgiven"
+    ) {
+        return YNNG_OPTIONS;
+    }
+
+    return cleaned
+        .split("|")
+        .map((opt) => opt.trim())
+        .filter(Boolean);
+};
+
+const parseOptionsStrict = (rawOptions) => {
+    const cleaned = normalizeOptionsString(rawOptions);
+    if (!cleaned) return [];
+
+    return cleaned
+        .split("|")
+        .map((opt) => opt.trim())
+        .filter(Boolean);
+};
+
+const inputTypes = new Set([
+    "input",
+    "short",
+    "shortanswer",
+    "sentence",
+    "sentencecompletion",
+    "table",
+    "tablecompletion",
+    "diagram",
+    "diagramlabel",
+    "flow",
+    "flowchart",
+    "summary",
+    "summarycompletion",
+]);
+
+const parseToken = (rawToken) => {
+    const [rawType, rawOptions] = rawToken.split(/:(.*)/s);
+    const type = normalizeTokenType(rawType);
+
+    if (inputTypes.has(type)) {
+        return { kind: "input" };
+    }
+
+    if (type === "select") {
+        return {
+            kind: "select",
+            options: parseOptions(rawOptions, TFNG_OPTIONS),
+        };
+    }
+
+    if (
+        type === "tfng" ||
+        type === "truefalse" ||
+        type === "truefalsenotgiven"
+    ) {
+        return { kind: "select", options: TFNG_OPTIONS };
+    }
+
+    if (
+        type === "yn" ||
+        type === "ynng" ||
+        type === "yesno" ||
+        type === "yesnonotgiven"
+    ) {
+        return { kind: "select", options: YNNG_OPTIONS };
+    }
+
+    if (
+        type === "matchingheadings" ||
+        type === "matching" ||
+        type === "match" ||
+        type === "headings" ||
+        type === "heading"
+    ) {
+        return {
+            kind: "select",
+            options: parseOptionsStrict(rawOptions).length
+                ? parseOptionsStrict(rawOptions)
+                : DEFAULT_MC_OPTIONS,
+            includeEmpty: true,
+        };
+    }
+
+    if (
+        type === "radio" ||
+        type === "redio" ||
+        type === "mc" ||
+        type === "multiplechoice"
+    ) {
+        return {
+            kind: "radio",
+            options: parseOptions(rawOptions, DEFAULT_MC_OPTIONS),
+        };
+    }
+
+    return null;
+};
+
+const getQuestionDefs = (html) => {
+    const regex = new RegExp(MARKER_REGEX);
+    const defs = [];
+    let match;
+
+    while ((match = regex.exec(html))) {
+        const parsed = parseToken(match[1]);
+        if (!parsed) continue;
+
+        defs.push({
+            type: parsed.kind === "input" ? "text" : "select",
+        });
+    }
+
+    return defs;
+};
+
 /* ================= PREVIEW ================= */
 
-function Preview({ passage, testName }) {
-    const [answers, setAnswers] = useState([]);
-
+function Preview({ passage, testName, answers = [], onAnswersChange }) {
     const html = passage.testText || "";
-  const markerRegex =
-    /\[\[(input|select(?::yn)?|radio(?::[^\]]+)?|redio(?::[^\]]+)?)\]\]/g;
+    const markerRegex = MARKER_REGEX;
 
     const renderQuestionHTML = () => {
-        let index = 0;
+        const regex = new RegExp(markerRegex);
+        let questionIndex = 0;
+        let nodeKey = 0;
         let lastIndex = 0;
         const nodes = [];
         let match;
 
-    while ((match = markerRegex.exec(html))) {
-      const token = match[1].replace(/^redio/, "radio");
+        while ((match = regex.exec(html))) {
+            const rawToken = match[1];
+            nodes.push(
+                <span
+                    key={`text-${nodeKey++}`}
+                    dangerouslySetInnerHTML={{
+                        __html: html.slice(lastIndex, match.index),
+                    }}
+                />
+            );
 
-      nodes.push(
-        <span
-          key={`text-${index}`}
-          dangerouslySetInnerHTML={{
-            __html: html.slice(lastIndex, match.index),
-          }}
-        />
-      );
+            const parsed = parseToken(rawToken);
 
-      if (token === "input") {
-        nodes.push(
-          <input
-            key={`input-${index}`}
-            value={answers[index] || ""}
-            onChange={(e) => {
-                            const copy = [...answers];
-                            copy[index] = e.target.value;
-                            setAnswers(copy);
+            if (!parsed) {
+                nodes.push(
+                    <span
+                        key={`unknown-${nodeKey++}`}
+                        dangerouslySetInnerHTML={{
+                            __html: html.slice(match.index, regex.lastIndex),
                         }}
                     />
                 );
+                lastIndex = regex.lastIndex;
+                continue;
             }
 
-      if (token.startsWith("select")) {
-        nodes.push(
-          <select
-            key={`select-${index}`}
-            value={answers[index] || ""}
-            onChange={(e) => {
-              const copy = [...answers];
-              copy[index] = e.target.value;
-              setAnswers(copy);
-            }}
-          >
-            <option value=""></option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-            <option value="not given">Not Given</option>
-          </select>
-        );
-      }
+            if (parsed.kind === "input") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <input
+                        key={`input-${nodeKey++}`}
+                        value={answers[currentIndex] || ""}
+                        onChange={(e) => {
+                            const copy = [...answers];
+                            copy[currentIndex] = e.target.value;
+                            onAnswersChange(copy);
+                        }}
+                    />
+                );
+                questionIndex++;
+            }
 
-      if (token.startsWith("radio")) {
-        const optionString = token.startsWith("radio:")
-          ? token.slice("radio:".length)
-          : "A|B|C|D";
-        const options = optionString
-          .split("|")
-          .map((opt) => opt.trim())
-          .filter(Boolean);
+            if (parsed.kind === "select") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <select
+                        key={`select-${nodeKey++}`}
+                        value={answers[currentIndex] || ""}
+                        onChange={(e) => {
+                            const copy = [...answers];
+                            copy[currentIndex] = e.target.value;
+                            onAnswersChange(copy);
+                        }}
+                    >
+                        {parsed.includeEmpty !== false && (
+                            <option value=""></option>
+                        )}
+                        {parsed.options.map((opt, optIndex) => (
+                            <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
+                                {opt}
+                            </option>
+                        ))}
+                    </select>
+                );
+                questionIndex++;
+            }
 
-        nodes.push(
-          <span key={`radio-${index}`}>
-            {options.map((opt, optIndex) => (
-              <label key={`radio-${index}-${optIndex}`}>
-                <input
-                  type="radio"
-                  name={`radio-${index}`}
-                  value={opt}
-                  checked={answers[index] === opt}
-                  onChange={(e) => {
-                    const copy = [...answers];
-                    copy[index] = e.target.value;
-                    setAnswers(copy);
-                  }}
-                />
-                {opt}
-              </label>
-            ))}
-          </span>
-        );
-      }
+            if (parsed.kind === "radio") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <span key={`radio-${nodeKey++}`}>
+                        {parsed.options.map((opt, optIndex) => (
+                            <label key={`radio-${currentIndex}-${optIndex}`}>
+                                <input
+                                    type="radio"
+                                    name={`radio-${currentIndex}`}
+                                    value={opt}
+                                    style={{ marginRight: "6px" }}
+                                    checked={answers[currentIndex] === opt}
+                                    onChange={(e) => {
+                                        const copy = [...answers];
+                                        copy[currentIndex] = e.target.value;
+                                        onAnswersChange(copy);
+                                    }}
+                                />
+                                {opt}
+                            </label>
+                        ))}
+                    </span>
+                );
+                questionIndex++;
+            }
 
-      lastIndex = markerRegex.lastIndex;
-      index++;
-    }
+            lastIndex = regex.lastIndex;
+        }
 
         nodes.push(
             <span
-                key="end"
+                key={`end-${nodeKey++}`}
                 dangerouslySetInnerHTML={{
                     __html: html.slice(lastIndex),
                 }}
@@ -112,8 +276,13 @@ function Preview({ passage, testName }) {
     };
 
     useEffect(() => {
-        const count = (html.match(markerRegex) || []).length;
-        setAnswers(Array(count).fill(""));
+        const defs = getQuestionDefs(html);
+        if (answers.length === defs.length) return;
+
+        const next = Array(defs.length)
+            .fill("")
+            .map((_, i) => answers[i] || "");
+        onAnswersChange(next);
     }, [html]);
 
     return (
@@ -142,12 +311,27 @@ function Preview({ passage, testName }) {
 const emptyPassage = {
     readingText: "",
     testText: "",
+    questions: [],
 };
+
+const TOKEN_BUTTONS = [
+    { key: "input", label: "Input", token: "[[input]]" },
+    { key: "mc", label: "Multiple choice", token: "[[mc]]" },
+    { key: "matching", label: "Matching headings", token: "[[matching-headings]]" },
+    { key: "tfng", label: "T/F/NG", token: "[[tfng]]" },
+    { key: "short", label: "Short answer", token: "[[short]]" },
+    { key: "sentence", label: "Sentence completion", token: "[[sentence]]" },
+    { key: "table", label: "Table completion", token: "[[table]]" },
+    { key: "diagram", label: "Diagram label", token: "[[diagram-label]]" },
+    { key: "flow", label: "Flow-chart completion", token: "[[flow-chart]]" },
+    { key: "summary", label: "Summary completion", token: "[[summary]]" },
+];
 
 export default function CreateReadingTest() {
     const [testName, setTestName] = useState("");
     const [activePassage, setActivePassage] = useState(0);
     const [showPreview, setShowPreview] = useState(false);
+    const [copiedKey, setCopiedKey] = useState(null);
 
     const [passages, setPassages] = useState([
         { ...emptyPassage },
@@ -278,10 +462,13 @@ export default function CreateReadingTest() {
     const saveCurrentPassage = () => {
         setPassages((prev) => {
             const copy = [...prev];
+            const html = questionEditorRef.current?.innerHTML || "";
+            const existingQuestions = copy[activePassage]?.questions || [];
 
             copy[activePassage] = {
                 readingText: editorRef.current.innerHTML,
-                testText: questionEditorRef.current.innerHTML,
+                testText: html,
+                questions: syncQuestions(html, existingQuestions),
             };
 
             return copy;
@@ -293,15 +480,80 @@ export default function CreateReadingTest() {
         questionEditorRef.current.innerHTML = current.testText;
     }, [activePassage]);
 
+    const syncQuestions = (html, existingQuestions = []) => {
+        const defs = getQuestionDefs(html);
+        return defs.map((def, i) => ({
+            value: existingQuestions[i]?.value || "",
+            type: def.type,
+        }));
+    };
+
+    const buildPassagesForSave = () =>
+        passages.map((p, i) => {
+            if (i !== activePassage) return p;
+
+            const html = questionEditorRef.current?.innerHTML || "";
+            return {
+                ...p,
+                readingText: editorRef.current.innerHTML,
+                testText: html,
+                questions: syncQuestions(html, p.questions),
+            };
+        });
+
     const handleSave = async () => {
-        saveCurrentPassage();
+        const payloadPassages = buildPassagesForSave();
+        setPassages(payloadPassages);
 
         await axios.post("/test/upload", {
             name: testName,
-            passages,
+            passages: payloadPassages,
         });
 
         alert("Saved");
+    };
+
+    const handleAnswersChange = (nextAnswers) => {
+        setPassages((prev) => {
+            const copy = [...prev];
+            const html = copy[activePassage]?.testText || "";
+            const defs = getQuestionDefs(html);
+            const questions = defs.map((def, i) => ({
+                value: nextAnswers[i] || "",
+                type: def.type,
+            }));
+
+            copy[activePassage] = {
+                ...copy[activePassage],
+                questions,
+            };
+
+            return copy;
+        });
+    };
+
+    const copyToken = async (token, key) => {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(token);
+            } else {
+                const textarea = document.createElement("textarea");
+                textarea.value = token;
+                textarea.setAttribute("readonly", "");
+                textarea.style.position = "fixed";
+                textarea.style.top = "-9999px";
+                textarea.style.left = "-9999px";
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+            }
+
+            setCopiedKey(key);
+            setTimeout(() => setCopiedKey(null), 1000);
+        } catch (err) {
+            setCopiedKey(null);
+        }
     };
 
     /* ================= UI ================= */
@@ -311,19 +563,36 @@ export default function CreateReadingTest() {
             <h1>IELTS Reading Test Creator</h1>
 
             {/* PASSAGE TABS */}
-            <div className="passage-tabs">
-                {passages.map((_, i) => (
-                    <button
-                        key={i}
-                        className={i === activePassage ? "active" : ""}
-                        onClick={() => {
-                            saveCurrentPassage();
-                            setActivePassage(i);
-                        }}
-                    >
-                        Passage {i + 1}
-                    </button>
-                ))}
+            <div className="passage-tools">
+                <div className="passage-tabs">
+                    {passages.map((_, i) => (
+                        <button
+                            key={i}
+                            className={i === activePassage ? "active" : ""}
+                            onClick={() => {
+                                saveCurrentPassage();
+                                setActivePassage(i);
+                            }}
+                        >
+                            Passage {i + 1}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="token-buttons">
+                    <span className="token-label">Tokens:</span>
+                    {TOKEN_BUTTONS.map((item) => (
+                        <button
+                            key={item.key}
+                            className={copiedKey === item.key ? "copied" : ""}
+                            onClick={() => copyToken(item.token, item.key)}
+                            title={item.token}
+                            type="button"
+                        >
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* TEST NAME */}
@@ -416,7 +685,14 @@ export default function CreateReadingTest() {
             </div>
 
             {/* PREVIEW */}
-            {showPreview && <Preview testName={testName} passage={current} />}
+            {showPreview && (
+                <Preview
+                    testName={testName}
+                    passage={current}
+                    answers={current.questions?.map((q) => q.value) || []}
+                    onAnswersChange={handleAnswersChange}
+                />
+            )}
         </div>
     );
 }
