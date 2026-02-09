@@ -1,6 +1,6 @@
 {
   "short_name": "Universe LS",
-  "name": "Create React App Sample",
+  "name": "Universe Language School",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#0b1220",
+  "background_color": "#f5f8ff"
 }

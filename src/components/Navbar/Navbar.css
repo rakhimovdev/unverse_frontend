@@ -1,18 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+
 /* 🔥 Navbar umumiy style */
 nav {
     display: flex;
     width: 95%;
     margin: auto;
-    height: 60px;
+    height: 64px;
     margin-top: 20px;
     border-radius: 15px;
 
     /* Glassmorphism */
-    background: rgba(0, 0, 0, 0.75);
-    /* qora shaffof */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, rgba(11, 18, 32, 0.96), rgba(24, 34, 57, 0.96));
+    border: 1px solid rgba(84, 211, 255, 0.2);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 8px 24px rgba(6, 12, 24, 0.45);
 
     transition: all 0.3s ease-in-out;
 }
@@ -27,20 +28,6 @@ nav {
 }
 
 /* 🔥 Logo */
-.logo h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-    /* oq rang */
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.logo h1:hover {
-    transform: scale(1.05);
-}
-
 /* 🔥 Menu (ul) */
 ul {
     display: flex;
@@ -56,8 +43,7 @@ li {
 /* 🔥 Linklar */
 a {
     text-decoration: none;
-    color: #f1f1f1;
-    /* oq rang */
+    color: #eaf0ff;
     font-size: 16px;
     font-weight: 500;
     position: relative;
@@ -73,15 +59,13 @@ a::after {
     bottom: -4px;
     width: 0;
     height: 2px;
-    background: linear-gradient(90deg, #ff6a00, #ff0080);
-    /* rangli chiziq */
+    background: linear-gradient(90deg, #ffd166, #ff6b6b);
     border-radius: 2px;
     transition: width 0.3s ease;
 }
 
 a:hover {
-    color: #ff6a00;
-    /* hoverda rang o‘zgaradi */
+    color: #ffd166;
 }
 
 .a:hover::after {
@@ -102,7 +86,7 @@ button {
     font-size: 15px;
     border: none;
     border-radius: 8px;
-    background: linear-gradient(135deg, #ff6a00, #ff0080);
+    background: linear-gradient(135deg, #4b7bff, #3b2bff);
     color: white;
     font-weight: 500;
     cursor: pointer;
@@ -117,10 +101,10 @@ button:hover {
 
 /* logo*/
 .logo {
-    width: 50px;
-    border-radius: 8px;
-    height: auto;
-
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
 .logo_a {
@@ -137,7 +121,7 @@ button:hover {
 
 .logoText {
     color: rgb(255, 255, 255);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     margin-left: 10px;
     /* width: 150px; */
@@ -146,11 +130,31 @@ button:hover {
     flex-direction: column;
     /* border: 2px solid red; */
     font-size: 18px;
+    font-family: "Space Grotesk", "Montserrat", sans-serif;
+    letter-spacing: 0.2px;
+}
+
+.logoText p:first-child {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.logoText p:last-child {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    margin: 0;
+    line-height: 1.2;
 }
 
 
 .btn2 {
-    background: linear-gradient(135deg, #0072ff, #00c6ff);
+    background: linear-gradient(135deg, #ffd166, #ff6b6b);
+    color: #0b1220;
 }
 
 /* 🔥 Responsive (mobil menyu) */

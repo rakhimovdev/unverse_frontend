@@ -45,7 +45,8 @@ function Writing() {
                 <div className="card_container">
                     {uploadedTests.map((item) => (
                         <div className="test_card" key={item._id}>
-                            <h3>{item.topic}</h3>
+                            <h3>Task 1: {item.task1Topic || item.topic}</h3>
+                            <p>Task 2: {item.task2Topic || "—"}</p>
 
                             <button
                                 onClick={() => navigate(`/writingpage/${item._id}`)}

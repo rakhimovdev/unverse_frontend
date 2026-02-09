@@ -1,0 +1,37 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="planet" x1="20" y1="20" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#54D3FF"/>
+      <stop offset="0.55" stop-color="#4B7BFF"/>
+      <stop offset="1" stop-color="#3B2BFF"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="12" y1="32" x2="116" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF6B6B"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="128" height="128" rx="32" fill="#0B1220"/>
+  <circle cx="64" cy="66" r="40" fill="url(#planet)"/>
+
+  <path
+    d="M44 40V70C44 84 60 88 64 88C68 88 84 84 84 70V40"
+    stroke="white"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <ellipse
+    cx="64"
+    cy="70"
+    rx="58"
+    ry="22"
+    transform="rotate(-18 64 70)"
+    stroke="url(#ring)"
+    stroke-width="6"
+    opacity="0.95"
+  />
+
+  <circle cx="98" cy="28" r="4" fill="#FFE29A"/>
+</svg>

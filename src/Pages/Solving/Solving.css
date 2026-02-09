@@ -5,6 +5,7 @@
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
+    background: var(--u-bg);
 }
 
 /* ================= PASSAGE TABS ================= */
@@ -29,13 +30,13 @@
     padding: 8px 14px;
     border: none;
     border-radius: 6px;
-    background: #e5e7eb;
+    background: #e9eefc;
     cursor: pointer;
     font-weight: 600;
 }
 
 .passage-tabs button.active {
-    background: #2563eb;
+    background: var(--u-primary);
     color: #fff;
 }
 
@@ -51,23 +52,23 @@
 .token-label {
     font-size: 12px;
     font-weight: 700;
-    color: #374151;
+    color: var(--u-muted);
     margin-right: 4px;
 }
 
 .token-buttons button {
     padding: 6px 10px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--u-border);
     border-radius: 6px;
     background: #ffffff;
     cursor: pointer;
     font-weight: 600;
     font-size: 12px;
-    color: #374151;
+    color: var(--u-ink);
 }
 
 .token-buttons button:hover {
-    background: #f3f4f6;
+    background: #f3f6ff;
 }
 
 .token-buttons button.copied {
@@ -88,9 +89,11 @@
 .left,
 .right {
     width: 50%;
-    background: #f9fafb;
+    background: var(--u-surface);
     padding: 15px;
     border-radius: 10px;
+    border: 1px solid var(--u-border);
+    box-shadow: var(--u-shadow);
 }
 
 /* ================= EDITORS ================= */
@@ -99,7 +102,7 @@
 .question-editor {
     min-height: 240px;
     padding: 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--u-border);
     border-radius: 8px;
     background: #ffffff;
     font-size: 15px;
@@ -135,7 +138,7 @@
     /* viewportga nisbatan */
     display: flex;
     gap: 6px;
-    background: #2563eb;
+    background: var(--u-primary);
     padding: 6px;
     border-radius: 6px;
     z-index: 999999;
@@ -144,7 +147,7 @@
 
 .selection-buttons button {
     background: #ffffff;
-    color: #2563eb;
+    color: var(--u-primary);
     border: none;
     padding: 4px 8px;
     font-size: 13px;
@@ -156,7 +159,7 @@
 }
 
 .selection-buttons button:hover {
-    background: #e5e7eb;
+    background: #e9eefc;
 }
 
 /* ================= ACTION BUTTONS ================= */
@@ -171,7 +174,7 @@
 .save-btn {
     padding: 10px 18px;
     font-size: 16px;
-    background: #2563eb;
+    background: var(--u-primary);
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -181,7 +184,7 @@
 .preview-btn {
     padding: 10px 18px;
     font-size: 16px;
-    background: #16a34a;
+    background: var(--u-accent);
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -193,7 +196,7 @@
 .readingform-blue {
     margin-top: 30px;
     padding: 20px;
-    background: #f4f7fb;
+    background: var(--u-bg);
     border-radius: 12px;
 }
 
@@ -211,7 +214,7 @@
 
 .timer {
     font-size: 14px;
-    color: #374151;
+    color: var(--u-muted);
 }
 
 /* preview layout */
@@ -224,11 +227,13 @@
 .container-blue .reading-half,
 .container-blue .test-half {
     width: 50%;
-    background: #ffffff;
+    background: var(--u-surface);
     padding: 16px;
     border-radius: 10px;
     line-height: 1.7;
     white-space: pre-wrap;
+    border: 1px solid var(--u-border);
+    box-shadow: var(--u-shadow);
 }
 
 /* preview inputs */
@@ -261,7 +266,7 @@
 
     padding: 12px;
 
-    border: 1px solid #ccc;
+    border: 1px solid var(--u-border);
 
     border-radius: 8px;
 
@@ -291,7 +296,7 @@
 
     position: fixed;
 
-    background: #2563eb;
+    background: var(--u-primary);
 
     padding: 6px;
 

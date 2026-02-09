@@ -3,7 +3,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 80vh;
+    min-height: 80vh;
+    padding: 60px 20px;
+    text-align: center;
+    gap: 32px;
+}
+
+.Home h1 {
+    font-family: "Fraunces", serif;
+    font-size: clamp(28px, 3.4vw, 44px);
+    max-width: 720px;
+    color: var(--u-ink);
 }
 
 .contant {
@@ -11,7 +21,9 @@
     align-items: center;
     justify-content: space-around;
     margin: 20px;
-    width: 650px;
+    width: min(760px, 100%);
+    gap: 18px;
+    flex-wrap: wrap;
 }
 
 .contact_a {
@@ -24,18 +36,23 @@
     border-radius: 5px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    width: 200px;
+    width: 210px;
 }
 
 .contact_a button {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #ff6a00, #ff0080);
+    background: linear-gradient(135deg, #4b7bff, #3b2bff);
     border: none;
     color: white;
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 600;
     border-radius: 5px;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
+.contact_a button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(59, 43, 255, 0.25);
 }

@@ -1,51 +1,52 @@
 .listening-container {
   text-align: center;
   padding: 30px;
-  width: 100%;
+  width: min(1100px, 100%);
+  margin: 30px auto;
+  background: var(--u-surface);
+  border-radius: 20px;
+  box-shadow: var(--u-shadow);
+  border: 1px solid var(--u-border);
+}
+
+.listening-container h2 {
+  color: var(--u-ink);
+  margin-bottom: 16px;
 }
 
 .play-btn {
-  background: #4cafef;
+  background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
   color: white;
   border: none;
   padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
   cursor: pointer;
   transition: 0.3s;
 }
 
-.container {
-  width: 100%;
-  border: 2px solid red;
-}
-
 .play-btn:hover {
-  background: #2196f3;
-}
-
-/* Container styling */
-.container {
-  /* max-width: 800px; */
-  margin: 20px auto;
-  font-family: Arial, sans-serif;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(75, 123, 255, 0.25);
 }
 
 /* Test container */
-.test-container {
+.listening-container .test-container {
   position: relative;
-  border: 1px solid #ddd;
+  border: 1px solid var(--u-border);
+  background: #f7f9ff;
   margin-top: 10px;
   padding: 10px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 14px;
 }
 
 /* Input styling */
-.test-container input[type="text"] {
-  border: 1px solid #000;
+.listening-container .test-container input[type="text"] {
+  border: 1px solid var(--u-border);
   padding: 3px;
   font-size: 14px;
 }
@@ -54,24 +55,27 @@
 .resizer {
   width: 6px;
   height: 100%;
-  background: blue;
+  background: var(--u-primary);
   cursor: ew-resize;
 }
 
 /* Buttons */
-button {
-  padding: 5px 10px;
+.listening-container button {
+  padding: 6px 12px;
   font-size: 14px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   border: none;
+  background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
+  color: #fff;
 }
 
-button:hover {
-  opacity: 0.85;
+.listening-container button:hover {
+  opacity: 0.9;
 }
 
-.test-container img {
-  border: 2px solid red;
-  width: 1000px;
+.listening-container .test-container img {
+  border: 1px solid var(--u-border);
+  width: min(1000px, 100%);
+  border-radius: 12px;
 }

@@ -2,44 +2,47 @@
     max-width: 1000px;
     margin: 40px auto;
     padding: 20px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
 }
 
 .title {
     text-align: center;
     font-size: 2rem;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--u-ink);
+    font-family: "Fraunces", serif;
 }
 
 /* 📌 Jadval */
 .students-table {
     width: 100%;
     border-collapse: collapse;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--u-shadow);
     overflow: hidden;
     border-radius: 10px;
+    border: 1px solid var(--u-border);
+    background: var(--u-surface);
 }
 
 .students-table th,
 .students-table td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--u-border);
     padding: 12px 15px;
     text-align: center;
 }
 
 .students-table th {
-    background-color: #4cafef;
+    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
     color: white;
     font-weight: bold;
 }
 
 .students-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #f7f9ff;
 }
 
 .students-table tr:hover {
-    background-color: #eaf6ff;
+    background-color: #eef3ff;
 }
 
 
@@ -49,14 +52,14 @@
     text-align: center;
     font-size: 1.2rem;
     margin-top: 20px;
-    color: #666;
+    color: var(--u-muted);
 }
 
 .students-container {
     max-width: 1200px;
     margin: 40px auto;
     padding: 20px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
     overflow-x: auto;
     /* 📌 Jadval tashqariga chiqsa scroll ichida qoladi */
 }
@@ -66,13 +69,13 @@
     min-width: 800px;
     /* 📌 Juda siqilib ketmasin */
     border-collapse: collapse;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--u-shadow);
     border-radius: 10px;
 }
 
 .students-table th,
 .students-table td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--u-border);
     padding: 10px 12px;
     /* 📌 Paddingni biroz kamaytirdim */
     text-align: center;
@@ -82,7 +85,7 @@
 
 /* 📌 Tugma */
 .delete-btn1 {
-    background-color: #ff4d4f;
+    background-color: var(--u-accent);
     color: white;
     border: none;
     padding: 4px 10px;
@@ -94,7 +97,7 @@
 }
 
 .delete-btn1:hover {
-    background-color: #d9363e;
+    background-color: #d94c4c;
 }
 
 .carousel-tabs {
@@ -108,11 +111,11 @@
     border: none;
     cursor: pointer;
     border-radius: 6px;
-    background: #eee;
+    background: #e9eefc;
     font-weight: 600;
 }
 
 .carousel-tabs button.active {
-    background: #2563eb;
+    background: var(--u-primary);
     color: white;
 }

@@ -1,6 +1,5 @@
 import React from "react";
 import "./Navbar.css";
-import img1 from "../../Images/image.png";
 
 const Navbar = () => {
     const token = localStorage.getItem("token");
@@ -20,7 +19,11 @@ const Navbar = () => {
             <div className="in_nav">
                 {/* Logo */}
                 <a className="logo_a" href="/">
-                    <img className="logo" src={img1} alt="Universe Language School Logo" />
+                    <img
+                        className="logo"
+                        src={`${process.env.PUBLIC_URL}/universe-logo.svg`}
+                        alt="Universe Language School Logo"
+                    />
                     <div className="logoText">
                         <p>Universe</p>
                         <p>Language School</p>

@@ -1,5 +1,6 @@
 .listening-form {
   padding: 20px;
+  background: var(--u-bg);
 }
 
 .heading {
@@ -13,13 +14,13 @@
 }
 
 .cart {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
+  background: var(--u-surface);
+  border: 1px solid var(--u-border);
   padding: 15px;
   border-radius: 10px;
   width: 250px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--u-shadow);
 }
 
 .cart p {
@@ -34,7 +35,7 @@
 }
 
 .cart button {
-  background: #007bff;
+  background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
   color: white;
   border: none;
   padding: 6px 12px;
@@ -43,9 +44,10 @@
 }
 
 .delete-btn {
-  background: red;
+  background: var(--u-accent);
 }
 
 .cart button:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
 }

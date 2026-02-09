@@ -1,6 +1,7 @@
 .writing_page {
     width: 100%;
     padding: 20px;
+    background: var(--u-bg);
 }
 
 .card_container {
@@ -10,21 +11,28 @@
 }
 
 .test_card {
-    background: white;
+    background: var(--u-surface);
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--u-shadow);
     text-align: center;
+    border: 1px solid var(--u-border);
 }
 
 .start_btn {
     margin-top: 10px;
     padding: 8px 15px;
     border: none;
-    background: #0074ff;
+    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
     color: white;
     border-radius: 8px;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.start_btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(75, 123, 255, 0.25);
 }
 
 .test_screen {

@@ -222,6 +222,7 @@ function ReadingForm() {
     const [userAnswers, setUserAnswers] = useState([]);
     const [secondsLeft, setSecondsLeft] = useState(3600);
     const [scoreResult, setScoreResult] = useState(null);
+    const [savingScore, setSavingScore] = useState(false);
 
     /* ================= LOAD TEST ================= */
 
@@ -281,6 +282,7 @@ function ReadingForm() {
                 totalQuestions: 0,
                 passageCorrect: 0,
                 passageTotal: 0,
+                passageResults: [],
                 academicBand: "N/A",
                 generalBand: "N/A",
                 bandAvailable: false,
@@ -293,6 +295,10 @@ function ReadingForm() {
         let passageCorrect = 0;
         let passageTotal = 0;
         let hasAnswerKey = false;
+        const passageResults = test.passages.map(() => ({
+            correct: 0,
+            total: 0
+        }));
 
         test.passages.forEach((p, pIndex) => {
             const defs = getQuestionDefs(p.testText || "");
@@ -301,6 +307,7 @@ function ReadingForm() {
 
             defs.forEach((_, qIndex) => {
                 totalQuestions += 1;
+                passageResults[pIndex].total += 1;
                 if (pIndex === activePassage) passageTotal += 1;
 
                 const correctValue = correctAnswers[qIndex]?.value || "";
@@ -308,6 +315,7 @@ function ReadingForm() {
 
                 if (isCorrectAnswer(answers[qIndex], correctValue)) {
                     totalCorrect += 1;
+                    passageResults[pIndex].correct += 1;
                     if (pIndex === activePassage) passageCorrect += 1;
                 }
             });
@@ -326,6 +334,7 @@ function ReadingForm() {
             totalQuestions,
             passageCorrect,
             passageTotal,
+            passageResults,
             academicBand,
             generalBand,
             bandAvailable,
@@ -335,10 +344,32 @@ function ReadingForm() {
 
     /* ================= SUBMIT ================= */
 
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback(async () => {
         if (!test) return;
         const result = calculateScores();
         setScoreResult(result);
+        if (!result.hasAnswerKey) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+            setSavingScore(true);
+            await axios.post(
+                "/score/add",
+                {
+                    testId: test._id,
+                    score: result.totalCorrect
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+        } catch (err) {
+            console.error("Score save error:", err.response?.data || err);
+        } finally {
+            setSavingScore(false);
+        }
     }, [userAnswers, activePassage, test]);
 
     /* ================= SAFE CHECK ================= */
@@ -500,8 +531,8 @@ function ReadingForm() {
 
                     <br />
 
-                    <button className="submit-btn" onClick={handleSubmit}>
-                        Submit Passage {activePassage + 1}
+                    <button className="submit-btn" onClick={handleSubmit} disabled={savingScore}>
+                        {savingScore ? "Saving..." : `Submit Passage ${activePassage + 1}`}
                     </button>
 
                     {scoreResult && (
@@ -521,6 +552,18 @@ function ReadingForm() {
                                 {scoreResult.totalCorrect} /{" "}
                                 {scoreResult.totalQuestions}
                             </div>
+                            {scoreResult.passageResults.length > 0 && (
+                                <div className="score-breakdown">
+                                    <strong>Per passage:</strong>
+                                    <div className="score-breakdown-list">
+                                        {scoreResult.passageResults.map((p, idx) => (
+                                            <span key={`passage-score-${idx}`}>
+                                                Passage {idx + 1}: {p.correct} / {p.total}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <strong>Band (Academic):</strong>{" "}
                                 {scoreResult.academicBand}

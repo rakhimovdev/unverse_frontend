@@ -1,7 +1,7 @@
 .app {
     width: 100%;
     min-height: 100vh;
-    background-color: white;
+    background-color: transparent;
     display: flex;
     flex-direction: column;
 
@@ -12,6 +12,13 @@
     overflow: hidden;
     white-space: nowrap;
     width: 100%;
+    background: linear-gradient(120deg, #0b1220 0%, #16223b 50%, #0b1220 100%);
+    color: #e9f1ff;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(84, 211, 255, 0.2);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .marquee span {

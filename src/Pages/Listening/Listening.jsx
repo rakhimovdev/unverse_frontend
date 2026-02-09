@@ -136,7 +136,7 @@ function ListeningTest() {
     };
 
     return (
-        <div className="container" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+        <div className="listening-container" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
             <h2>🎧 Listening Test (Image + Drag & Resize Inputs)</h2>
 
             <input

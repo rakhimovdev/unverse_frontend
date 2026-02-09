@@ -1,13 +1,14 @@
 /* ===== LAYOUT ===== */
 .readingform-blue {
     padding: 20px;
-    background: #f4f7fb;
+    background: var(--u-bg);
 }
 
 .reading-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--u-ink);
 }
 
 .container-blue {
@@ -19,12 +20,15 @@
 /* ===== READING ===== */
 .reading-half {
     width: 50%;
-    background: white;
+    background: var(--u-surface);
     padding: 20px;
     line-height: 1.7;
     font-size: 16px;
     max-height: 75vh;
     overflow-y: scroll;
+    border-radius: 16px;
+    box-shadow: var(--u-shadow);
+    border: 1px solid var(--u-border);
 }
 
 /* ADMIN HIGHLIGHTS */
@@ -46,10 +50,13 @@
 /* ===== QUESTIONS ===== */
 .test-half {
     width: 50%;
-    background: white;
+    background: var(--u-surface);
     padding: 20px;
     max-height: 75vh;
     overflow-y: scroll;
+    border-radius: 16px;
+    box-shadow: var(--u-shadow);
+    border: 1px solid var(--u-border);
 }
 
 .question-block {
@@ -61,32 +68,46 @@
 }
 
 .correct {
-    color: green;
+    color: #16a34a;
     margin-left: 8px;
 }
 
 .wrong {
-    color: red;
+    color: #ff6b6b;
     margin-left: 8px;
 }
 
 /* ===== TABS ===== */
 .passage-tabs button.active {
-    background: #2563eb;
+    background: var(--u-primary);
     color: white;
 }
 
 /* ===== BUTTONS ===== */
 .submit-btn {
     margin-top: 20px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(75, 123, 255, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 28px rgba(75, 123, 255, 0.3);
 }
 
 /* ===== SCORE BOX ===== */
 .score-box {
     margin-top: 16px;
     padding: 12px;
-    border: 1px solid #e5e7eb;
-    background: #f9fafb;
+    border: 1px solid var(--u-border);
+    background: #f7f9ff;
     border-radius: 8px;
     font-size: 14px;
     display: flex;
@@ -94,15 +115,29 @@
     gap: 6px;
 }
 
+.score-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.score-breakdown-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: var(--u-muted);
+    font-weight: 600;
+}
+
 .score-note {
-    color: #6b7280;
+    color: var(--u-muted);
     font-size: 12px;
 }
 
 /* ===== LAYOUT ===== */
 .readingform-blue {
     padding: 20px;
-    background: #f4f7fb;
+    background: var(--u-bg);
 }
 
 .reading-header {
@@ -120,13 +155,16 @@
 /* ===== READING ===== */
 .reading-half {
     width: 50%;
-    background: white;
+    background: var(--u-surface);
     padding: 20px;
     line-height: 1.7;
     font-size: 16px;
 
     /* 🔥 FORMAT SAQLANADI */
     white-space: pre-wrap;
+    border-radius: 16px;
+    box-shadow: var(--u-shadow);
+    border: 1px solid var(--u-border);
 }
 
 /* HIGHLIGHTS */
@@ -142,8 +180,11 @@
 /* ===== QUESTIONS ===== */
 .test-half {
     width: 50%;
-    background: white;
+    background: var(--u-surface);
     padding: 20px;
+    border-radius: 16px;
+    box-shadow: var(--u-shadow);
+    border: 1px solid var(--u-border);
 }
 
 .question-block {
@@ -158,18 +199,18 @@
 }
 
 .correct {
-    color: green;
+    color: #16a34a;
     margin-left: 8px;
 }
 
 .wrong {
-    color: red;
+    color: #ff6b6b;
     margin-left: 8px;
 }
 
 /* ===== TABS ===== */
 .passage-tabs button.active {
-    background: #2563eb;
+    background: var(--u-primary);
     color: white;
 }
 

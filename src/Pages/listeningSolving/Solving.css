@@ -1,12 +1,17 @@
 .test-image {
     position: relative;
-    width: 1000px;
-    /* rasm kengligi doim shu */
-    margin: 0 auto;
+    width: min(1000px, 100%);
+    margin: 30px auto;
+    padding: 18px;
+    background: var(--u-surface);
+    border-radius: 18px;
+    border: 1px solid var(--u-border);
+    box-shadow: var(--u-shadow);
 }
 
 .test-image img {
     width: 100%;
     height: auto;
     display: block;
+    border-radius: 12px;
 }
