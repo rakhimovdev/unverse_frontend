@@ -38,11 +38,11 @@
 }
 
 .students-table tr:nth-child(even) {
-    background-color: #f7f9ff;
+    background-color: var(--u-tint);
 }
 
 .students-table tr:hover {
-    background-color: #eef3ff;
+    background-color: var(--u-tint-strong);
 }
 
 
@@ -111,7 +111,7 @@
     border: none;
     cursor: pointer;
     border-radius: 6px;
-    background: #e9eefc;
+    background: var(--u-tint-strong);
     font-weight: 600;
 }
 

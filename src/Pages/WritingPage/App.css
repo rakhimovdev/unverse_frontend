@@ -6,7 +6,7 @@
     /* to‘liq ekran balandligi */
     padding: 20px;
     box-sizing: border-box;
-    background-color: #f5f5f5;
+    background-color: var(--u-bg);
     gap: 20px;
     /* chap va o‘ng panel orasidagi bo‘shliq */
 }
@@ -14,8 +14,8 @@
 .writing-test-page {
     min-height: 100vh;
     padding: 36px 6vw 64px;
-    background: #f5f7fb;
-    color: #0c1a27;
+    background: var(--u-bg);
+    color: var(--u-ink);
     box-sizing: border-box;
 }
 
@@ -33,7 +33,7 @@
     letter-spacing: 0.2em;
     font-size: 12px;
     font-weight: 600;
-    color: #6a7b8c;
+    color: var(--u-muted);
     margin: 0 0 10px;
 }
 
@@ -47,8 +47,8 @@
     gap: 8px;
     padding: 6px;
     border-radius: 999px;
-    background: rgba(15, 108, 255, 0.08);
-    border: 1px solid rgba(15, 108, 255, 0.2);
+    background: rgba(179, 33, 28, 0.08);
+    border: 1px solid rgba(179, 33, 28, 0.2);
 }
 
 .writing-test-switch-btn {
@@ -57,21 +57,21 @@
     padding: 10px 18px;
     font-weight: 600;
     background: transparent;
-    color: #5a6b7c;
+    color: var(--u-muted);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .writing-test-switch-btn.active {
-    background: #0f6cff;
+    background: var(--u-primary);
     color: #fff;
-    box-shadow: 0 12px 24px rgba(15, 108, 255, 0.25);
+    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
 }
 
 .writing-test-carousel {
     border-radius: 24px;
-    background: #ffffff;
-    border: 1px solid #e0e6f5;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(12, 26, 39, 0.1);
 }
@@ -98,8 +98,8 @@
     gap: 24px;
     padding: 24px;
     border-radius: 20px;
-    background: #ffffff;
-    border: 1px solid #eef2fb;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
 }
 
 .writing-test-prompt h2 {
@@ -108,7 +108,7 @@
 
 .writing-test-topic {
     margin: 0 0 16px;
-    color: #5a6b7c;
+    color: var(--u-muted);
     font-weight: 600;
 }
 
@@ -117,7 +117,7 @@
     max-height: 360px;
     object-fit: contain;
     border-radius: 12px;
-    background: #f7f9ff;
+    background: var(--u-tint);
 }
 
 .writing-test-answer h3 {
@@ -129,7 +129,7 @@
     min-height: 340px;
     padding: 16px;
     border-radius: 12px;
-    border: 1px solid #ccd6ea;
+    border: 1px solid var(--u-border);
     font-size: 16px;
     resize: vertical;
     box-sizing: border-box;
@@ -146,7 +146,7 @@
     padding: 14px 30px;
     border-radius: 14px;
     border: none;
-    background: #0f6cff;
+    background: var(--u-primary);
     color: white;
     font-size: 16px;
     font-weight: 600;
@@ -155,9 +155,9 @@
 }
 
 .writing-test-save:hover {
-    background: #0a4fb8;
+    background: var(--u-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(15, 108, 255, 0.3);
+    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.3);
 }
 
 .writing-test-save:disabled {
@@ -186,7 +186,7 @@
     /* har biri ekranning yarmida */
     display: flex;
     flex-direction: column;
-    background-color: white;
+    background-color: var(--u-surface);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -203,8 +203,8 @@
     margin-top: 12px;
     padding: 16px;
     border-radius: 10px;
-    background: #f0f4ff;
-    color: #3a4b66;
+    background: var(--u-tint);
+    color: var(--u-muted);
     font-weight: 600;
     text-align: center;
 }
@@ -213,9 +213,9 @@
     margin-top: 12px;
     padding: 18px;
     border-radius: 12px;
-    background: #ffffff;
-    border: 1px solid #e3e8f5;
-    color: #1f2a44;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    color: var(--u-ink);
     font-size: 16px;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -256,7 +256,7 @@
     padding: 15px;
     font-size: 16px;
     border-radius: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--u-border);
     box-sizing: border-box;
 }
 

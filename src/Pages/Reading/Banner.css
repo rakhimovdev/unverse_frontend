@@ -70,14 +70,14 @@
     border: 1px solid var(--u-border);
     font-size: 14px;
     box-sizing: border-box;
-    background: #f7f9ff;
+    background: var(--u-tint);
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .banner .left .filter-input:focus {
     border-color: var(--u-primary);
-    box-shadow: 0 0 0 3px rgba(75, 123, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(90, 13, 13, 0.15);
 }
 
 .banner .left .filter-button {
@@ -90,7 +90,7 @@
     font-size: 16px;
     cursor: pointer;
     font-weight: bold;
-    box-shadow: 0 10px 20px rgba(75, 123, 255, 0.25);
+    box-shadow: 0 10px 20px rgba(90, 13, 13, 0.25);
 }
 
 .banner .right {
@@ -123,7 +123,7 @@
     padding: 8px 22px;
     font-size: 18px;
     border-radius: 10px;
-    background-color: #f7f9ff;
+    background-color: var(--u-tint);
     color: var(--u-primary);
 }
 
@@ -140,7 +140,7 @@
     max-height: 550px;
     overflow-y: scroll;
     margin: auto;
-    background: #f7f9ff;
+    background: var(--u-tint);
 }
 
 .banner .right .box .cart {
@@ -152,14 +152,14 @@
     align-items: flex-start;
     justify-content: flex-start;
     border: 1px solid var(--u-border);
-    background: #fff;
+    background: var(--u-surface);
     font-size: 18px;
-    color: #222;
+    color: var(--u-ink);
     gap: 10px;
     padding: 16px 14px 12px 14px;
     border-radius: 15px;
     /* Yangi box-shadow: pastda gradient va yuqorida yumshoq soya */
-    box-shadow: 0 12px 24px rgba(12, 26, 39, 0.08);
+    box-shadow: 0 12px 24px rgba(60, 12, 12, 0.08);
     position: relative;
     transition:
         box-shadow 0.3s cubic-bezier(.4, 2, .6, 1),
@@ -168,7 +168,7 @@
 }
 
 .banner .right .box .cart:hover {
-    box-shadow: 0 18px 32px rgba(12, 26, 39, 0.16);
+    box-shadow: 0 18px 32px rgba(60, 12, 12, 0.16);
     border-color: var(--u-primary);
     transform: scale(1.04) translateY(-4px) rotateZ(-1deg);
     z-index: 2;
@@ -202,7 +202,7 @@
     width: 36px;
     height: 36px;
     padding: 0;
-    background: #fff;
+    background: var(--u-surface);
     color: var(--u-accent);
     border: 1.5px solid var(--u-accent);
     border-radius: 50%;
@@ -240,7 +240,7 @@
     cursor: pointer;
     margin-top: 4px;
     margin-left: 0;
-    box-shadow: 0 2px 8px rgba(75, 123, 255, 0.18);
+    box-shadow: 0 2px 8px rgba(90, 13, 13, 0.18);
     transition:
         background 0.2s,
         transform 0.15s cubic-bezier(.4, 2, .6, 1),
@@ -249,9 +249,9 @@
 }
 
 .banner .right .box .cart button:not(.delete-btn):hover {
-    background: linear-gradient(90deg, var(--u-primary-dark) 60%, #2419b6 100%);
+    background: linear-gradient(90deg, var(--u-primary-dark) 60%, var(--u-primary-deep) 100%);
     transform: scale(1.09) translateY(-2px);
-    box-shadow: 0 6px 18px rgba(75, 123, 255, 0.3);
+    box-shadow: 0 6px 18px rgba(90, 13, 13, 0.3);
 }
 
 @keyframes shake {

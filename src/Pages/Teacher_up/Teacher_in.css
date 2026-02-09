@@ -59,7 +59,7 @@
     border: 1px solid var(--u-border);
     padding: 12px 14px;
     border-radius: 10px;
-    background: #f7f9ff;
+    background: var(--u-tint);
     color: var(--u-ink);
 }
 

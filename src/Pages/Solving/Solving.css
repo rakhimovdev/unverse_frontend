@@ -30,7 +30,7 @@
     padding: 8px 14px;
     border: none;
     border-radius: 6px;
-    background: #e9eefc;
+    background: var(--u-tint-strong);
     cursor: pointer;
     font-weight: 600;
 }
@@ -60,7 +60,7 @@
     padding: 6px 10px;
     border: 1px solid var(--u-border);
     border-radius: 6px;
-    background: #ffffff;
+    background: var(--u-surface);
     cursor: pointer;
     font-weight: 600;
     font-size: 12px;
@@ -68,13 +68,13 @@
 }
 
 .token-buttons button:hover {
-    background: #f3f6ff;
+    background: var(--u-tint);
 }
 
 .token-buttons button.copied {
     background: #16a34a;
     border-color: #16a34a;
-    color: #ffffff;
+    color: #fff;
 }
 
 /* ================= SPLIT SCREEN ================= */
@@ -104,7 +104,7 @@
     padding: 12px;
     border: 1px solid var(--u-border);
     border-radius: 8px;
-    background: #ffffff;
+    background: var(--u-surface);
     font-size: 15px;
     line-height: 1.7;
     white-space: pre-wrap;
@@ -146,7 +146,7 @@
 }
 
 .selection-buttons button {
-    background: #ffffff;
+    background: var(--u-surface);
     color: var(--u-primary);
     border: none;
     padding: 4px 8px;
@@ -159,7 +159,7 @@
 }
 
 .selection-buttons button:hover {
-    background: #e9eefc;
+    background: var(--u-tint-strong);
 }
 
 /* ================= ACTION BUTTONS ================= */
@@ -175,7 +175,7 @@
     padding: 10px 18px;
     font-size: 16px;
     background: var(--u-primary);
-    color: #ffffff;
+    color: #fff;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -185,7 +185,7 @@
     padding: 10px 18px;
     font-size: 16px;
     background: var(--u-accent);
-    color: #ffffff;
+    color: #fff;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -270,7 +270,7 @@
 
     border-radius: 8px;
 
-    background: #fff;
+    background: var(--u-surface);
 
     line-height: 1.7;
 

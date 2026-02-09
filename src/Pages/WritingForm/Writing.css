@@ -32,7 +32,7 @@
 
 .start_btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(75, 123, 255, 0.25);
+    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
 }
 
 .test_screen {
@@ -41,7 +41,7 @@
     justify-content: space-around;
     gap: 20px;
     width: 100%;
-    border: 2px solid #ddd;
+    border: 2px solid var(--u-border);
     border-radius: 10px;
     padding: 20px;
     box-sizing: border-box;

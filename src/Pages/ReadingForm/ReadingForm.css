@@ -93,13 +93,13 @@
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(75, 123, 255, 0.25);
+    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 28px rgba(75, 123, 255, 0.3);
+    box-shadow: 0 16px 28px rgba(90, 13, 13, 0.3);
 }
 
 /* ===== SCORE BOX ===== */
@@ -107,7 +107,7 @@
     margin-top: 16px;
     padding: 12px;
     border: 1px solid var(--u-border);
-    background: #f7f9ff;
+    background: var(--u-tint);
     border-radius: 8px;
     font-size: 14px;
     display: flex;

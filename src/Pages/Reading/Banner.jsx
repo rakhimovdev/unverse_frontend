@@ -6,6 +6,8 @@ import { FaTrash } from "react-icons/fa";
 
 function Banner() {
   const [uploadedTests, setUploadedTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
   // LocalStorage'dan token va role olish
@@ -14,11 +16,18 @@ function Banner() {
 
   // Testlarni backenddan olish
   const fetchTests = () => {
-    axios.get('/test/all')
+    setLoading(true);
+    setErrorMsg("");
+    axios.get('/test/all', { params: { summary: 1 } })
       .then(res => {
         setUploadedTests(res.data || []);
+        setLoading(false);
       })
-      .catch(() => setUploadedTests([]));
+      .catch(() => {
+        setUploadedTests([]);
+        setErrorMsg("Testlarni yuklashda muammo bo'ldi. Qayta urinib ko'ring.");
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -59,7 +68,11 @@ function Banner() {
           <h2>Uploaded Tests</h2>
         </div>
         <div className="box">
-          {uploadedTests.length > 0 ? (
+          {loading ? (
+            <p>Yuklanmoqda...</p>
+          ) : errorMsg ? (
+            <p>{errorMsg}</p>
+          ) : uploadedTests.length > 0 ? (
             uploadedTests.map(test => (
               <div className="cart" key={test._id}>
                 <p>{test.name}</p>
