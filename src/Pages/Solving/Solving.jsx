@@ -283,7 +283,7 @@ function Preview({ passage, testName, answers = [], onAnswersChange }) {
             .fill("")
             .map((_, i) => answers[i] || "");
         onAnswersChange(next);
-    }, [html]);
+    }, [html, answers, onAnswersChange]);
 
     return (
         <div className="readingform-blue">
@@ -478,7 +478,7 @@ export default function CreateReadingTest() {
     useEffect(() => {
         editorRef.current.innerHTML = current.readingText;
         questionEditorRef.current.innerHTML = current.testText;
-    }, [activePassage]);
+    }, [activePassage, current.readingText, current.testText]);
 
     const syncQuestions = (html, existingQuestions = []) => {
         const defs = getQuestionDefs(html);

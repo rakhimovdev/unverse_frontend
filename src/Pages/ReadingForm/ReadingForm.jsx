@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { FaClock } from "react-icons/fa6";
 import { useParams } from "react-router-dom";
@@ -344,7 +344,7 @@ function ReadingForm() {
 
     /* ================= SUBMIT ================= */
 
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = async () => {
         if (!test) return;
         const result = calculateScores();
         setScoreResult(result);
@@ -370,7 +370,7 @@ function ReadingForm() {
         } finally {
             setSavingScore(false);
         }
-    }, [userAnswers, activePassage, test]);
+    };
 
     /* ================= SAFE CHECK ================= */
 
