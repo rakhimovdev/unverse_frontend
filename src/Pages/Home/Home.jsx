@@ -7,7 +7,7 @@ function Home() {
         <main className="home">
             <section className="hero">
                 <div className="hero__content">
-                    <p className="eyebrow">Nine Language School</p>
+                    <p className="eyebrow">Universe Language School</p>
                     <h1>Train for band 9 with a system that builds every skill.</h1>
                     <p className="lead">
                         Short, focused practice. Clear feedback. Real progress you can see. Build reading, listening,
