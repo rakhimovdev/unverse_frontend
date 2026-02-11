@@ -94,10 +94,86 @@
     cursor: pointer;
     font-size: 0.85rem;
     transition: background-color 0.3s;
+    margin-right: 8px;
 }
 
 .delete-btn1:hover {
     background-color: #d94c4c;
+}
+
+.view-btn {
+    background-color: var(--u-primary);
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.3s;
+}
+
+.view-btn:hover {
+    background-color: var(--u-primary-dark);
+}
+
+.score-input {
+    width: 90px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--u-border);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.score-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.writing-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 1000;
+}
+
+.writing-modal-content {
+    width: min(1100px, 95vw);
+    max-height: 90vh;
+    overflow: auto;
+    background: var(--u-bg);
+    border-radius: 18px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.writing-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    border: none;
+    background: var(--u-tint-strong);
+    color: var(--u-ink);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.writing-modal-meta {
+    margin: 8px 0 0;
+    color: var(--u-muted);
+    font-weight: 600;
+}
+
+.writing-modal .writing-test-carousel {
+    margin-top: 16px;
 }
 
 .carousel-tabs {

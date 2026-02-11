@@ -1,8 +1,13 @@
-import axios from "axios"
+import axios from "axios";
 
-const Api = axios.create({
-    baseURL: 'https://unverse-backend.onrender.com/' // Backend server URL
-})
-//  https://unverse-backend.onrender.com/
-// http://localhost:5000/
-export default Api
+const baseURL =
+    process.env.REACT_APP_API_URL ||
+    (process.env.NODE_ENV === "development"
+        ? "http://localhost:5000/"
+        : "https://unverse-backend.onrender.com/");
+
+const Api = axios.create({ baseURL });
+
+export default Api;
+
+

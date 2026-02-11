@@ -144,6 +144,9 @@ function Home() {
                 <div>
                     <h3>Universe Language School</h3>
                     <p>Focused practice for ambitious learners.</p>
+                    <br />
+                    <br />
+                    <h3>This Web Site Created By <Link to="https://myportfolio-wheat-seven.vercel.app/">Rakhimov_dev</Link></h3>
                 </div>
                 <div className="home-footer__links">
                     <a href="/read">Reading</a>

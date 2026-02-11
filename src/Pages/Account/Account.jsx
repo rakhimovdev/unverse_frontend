@@ -3,6 +3,7 @@ import axios from "../../Api/Axios";
 
 function Account() {
     const [results, setResults] = useState([]);
+    const [writingResults, setWritingResults] = useState([]);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -24,6 +25,11 @@ function Account() {
                     headers: { Authorization: token }
                 });
                 setResults(resScores.data);
+
+                const resWriting = await axios.get("/scorew/my", {
+                    headers: { Authorization: token }
+                });
+                setWritingResults(resWriting.data);
             } catch (err) {
                 console.error("Error loading account:", err);
             } finally {
@@ -70,6 +76,32 @@ function Account() {
                     </table>
                 ) : (
                     <p>You have not completed any tests yet.</p>
+                )}
+            </div>
+
+            <div className="results" style={{ marginTop: "30px" }}>
+                <h2>My Writing Results</h2>
+                {writingResults.length > 0 ? (
+                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {writingResults.map((r, i) => (
+                                <tr key={i}>
+                                    <td>{r.testName || "Writing Test"}</td>
+                                    <td>{r.score}</td>
+                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p>You have no writing results yet.</p>
                 )}
             </div>
         </div>

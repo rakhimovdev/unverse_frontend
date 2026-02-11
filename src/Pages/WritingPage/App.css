@@ -28,6 +28,53 @@
     margin-bottom: 24px;
 }
 
+.writing-test-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.writing-test-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(179, 33, 28, 0.08);
+    border: 1px solid rgba(179, 33, 28, 0.2);
+    font-weight: 600;
+}
+
+.writing-test-timer.is-done {
+    background: rgba(176, 0, 32, 0.12);
+    border-color: rgba(176, 0, 32, 0.3);
+    color: #b00020;
+}
+
+.writing-test-timer-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--u-muted);
+}
+
+.writing-test-timer-value {
+    font-size: 18px;
+    letter-spacing: 0.08em;
+}
+
+.writing-test-wordcounts {
+    display: flex;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--u-muted);
+    font-weight: 600;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .writing-test-eyebrow {
     text-transform: uppercase;
     letter-spacing: 0.2em;
@@ -122,6 +169,20 @@
 
 .writing-test-answer h3 {
     margin: 0 0 12px;
+}
+
+.writing-test-answer-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    color: var(--u-muted);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.writing-test-wordcount {
+    letter-spacing: 0.03em;
 }
 
 .writing-test-answer textarea {
@@ -234,6 +295,15 @@
 @media (max-width: 720px) {
     .writing-test-page {
         padding: 28px 20px 48px;
+    }
+
+    .writing-test-meta {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .writing-test-wordcounts {
+        justify-content: flex-start;
     }
 
     .writing-test-panel {

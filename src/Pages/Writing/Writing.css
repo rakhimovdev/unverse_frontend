@@ -230,6 +230,34 @@
     border-radius: 14px;
 }
 
+.task1-preview {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-self: stretch;
+}
+
+.task1-text-preview {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--u-border);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--writing-ink);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.task1-text-placeholder {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px dashed rgba(179, 33, 28, 0.25);
+    color: var(--writing-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
 .text-preview {
     width: 100%;
     height: 100%;

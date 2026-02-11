@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "../../Api/Axios";
 import "./App.css";
@@ -15,6 +15,7 @@ function Index() {
     const [answers, setAnswers] = useState({ task1: "", task2: "" });
     const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(60 * 60);
 
     useEffect(() => {
         const getTest = async () => {
@@ -28,6 +29,48 @@ function Index() {
 
         getTest();
     }, [id]);
+
+    useEffect(() => {
+        setTimeLeft(60 * 60);
+    }, [id]);
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const intervalId = setInterval(() => {
+            setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [timeLeft]);
+
+    const formatTime = (totalSeconds) => {
+        const hours = Math.floor(totalSeconds / 3600)
+            .toString()
+            .padStart(2, "0");
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+            .toString()
+            .padStart(2, "0");
+        const seconds = Math.floor(totalSeconds % 60)
+            .toString()
+            .padStart(2, "0");
+
+        return `${hours}:${minutes}:${seconds}`;
+    };
+
+    const countWords = (value) => {
+        const trimmed = value.trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).length;
+    };
+
+    const wordCounts = useMemo(
+        () => ({
+            task1: countWords(answers.task1),
+            task2: countWords(answers.task2)
+        }),
+        [answers.task1, answers.task2]
+    );
 
     const handleSubmit = async () => {
         if (!answers.task1.trim() || !answers.task2.trim()) {
@@ -63,13 +106,16 @@ function Index() {
 
     if (!test) return <h2>Loading...</h2>;
 
+    const sharedTopic = test.task1Topic || test.topic || "";
+
     const task1 = {
-        topic: test.task1Topic || test.topic || "",
-        image: test.task1Image || test.image || ""
+        topic: sharedTopic,
+        image: test.task1Image || test.image || "",
+        text: test.task1Text || (test.task === "task1" ? test.taskText : "") || ""
     };
 
     const task2 = {
-        topic: test.task2Topic || "",
+        topic: sharedTopic,
         text: test.task2Text || test.taskText || ""
     };
 
@@ -79,6 +125,23 @@ function Index() {
                 <div>
                     <p className="writing-test-eyebrow">IELTS Writing</p>
                     <h1>Writing Test</h1>
+                </div>
+                <div className="writing-test-meta">
+                    <div
+                        className={`writing-test-timer ${
+                            timeLeft === 0 ? "is-done" : ""
+                        }`}
+                        aria-live="polite"
+                    >
+                        <span className="writing-test-timer-label">Time left</span>
+                        <span className="writing-test-timer-value">
+                            {formatTime(timeLeft)}
+                        </span>
+                    </div>
+                    <div className="writing-test-wordcounts">
+                        <span>Task 1: {wordCounts.task1} words</span>
+                        <span>Task 2: {wordCounts.task2} words</span>
+                    </div>
                 </div>
                 <div className="writing-test-switch" role="tablist" aria-label="Task switch">
                     {TASKS.map((task) => (
@@ -116,9 +179,19 @@ function Index() {
                                 ) : (
                                     <div className="no-image">Bu task uchun rasm yo'q.</div>
                                 )}
+                                {task1.text ? (
+                                    <div className="task-text">{task1.text}</div>
+                                ) : (
+                                    <div className="no-image">Bu task uchun matn yo'q.</div>
+                                )}
                             </div>
                             <div className="writing-test-answer">
                                 <h3>Task 1 Answer</h3>
+                                <div className="writing-test-answer-meta">
+                                    <span className="writing-test-wordcount">
+                                        {wordCounts.task1} words
+                                    </span>
+                                </div>
                                 <textarea
                                     value={answers.task1}
                                     onChange={(e) => {
@@ -147,6 +220,11 @@ function Index() {
                             </div>
                             <div className="writing-test-answer">
                                 <h3>Task 2 Answer</h3>
+                                <div className="writing-test-answer-meta">
+                                    <span className="writing-test-wordcount">
+                                        {wordCounts.task2} words
+                                    </span>
+                                </div>
                                 <textarea
                                     value={answers.task2}
                                     onChange={(e) => {
