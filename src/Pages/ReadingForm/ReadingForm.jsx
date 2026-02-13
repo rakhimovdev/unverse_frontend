@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { FaClock } from "react-icons/fa6";
 import { useParams } from "react-router-dom";
@@ -212,6 +212,186 @@ const getBandScore = (rawScore, table) => {
     return "<3.0";
 };
 
+const createTextWalker = (container) =>
+    document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+        acceptNode: (node) => {
+            if (!node.nodeValue || !node.nodeValue.trim()) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            const parent = node.parentElement;
+            if (!parent) return NodeFilter.FILTER_REJECT;
+            if (
+                parent.closest(
+                    "input, select, option, textarea, button, script, style"
+                )
+            ) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            if (parent.closest(".highlight-toolbar")) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+        },
+    });
+
+const getFilteredTextLength = (container, range) => {
+    const walker = createTextWalker(container);
+    let length = 0;
+
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        try {
+            if (!range.intersectsNode(node)) continue;
+        } catch (err) {
+            continue;
+        }
+
+        let start = 0;
+        let end = node.nodeValue?.length || 0;
+
+        if (range.startContainer === node) {
+            start = range.startOffset;
+        }
+
+        if (range.endContainer === node) {
+            end = range.endOffset;
+        }
+
+        if (start < end) {
+            length += end - start;
+        }
+    }
+
+    return length;
+};
+
+const createRangeFromOffsets = (container, offsets) => {
+    if (!offsets) return null;
+    const { start, end } = offsets;
+    const range = document.createRange();
+
+    let current = 0;
+    let startNode = null;
+    let endNode = null;
+    let startOffset = 0;
+    let endOffset = 0;
+
+    const walker = createTextWalker(container);
+
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const length = node.nodeValue?.length || 0;
+        const next = current + length;
+
+        if (!startNode && start <= next) {
+            startNode = node;
+            startOffset = Math.max(0, start - current);
+        }
+
+        if (!endNode && end <= next) {
+            endNode = node;
+            endOffset = Math.max(0, end - current);
+            break;
+        }
+
+        current = next;
+    }
+
+    if (!startNode || !endNode) return null;
+
+    range.setStart(
+        startNode,
+        Math.min(startOffset, startNode.nodeValue.length)
+    );
+    range.setEnd(endNode, Math.min(endOffset, endNode.nodeValue.length));
+    return range;
+};
+
+const unwrapHighlightSpan = (span) => {
+    const parent = span.parentNode;
+    if (!parent) return;
+
+    while (span.firstChild) {
+        parent.insertBefore(span.firstChild, span);
+    }
+
+    parent.removeChild(span);
+    parent.normalize();
+};
+
+const removeHighlightInRange = (container, range) => {
+    const highlights = container.querySelectorAll(
+        ".highlight-yellow, .highlight-green, .highlight-blue"
+    );
+
+    highlights.forEach((span) => {
+        try {
+            if (!range.intersectsNode(span)) return;
+        } catch (err) {
+            return;
+        }
+
+        unwrapHighlightSpan(span);
+    });
+};
+
+const removeAllHighlights = (container) => {
+    if (!container) return;
+    const highlights = container.querySelectorAll(
+        ".highlight-yellow, .highlight-green, .highlight-blue"
+    );
+    highlights.forEach((span) => unwrapHighlightSpan(span));
+};
+
+const getTextNodesInRange = (container, range) => {
+    const nodes = [];
+    const walker = createTextWalker(container);
+
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        try {
+            if (!range.intersectsNode(node)) continue;
+        } catch (err) {
+            continue;
+        }
+        nodes.push(node);
+    }
+
+    return nodes;
+};
+
+const wrapRangeInClass = (container, range, className) => {
+    const textNodes = getTextNodesInRange(container, range);
+
+    textNodes.forEach((node) => {
+        const length = node.nodeValue?.length || 0;
+        if (!length) return;
+
+        const startOffset =
+            node === range.startContainer ? range.startOffset : 0;
+        const endOffset = node === range.endContainer ? range.endOffset : length;
+
+        if (startOffset === endOffset) return;
+
+        const text = node.nodeValue || "";
+        const before = text.slice(0, startOffset);
+        const middle = text.slice(startOffset, endOffset);
+        const after = text.slice(endOffset);
+
+        const fragment = document.createDocumentFragment();
+        if (before) fragment.appendChild(document.createTextNode(before));
+        if (middle) {
+            const span = document.createElement("span");
+            span.className = className;
+            span.textContent = middle;
+            fragment.appendChild(span);
+        }
+        if (after) fragment.appendChild(document.createTextNode(after));
+
+        node.parentNode.replaceChild(fragment, node);
+    });
+};
+
 function ReadingForm() {
     const { testId } = useParams();
 
@@ -223,6 +403,21 @@ function ReadingForm() {
     const [secondsLeft, setSecondsLeft] = useState(3600);
     const [scoreResult, setScoreResult] = useState(null);
     const [savingScore, setSavingScore] = useState(false);
+    const [readingHtml, setReadingHtml] = useState([]);
+    const [questionHighlights, setQuestionHighlights] = useState([]);
+    const [highlightMenu, setHighlightMenu] = useState({
+        visible: false,
+        top: 0,
+        left: 0,
+        target: null,
+    });
+
+    const readingWrapRef = useRef(null);
+    const readingContentRef = useRef(null);
+    const questionWrapRef = useRef(null);
+    const questionContentRef = useRef(null);
+    const selectionOffsetsRef = useRef(null);
+    const selectionTargetRef = useRef(null);
 
     /* ================= LOAD TEST ================= */
 
@@ -232,6 +427,8 @@ function ReadingForm() {
             .then((res) => {
                 const data = res.data;
                 setTest(data);
+                setReadingHtml(data.passages.map((p) => p.readingText || ""));
+                setQuestionHighlights(data.passages.map(() => []));
 
                 const answers = data.passages.map((p) => {
                     const defs = getQuestionDefs(p.testText || "");
@@ -244,6 +441,37 @@ function ReadingForm() {
                 console.log("LOAD ERROR:", err.response?.data || err);
             });
     }, [testId]);
+
+    useEffect(() => {
+        setHighlightMenu((prev) =>
+            prev.visible ? { ...prev, visible: false, target: null } : prev
+        );
+        selectionOffsetsRef.current = null;
+        selectionTargetRef.current = null;
+    }, [activePassage]);
+
+    useEffect(() => {
+        const handleDocumentMouseDown = (event) => {
+            const readingWrap = readingWrapRef.current;
+            const questionWrap = questionWrapRef.current;
+            if (
+                (readingWrap && readingWrap.contains(event.target)) ||
+                (questionWrap && questionWrap.contains(event.target))
+            ) {
+                return;
+            }
+            setHighlightMenu((prev) =>
+                prev.visible ? { ...prev, visible: false, target: null } : prev
+            );
+            selectionOffsetsRef.current = null;
+            selectionTargetRef.current = null;
+        };
+
+        document.addEventListener("mousedown", handleDocumentMouseDown);
+        return () => {
+            document.removeEventListener("mousedown", handleDocumentMouseDown);
+        };
+    }, []);
 
     /* ================= TIMER ================= */
 
@@ -372,15 +600,45 @@ function ReadingForm() {
         }
     };
 
-    /* ================= SAFE CHECK ================= */
+    useEffect(() => {
+        const content = readingContentRef.current;
+        if (!content) return;
 
-    if (!test) return <p>Loading...</p>;
+        if (!test) {
+            content.innerHTML = "";
+            return;
+        }
 
-    const passage = test.passages[activePassage];
+        const html =
+            readingHtml[activePassage] ??
+            test.passages[activePassage]?.readingText ??
+            "";
 
-    /* ================= PARSE TEST TEXT ================= */
+        if (content.innerHTML !== html) {
+            content.innerHTML = html;
+        }
+    }, [test, readingHtml, activePassage]);
 
-    const renderQuestionHTML = () => {
+    useEffect(() => {
+        const content = questionContentRef.current;
+        if (!content) return;
+
+        removeAllHighlights(content);
+
+        const highlights = questionHighlights[activePassage] || [];
+        highlights.forEach((item) => {
+            const range = createRangeFromOffsets(content, item);
+            if (range) {
+                wrapRangeInClass(content, range, item.className);
+            }
+        });
+    }, [questionHighlights, activePassage, userAnswers]);
+
+    const passage = test?.passages?.[activePassage];
+
+    const questionNodes = useMemo(() => {
+        if (!passage?.testText) return [];
+
         const regex = new RegExp(MARKER_REGEX);
         let questionIndex = 0;
         let nodeKey = 0;
@@ -488,7 +746,206 @@ function ReadingForm() {
         );
 
         return nodes;
+    }, [passage?.testText, activePassage, userAnswers]);
+
+    /* ================= SAFE CHECK ================= */
+
+    if (!test) return <p>Loading...</p>;
+    /* ================= HIGHLIGHTS ================= */
+
+    const hideHighlightMenu = () => {
+        setHighlightMenu((prev) =>
+            prev.visible ? { ...prev, visible: false, target: null } : prev
+        );
     };
+
+    const syncReadingHtml = () => {
+        const content = readingContentRef.current;
+        if (!content) return;
+
+        setReadingHtml((prev) => {
+            const next = [...prev];
+            next[activePassage] = content.innerHTML;
+            return next;
+        });
+    };
+
+    const getSelectionOffsets = (container, range) => {
+        const preRange = document.createRange();
+        preRange.selectNodeContents(container);
+        preRange.setEnd(range.startContainer, range.startOffset);
+
+        const start = getFilteredTextLength(container, preRange);
+        const selectedLength = getFilteredTextLength(container, range);
+        return { start, end: start + selectedLength };
+    };
+
+    const handleSelection = () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+            hideHighlightMenu();
+            selectionOffsetsRef.current = null;
+            selectionTargetRef.current = null;
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const readingContent = readingContentRef.current;
+        const readingWrap = readingWrapRef.current;
+        const questionWrap = questionWrapRef.current;
+        const questionContent = questionContentRef.current;
+
+        let target = null;
+        let content = null;
+        let wrap = null;
+
+        if (readingContent && readingContent.contains(range.commonAncestorContainer)) {
+            target = "reading";
+            content = readingContent;
+            wrap = readingWrap;
+        } else if (
+            questionContent &&
+            questionContent.contains(range.commonAncestorContainer)
+        ) {
+            target = "questions";
+            content = questionContent;
+            wrap = questionWrap;
+        }
+
+        if (!target || !content || !wrap) {
+            hideHighlightMenu();
+            selectionOffsetsRef.current = null;
+            selectionTargetRef.current = null;
+            return;
+        }
+
+        const offsets = getSelectionOffsets(content, range);
+        if (offsets.start === offsets.end) {
+            hideHighlightMenu();
+            selectionOffsetsRef.current = null;
+            selectionTargetRef.current = null;
+            return;
+        }
+
+        selectionOffsetsRef.current = offsets;
+        selectionTargetRef.current = target;
+
+        const rect = range.getBoundingClientRect();
+        const wrapRect = wrap.getBoundingClientRect();
+        const top = rect.top - wrapRect.top + wrap.scrollTop - 10;
+        const left =
+            rect.left - wrapRect.left + wrap.scrollLeft + rect.width / 2;
+
+        setHighlightMenu({
+            visible: true,
+            top: Math.max(top, 48),
+            left: Math.max(left, 8),
+            target,
+        });
+    };
+
+    const applyQuestionHighlight = (className) => {
+        const offsets = selectionOffsetsRef.current;
+        if (!offsets) return;
+
+        setQuestionHighlights((prev) => {
+            const next = [...prev];
+            const current = [...(next[activePassage] || [])];
+            const filtered = current.filter(
+                (item) => item.end <= offsets.start || item.start >= offsets.end
+            );
+
+            if (className) {
+                filtered.push({
+                    start: offsets.start,
+                    end: offsets.end,
+                    className,
+                });
+            }
+
+            next[activePassage] = filtered;
+            return next;
+        });
+    };
+
+    const applyHighlight = (className) => {
+        const target = selectionTargetRef.current;
+        const offsets = selectionOffsetsRef.current;
+        if (!target || !offsets) return;
+
+        if (target === "reading") {
+            const content = readingContentRef.current;
+            if (!content) return;
+
+            const range = createRangeFromOffsets(content, offsets);
+            if (!range) return;
+
+            removeHighlightInRange(content, range);
+
+            if (className) {
+                const refreshedRange = createRangeFromOffsets(content, offsets);
+                if (refreshedRange) {
+                    wrapRangeInClass(content, refreshedRange, className);
+                }
+            }
+
+            syncReadingHtml();
+        }
+
+        if (target === "questions") {
+            applyQuestionHighlight(className);
+        }
+
+        hideHighlightMenu();
+        selectionOffsetsRef.current = null;
+        selectionTargetRef.current = null;
+
+        const selection = window.getSelection();
+        if (selection) selection.removeAllRanges();
+    };
+
+    const renderHighlightToolbar = () => (
+        <div
+            className="highlight-toolbar"
+            style={{
+                top: highlightMenu.top,
+                left: highlightMenu.left,
+            }}
+            onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            }}
+        >
+            <button
+                className="highlight-btn highlight-yellow-btn"
+                onClick={() => applyHighlight("highlight-yellow")}
+                type="button"
+            >
+                Yellow
+            </button>
+            <button
+                className="highlight-btn highlight-green-btn"
+                onClick={() => applyHighlight("highlight-green")}
+                type="button"
+            >
+                Green
+            </button>
+            <button
+                className="highlight-btn highlight-blue-btn"
+                onClick={() => applyHighlight("highlight-blue")}
+                type="button"
+            >
+                Blue
+            </button>
+            <button
+                className="highlight-btn highlight-remove-btn"
+                onClick={() => applyHighlight("")}
+                type="button"
+            >
+                Remove
+            </button>
+        </div>
+    );
 
     /* ================= UI ================= */
 
@@ -522,68 +979,94 @@ function ReadingForm() {
                 {/* READING TEXT */}
                 <div
                     className="reading-half"
-                    dangerouslySetInnerHTML={{ __html: passage.readingText }}
-                />
+                    ref={readingWrapRef}
+                    onMouseUp={handleSelection}
+                    onKeyUp={handleSelection}
+                    onScroll={hideHighlightMenu}
+                >
+                    {highlightMenu.visible &&
+                        highlightMenu.target === "reading" &&
+                        renderHighlightToolbar()}
+                    <div
+                        className="reading-content"
+                        ref={readingContentRef}
+                    />
+                </div>
 
                 {/* QUESTIONS */}
-                <div className="test-half">
-                    {renderQuestionHTML()}
+                <div
+                    className="test-half"
+                    ref={questionWrapRef}
+                    onMouseUp={handleSelection}
+                    onKeyUp={handleSelection}
+                    onScroll={hideHighlightMenu}
+                >
+                    {highlightMenu.visible &&
+                        highlightMenu.target === "questions" &&
+                        renderHighlightToolbar()}
+                    <div className="question-content" ref={questionContentRef}>
+                        {questionNodes}
 
-                    <br />
+                        <br />
 
-                    <button className="submit-btn" onClick={handleSubmit} disabled={savingScore}>
-                        {savingScore ? "Saving..." : `Submit Passage ${activePassage + 1}`}
-                    </button>
+                        <button
+                            className="submit-btn"
+                            onClick={handleSubmit}
+                            disabled={savingScore}
+                        >
+                            {savingScore ? "Saving..." : `Submit Passage ${activePassage + 1}`}
+                        </button>
 
-                    {scoreResult && (
-                        <div className="score-box">
-                            {!scoreResult.hasAnswerKey && (
-                                <div className="score-note">
-                                    No answer key saved for this test yet.
-                                </div>
-                            )}
-                            <div>
-                                <strong>Passage raw score:</strong>{" "}
-                                {scoreResult.passageCorrect} /{" "}
-                                {scoreResult.passageTotal}
-                            </div>
-                            <div>
-                                <strong>Total raw score:</strong>{" "}
-                                {scoreResult.totalCorrect} /{" "}
-                                {scoreResult.totalQuestions}
-                            </div>
-                            {scoreResult.passageResults.length > 0 && (
-                                <div className="score-breakdown">
-                                    <strong>Per passage:</strong>
-                                    <div className="score-breakdown-list">
-                                        {scoreResult.passageResults.map((p, idx) => (
-                                            <span key={`passage-score-${idx}`}>
-                                                Passage {idx + 1}: {p.correct} / {p.total}
-                                            </span>
-                                        ))}
+                        {scoreResult && (
+                            <div className="score-box">
+                                {!scoreResult.hasAnswerKey && (
+                                    <div className="score-note">
+                                        No answer key saved for this test yet.
                                     </div>
+                                )}
+                                <div>
+                                    <strong>Passage raw score:</strong>{" "}
+                                    {scoreResult.passageCorrect} /{" "}
+                                    {scoreResult.passageTotal}
                                 </div>
-                            )}
-                            <div>
-                                <strong>Band (Academic):</strong>{" "}
-                                {scoreResult.academicBand}
+                                <div>
+                                    <strong>Total raw score:</strong>{" "}
+                                    {scoreResult.totalCorrect} /{" "}
+                                    {scoreResult.totalQuestions}
+                                </div>
+                                {scoreResult.passageResults.length > 0 && (
+                                    <div className="score-breakdown">
+                                        <strong>Per passage:</strong>
+                                        <div className="score-breakdown-list">
+                                            {scoreResult.passageResults.map((p, idx) => (
+                                                <span key={`passage-score-${idx}`}>
+                                                    Passage {idx + 1}: {p.correct} / {p.total}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                <div>
+                                    <strong>Band (Academic):</strong>{" "}
+                                    {scoreResult.academicBand}
+                                </div>
+                                <div>
+                                    <strong>Band (General Training):</strong>{" "}
+                                    {scoreResult.generalBand}
+                                </div>
+                                {scoreResult.bandAvailable && (
+                                    <div className="score-note">
+                                        Band boundaries are approximate and can vary by test.
+                                    </div>
+                                )}
+                                {!scoreResult.bandAvailable && (
+                                    <div className="score-note">
+                                        Band score requires 40 questions.
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <strong>Band (General Training):</strong>{" "}
-                                {scoreResult.generalBand}
-                            </div>
-                            {scoreResult.bandAvailable && (
-                                <div className="score-note">
-                                    Band boundaries are approximate and can vary by test.
-                                </div>
-                            )}
-                            {!scoreResult.bandAvailable && (
-                                <div className="score-note">
-                                    Band score requires 40 questions.
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

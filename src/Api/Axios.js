@@ -9,5 +9,3 @@ const baseURL =
 const Api = axios.create({ baseURL });
 
 export default Api;
-
-

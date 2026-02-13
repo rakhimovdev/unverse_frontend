@@ -159,6 +159,9 @@
     padding: 20px;
     line-height: 1.7;
     font-size: 16px;
+    position: relative;
+    -webkit-user-select: text !important;
+    user-select: text !important;
 
     /* 🔥 FORMAT SAQLANADI */
     white-space: pre-wrap;
@@ -177,6 +180,89 @@
     font-weight: 700;
 }
 
+.reading-content {
+    position: relative;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+.reading-half .highlight-yellow,
+.reading-half .highlight-green,
+.reading-half .highlight-blue,
+.test-half .highlight-yellow,
+.test-half .highlight-green,
+.test-half .highlight-blue {
+    padding: 0 2px;
+    border-radius: 3px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.reading-half .highlight-yellow,
+.test-half .highlight-yellow {
+    background: #fff3a0;
+}
+
+.reading-half .highlight-green,
+.test-half .highlight-green {
+    background: #c9f7d1;
+}
+
+.reading-half .highlight-blue,
+.test-half .highlight-blue {
+    background: #cfe6ff;
+}
+
+.highlight-toolbar {
+    position: absolute;
+    z-index: 5;
+    transform: translate(-50%, -100%);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    border-radius: 10px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+}
+
+.highlight-btn {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.highlight-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.highlight-yellow-btn {
+    background: #fff3a0;
+    border-color: #f2d46b;
+}
+
+.highlight-green-btn {
+    background: #c9f7d1;
+    border-color: #8cd9a3;
+}
+
+.highlight-blue-btn {
+    background: #cfe6ff;
+    border-color: #8bc3ff;
+}
+
+.highlight-remove-btn {
+    background: #fff;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
 /* ===== QUESTIONS ===== */
 .test-half {
     width: 50%;
@@ -185,6 +271,24 @@
     border-radius: 16px;
     box-shadow: var(--u-shadow);
     border: 1px solid var(--u-border);
+    position: relative;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+.question-content {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+.reading-half * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+.test-half * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
 }
 
 .question-block {

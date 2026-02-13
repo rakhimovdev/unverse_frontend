@@ -1,206 +1,522 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "../../Api/Axios";
 import "./Listening.css";
 
-function ListeningTest() {
-    const [title, setTitle] = useState("");
-    const [file, setFile] = useState(null); // audio
-    const [image, setImage] = useState(null); // rasm
-    const [inputs, setInputs] = useState([]); // inputlar
-    const [draggingId, setDraggingId] = useState(null);
-    const [resizingId, setResizingId] = useState(null); // resize uchun
-    const offsetRef = useRef({ x: 0, y: 0 });
-    const startWidthRef = useRef(0);
+const MARKER_REGEX = /\[\[([^\]]+)\]\]/g;
+const TFNG_OPTIONS = ["True", "False", "Not Given"];
+const YNNG_OPTIONS = ["Yes", "No", "Not Given"];
+const DEFAULT_MC_OPTIONS = ["A", "B", "C", "D"];
 
-    // Rasm ref
-    const imageRef = useRef(null);
+const normalizeTokenType = (rawType) =>
+    rawType
+        .toLowerCase()
+        .replace(/&nbsp;/g, " ")
+        .replace(/[^a-z]/g, "");
 
-    // Input qo‘shish
-    const handleAddInput = () => {
-        setInputs(prev => [
-            ...prev,
-            { id: Date.now(), value: "", top: 50 + prev.length * 40, left: 50, width: 120 }
-        ]);
+const normalizeOptionsString = (rawOptions) =>
+    rawOptions ? rawOptions.replace(/&nbsp;/g, " ").trim() : "";
+
+const parseOptions = (rawOptions, fallbackOptions) => {
+    const cleaned = normalizeOptionsString(rawOptions);
+    if (!cleaned) return fallbackOptions;
+
+    const keyword = cleaned.toLowerCase().replace(/[^a-z]/g, "");
+
+    if (
+        keyword === "tfng" ||
+        keyword === "truefalse" ||
+        keyword === "truefalsenotgiven"
+    ) {
+        return TFNG_OPTIONS;
+    }
+
+    if (
+        keyword === "yn" ||
+        keyword === "ynng" ||
+        keyword === "yesno" ||
+        keyword === "yesnonotgiven"
+    ) {
+        return YNNG_OPTIONS;
+    }
+
+    return cleaned
+        .split("|")
+        .map((opt) => opt.trim())
+        .filter(Boolean);
+};
+
+const parseOptionsStrict = (rawOptions) => {
+    const cleaned = normalizeOptionsString(rawOptions);
+    if (!cleaned) return [];
+
+    return cleaned
+        .split("|")
+        .map((opt) => opt.trim())
+        .filter(Boolean);
+};
+
+const inputTypes = new Set([
+    "input",
+    "short",
+    "shortanswer",
+    "sentence",
+    "sentencecompletion",
+    "table",
+    "tablecompletion",
+    "diagram",
+    "diagramlabel",
+    "flow",
+    "flowchart",
+    "summary",
+    "summarycompletion",
+]);
+
+const parseToken = (rawToken) => {
+    const [rawType, rawOptions] = rawToken.split(/:(.*)/s);
+    const type = normalizeTokenType(rawType);
+
+    if (inputTypes.has(type)) {
+        return { kind: "input" };
+    }
+
+    if (type === "select") {
+        return {
+            kind: "select",
+            options: parseOptions(rawOptions, TFNG_OPTIONS),
+        };
+    }
+
+    if (
+        type === "tfng" ||
+        type === "truefalse" ||
+        type === "truefalsenotgiven"
+    ) {
+        return { kind: "select", options: TFNG_OPTIONS };
+    }
+
+    if (
+        type === "yn" ||
+        type === "ynng" ||
+        type === "yesno" ||
+        type === "yesnonotgiven"
+    ) {
+        return { kind: "select", options: YNNG_OPTIONS };
+    }
+
+    if (
+        type === "matchingheadings" ||
+        type === "matching" ||
+        type === "match" ||
+        type === "headings" ||
+        type === "heading"
+    ) {
+        return {
+            kind: "select",
+            options: parseOptionsStrict(rawOptions).length
+                ? parseOptionsStrict(rawOptions)
+                : DEFAULT_MC_OPTIONS,
+            includeEmpty: true,
+        };
+    }
+
+    if (
+        type === "radio" ||
+        type === "redio" ||
+        type === "mc" ||
+        type === "multiplechoice"
+    ) {
+        return {
+            kind: "radio",
+            options: parseOptions(rawOptions, DEFAULT_MC_OPTIONS),
+        };
+    }
+
+    return null;
+};
+
+const getQuestionDefs = (html) => {
+    const regex = new RegExp(MARKER_REGEX);
+    const defs = [];
+    let match;
+
+    while ((match = regex.exec(html))) {
+        const parsed = parseToken(match[1]);
+        if (!parsed) continue;
+
+        defs.push({
+            type: parsed.kind === "input" ? "text" : "select",
+        });
+    }
+
+    return defs;
+};
+
+const TOKEN_BUTTONS = [
+    { key: "input", label: "Input", token: "[[input]]" },
+    { key: "mc", label: "Multiple choice", token: "[[mc]]" },
+    { key: "matching", label: "Matching headings", token: "[[matching-headings]]" },
+    { key: "tfng", label: "T/F/NG", token: "[[tfng]]" },
+    { key: "ynng", label: "Y/N/NG", token: "[[ynng]]" },
+    { key: "short", label: "Short answer", token: "[[short]]" },
+    { key: "sentence", label: "Sentence completion", token: "[[sentence]]" },
+    { key: "table", label: "Table completion", token: "[[table]]" },
+    { key: "diagram", label: "Diagram label", token: "[[diagram-label]]" },
+    { key: "flow", label: "Flow-chart completion", token: "[[flow-chart]]" },
+    { key: "summary", label: "Summary completion", token: "[[summary]]" },
+    { key: "select", label: "Select (A|B|C)", token: "[[select: A|B|C]]" },
+];
+
+function Preview({ html, answers, onAnswersChange }) {
+    const renderQuestionHTML = () => {
+        const regex = new RegExp(MARKER_REGEX);
+        let questionIndex = 0;
+        let nodeKey = 0;
+        let lastIndex = 0;
+        const nodes = [];
+        let match;
+
+        while ((match = regex.exec(html))) {
+            const rawToken = match[1];
+            nodes.push(
+                <span
+                    key={`text-${nodeKey++}`}
+                    dangerouslySetInnerHTML={{
+                        __html: html.slice(lastIndex, match.index),
+                    }}
+                />
+            );
+
+            const parsed = parseToken(rawToken);
+
+            if (!parsed) {
+                nodes.push(
+                    <span
+                        key={`unknown-${nodeKey++}`}
+                        dangerouslySetInnerHTML={{
+                            __html: html.slice(match.index, regex.lastIndex),
+                        }}
+                    />
+                );
+                lastIndex = regex.lastIndex;
+                continue;
+            }
+
+            if (parsed.kind === "input") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <input
+                        key={`input-${nodeKey++}`}
+                        value={answers[currentIndex] || ""}
+                        onChange={(e) => {
+                            const copy = [...answers];
+                            copy[currentIndex] = e.target.value;
+                            onAnswersChange(copy);
+                        }}
+                    />
+                );
+                questionIndex++;
+            }
+
+            if (parsed.kind === "select") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <select
+                        key={`select-${nodeKey++}`}
+                        value={answers[currentIndex] || ""}
+                        onChange={(e) => {
+                            const copy = [...answers];
+                            copy[currentIndex] = e.target.value;
+                            onAnswersChange(copy);
+                        }}
+                    >
+                        {parsed.includeEmpty !== false && (
+                            <option value=""></option>
+                        )}
+                        {parsed.options.map((opt, optIndex) => (
+                            <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
+                                {opt}
+                            </option>
+                        ))}
+                    </select>
+                );
+                questionIndex++;
+            }
+
+            if (parsed.kind === "radio") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <span key={`radio-${nodeKey++}`}>
+                        {parsed.options.map((opt, optIndex) => (
+                            <label key={`radio-${currentIndex}-${optIndex}`}>
+                                <input
+                                    type="radio"
+                                    name={`radio-${currentIndex}`}
+                                    value={opt}
+                                    checked={answers[currentIndex] === opt}
+                                    onChange={(e) => {
+                                        const copy = [...answers];
+                                        copy[currentIndex] = e.target.value;
+                                        onAnswersChange(copy);
+                                    }}
+                                />
+                                {opt}
+                            </label>
+                        ))}
+                    </span>
+                );
+                questionIndex++;
+            }
+
+            lastIndex = regex.lastIndex;
+        }
+
+        nodes.push(
+            <span
+                key={`end-${nodeKey++}`}
+                dangerouslySetInnerHTML={{
+                    __html: html.slice(lastIndex),
+                }}
+            />
+        );
+
+        return nodes;
     };
 
-    // Input qiymatini o‘zgartirish
-    const handleAnswerChange = (id, value) => {
-        setInputs(prev =>
-            prev.map(inp => (inp.id === id ? { ...inp, value } : inp))
+    return <div className="listening-preview">{renderQuestionHTML()}</div>;
+}
+
+function ListeningTest() {
+    const [title, setTitle] = useState("");
+    const [audioFile, setAudioFile] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [transcriptHtml, setTranscriptHtml] = useState("");
+    const [questionHtml, setQuestionHtml] = useState("");
+    const [questions, setQuestions] = useState([]);
+    const [showPreview, setShowPreview] = useState(false);
+    const [copiedKey, setCopiedKey] = useState(null);
+    const [saving, setSaving] = useState(false);
+
+    const transcriptRef = useRef(null);
+    const questionEditorRef = useRef(null);
+
+    const syncQuestions = (html, existingQuestions = []) => {
+        const defs = getQuestionDefs(html);
+        return defs.map((def, i) => ({
+            value: existingQuestions[i]?.value || "",
+            type: def.type,
+        }));
+    };
+
+    useEffect(() => {
+        if (transcriptRef.current && transcriptRef.current.innerHTML !== transcriptHtml) {
+            transcriptRef.current.innerHTML = transcriptHtml;
+        }
+    }, [transcriptHtml]);
+
+    useEffect(() => {
+        if (questionEditorRef.current && questionEditorRef.current.innerHTML !== questionHtml) {
+            questionEditorRef.current.innerHTML = questionHtml;
+        }
+    }, [questionHtml]);
+
+    const handleTranscriptInput = () => {
+        const html = transcriptRef.current?.innerHTML || "";
+        setTranscriptHtml(html);
+    };
+
+    const handleQuestionInput = () => {
+        const html = questionEditorRef.current?.innerHTML || "";
+        setQuestionHtml(html);
+        setQuestions((prev) => syncQuestions(html, prev));
+    };
+
+    const handleAnswersChange = (nextAnswers) => {
+        setQuestions((prev) =>
+            prev.map((q, i) => ({
+                ...q,
+                value: nextAnswers[i] || "",
+            }))
         );
     };
 
-    // Inputni o‘chirish
-    const handleDeleteInput = (id) => {
-        setInputs(prev => prev.filter(inp => inp.id !== id));
-    };
-
-    // Drag boshlanishi
-    const handleMouseDown = (id, e) => {
-        if (e.target.classList.contains("resizer")) return; // resize bilan aralashmasin
-        const rect = imageRef.current.getBoundingClientRect();
-        setDraggingId(id);
-        offsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    };
-
-    // Resize boshlanishi
-    const handleResizeMouseDown = (id, e) => {
-        e.stopPropagation();
-        setResizingId(id);
-        offsetRef.current.x = e.clientX;
-        const inp = inputs.find(inp => inp.id === id);
-        startWidthRef.current = inp ? inp.width : 120;
-    };
-
-    // Drag va resize davomida
-    const handleMouseMove = (e) => {
-        const rect = imageRef.current?.getBoundingClientRect();
-        if (!rect) return;
-
-        // Drag
-        if (draggingId) {
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            setInputs(prev =>
-                prev.map(inp =>
-                    inp.id === draggingId
-                        ? { ...inp, left: mouseX - offsetRef.current.x + inp.width / 2, top: mouseY - offsetRef.current.y + 15 }
-                        : inp
-                )
-            );
-        }
-
-        // Resize
-        if (resizingId) {
-            const deltaX = e.clientX - offsetRef.current.x;
-            setInputs(prev =>
-                prev.map(inp =>
-                    inp.id === resizingId
-                        ? { ...inp, width: Math.max(30, startWidthRef.current + deltaX) } // minimal width 30px
-                        : inp
-                )
-            );
-        }
-    };
-
-    // Drag yoki resize tugagach
-    const handleMouseUp = () => {
-        setDraggingId(null);
-        setResizingId(null);
-    };
-
-    // Tozalash
     const handleClear = () => {
         setTitle("");
-        setFile(null);
-        setImage(null);
-        setInputs([]);
+        setAudioFile(null);
+        setImageFile(null);
+        setTranscriptHtml("");
+        setQuestionHtml("");
+        setQuestions([]);
+        setShowPreview(false);
+        setCopiedKey(null);
+        if (transcriptRef.current) transcriptRef.current.innerHTML = "";
+        if (questionEditorRef.current) questionEditorRef.current.innerHTML = "";
     };
 
-    // Full submit
+    const copyToken = async (token, key) => {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(token);
+            } else {
+                const textarea = document.createElement("textarea");
+                textarea.value = token;
+                textarea.setAttribute("readonly", "");
+                textarea.style.position = "fixed";
+                textarea.style.top = "-9999px";
+                textarea.style.left = "-9999px";
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+            }
+
+            setCopiedKey(key);
+            setTimeout(() => setCopiedKey(null), 1000);
+        } catch (err) {
+            setCopiedKey(null);
+        }
+    };
+
     const handleSubmitFull = async () => {
-        if (!title || !file || !image) {
-            alert("Iltimos, title, audio va rasm yuklang!");
+        if (!title || !audioFile) {
+            alert("Iltimos, title va audio faylni kiriting!");
             return;
         }
 
-        const rect = imageRef.current?.getBoundingClientRect();
-        if (!rect) return;
+        const questionHtmlValue = questionEditorRef.current?.innerHTML || "";
+        if (!questionHtmlValue.trim()) {
+            alert("Savollar matnini kiriting!");
+            return;
+        }
+
+        const syncedQuestions = syncQuestions(questionHtmlValue, questions);
+        setQuestions(syncedQuestions);
 
         const formData = new FormData();
         formData.append("title", title);
-        formData.append("audio", file);
-        formData.append("image", image);
-        formData.append(
-            "questions",
-            JSON.stringify(
-                inputs.map((inp) => ({
-                    value: inp.value,
-                    type: inp.type || "text",
-                    // 🔹 Rasmga nisbatan foizlarda saqlash
-                    top: inp.top / rect.height,
-                    left: inp.left / rect.width,
-                    width: inp.width / rect.width,
-                }))
-            )
-        );
+        formData.append("audio", audioFile);
+        if (imageFile) formData.append("image", imageFile);
+        formData.append("transcript", transcriptRef.current?.innerHTML || "");
+        formData.append("testText", questionHtmlValue);
+        formData.append("questions", JSON.stringify(syncedQuestions));
 
         try {
-            await axios.post("/testl/full", formData, { headers: { "Content-Type": "multipart/form-data" } });
+            setSaving(true);
+            await axios.post("/testl/full", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
             alert("✅ Listening test saqlandi!");
             handleClear();
         } catch (err) {
             alert("❌ Xatolik: " + (err.response?.data?.message || err.message));
+        } finally {
+            setSaving(false);
         }
     };
 
     return (
-        <div className="listening-container" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
-            <h2>🎧 Listening Test (Image + Drag & Resize Inputs)</h2>
+        <div className="listening-container">
+            <h2>🎧 IELTS Listening Test Upload</h2>
 
-            <input
-                type="text"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Listening test nomi"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px", fontSize: "16px" }}
-            />
+            <div className="listening-form">
+                <div className="listening-field">
+                    <label>Test nomi</label>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Listening test nomi"
+                    />
+                </div>
 
-            <label>Audio fayl:</label>
-            <input
-                type="file"
-                accept="audio/*"
-                onChange={e => setFile(e.target.files[0])}
-                style={{ marginBottom: "12px" }}
-            />
+                <div className="listening-row">
+                    <div className="listening-field">
+                        <label>Audio fayl</label>
+                        <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={(e) => setAudioFile(e.target.files[0])}
+                        />
+                        {audioFile && <p className="file-note">{audioFile.name}</p>}
+                    </div>
 
-            <label>Test rasmi:</label>
-            <input
-                type="file"
-                accept="image/*"
-                onChange={e => setImage(e.target.files[0])}
-                style={{ marginBottom: "12px" }}
-            />
+                    <div className="listening-field">
+                        <label>Rasm (ixtiyoriy)</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImageFile(e.target.files[0])}
+                        />
+                        {imageFile && <p className="file-note">{imageFile.name}</p>}
+                    </div>
+                </div>
 
-            {image && (
-                <div className="test-container" style={{ position: "relative", border: "1px solid #ddd", marginTop: "10px", padding: "10px" }}>
-                    <img ref={imageRef} src={URL.createObjectURL(image)} alt="Test" style={{ display: "block" }} className="img_upload" />
-                    {inputs.map(inp => (
-                        <div
-                            key={inp.id}
-                            style={{ position: "absolute", top: inp.top, left: inp.left, display: "flex", alignItems: "center", cursor: "move", gap: "5px" }}
-                            onMouseDown={e => handleMouseDown(inp.id, e)}
+                {imageFile && (
+                    <div className="image-preview">
+                        <img src={URL.createObjectURL(imageFile)} alt="preview" />
+                    </div>
+                )}
+
+                <div className="token-buttons">
+                    <span className="token-label">Tokens:</span>
+                    {TOKEN_BUTTONS.map((item) => (
+                        <button
+                            key={item.key}
+                            className={copiedKey === item.key ? "copied" : ""}
+                            onClick={() => copyToken(item.token, item.key)}
+                            title={item.token}
+                            type="button"
                         >
-                            <input
-                                type="text"
-                                value={inp.value}
-                                onChange={e => handleAnswerChange(inp.id, e.target.value)}
-                                style={{ width: inp.width, border: "1px solid #000", padding: "3px" }}
-                                placeholder="Javob"
-                            />
-                            {/* Resizer */}
-                            <div
-                                className="resizer"
-                                onMouseDown={e => handleResizeMouseDown(inp.id, e)}
-                                style={{ width: "6px", height: "100%", background: "blue", cursor: "ew-resize" }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => handleDeleteInput(inp.id)}
-                                style={{ background: "red", color: "white", border: "none", borderRadius: "4px", padding: "2px 6px", cursor: "pointer" }}
-                            >
-                                ✕
-                            </button>
-                        </div>
+                            {item.label}
+                        </button>
                     ))}
                 </div>
-            )}
 
-            <div style={{ marginTop: "12px", display: "flex", gap: "10px" }}>
-                <button type="button" onClick={handleAddInput}>➕ Input qo‘shish</button>
-                <button type="button" onClick={handleClear}>🗑 Tozalash</button>
-                <button type="button" onClick={handleSubmitFull}>💾 Saqlash</button>
+                <div className="listening-editors">
+                    <div className="editor-col">
+                        <h3>Transcript (ixtiyoriy)</h3>
+                        <div
+                            className="editor-box"
+                            ref={transcriptRef}
+                            contentEditable
+                            onInput={handleTranscriptInput}
+                            data-placeholder="Listening transcriptni shu yerga yozing..."
+                        />
+                    </div>
+
+                    <div className="editor-col">
+                        <h3>Questions</h3>
+                        <div
+                            className="editor-box"
+                            ref={questionEditorRef}
+                            contentEditable
+                            onInput={handleQuestionInput}
+                            data-placeholder="Savollar matnini yozing va tokenlardan foydalaning..."
+                        />
+                    </div>
+                </div>
+
+                <div className="preview-toggle">
+                    <button type="button" onClick={() => setShowPreview((prev) => !prev)}>
+                        {showPreview ? "Hide Answer Preview" : "Answer Preview"}
+                    </button>
+                </div>
+
+                {showPreview && (
+                    <Preview
+                        html={questionHtml}
+                        answers={questions.map((q) => q.value)}
+                        onAnswersChange={handleAnswersChange}
+                    />
+                )}
+
+                <div className="actions">
+                    <button type="button" onClick={handleSubmitFull} disabled={saving}>
+                        {saving ? "Saving..." : "💾 Saqlash"}
+                    </button>
+                    <button type="button" className="ghost" onClick={handleClear}>
+                        🗑 Tozalash
+                    </button>
+                </div>
             </div>
         </div>
     );
