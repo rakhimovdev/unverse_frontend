@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FaClock } from "react-icons/fa6";
 import { useParams } from "react-router-dom";
@@ -495,13 +495,13 @@ function ReadingForm() {
 
     /* ================= ANSWER CHANGE ================= */
 
-    const handleChange = (value, index) => {
+    const handleChange = useCallback((value, index) => {
         setUserAnswers((prev) => {
             const copy = [...prev];
             copy[activePassage][index] = value;
             return copy;
         });
-    };
+    }, [activePassage]);
 
     const calculateScores = () => {
         if (!test) {
@@ -746,7 +746,7 @@ function ReadingForm() {
         );
 
         return nodes;
-    }, [passage?.testText, activePassage, userAnswers]);
+    }, [passage?.testText, activePassage, userAnswers, handleChange]);
 
     /* ================= SAFE CHECK ================= */
 
