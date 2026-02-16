@@ -180,7 +180,10 @@ function Index() {
                                     <div className="no-image">Bu task uchun rasm yo'q.</div>
                                 )}
                                 {task1.text ? (
-                                    <div className="task-text">{task1.text}</div>
+                                    <div
+                                        className="task-text"
+                                        dangerouslySetInnerHTML={{ __html: task1.text }}
+                                    />
                                 ) : (
                                     <div className="no-image">Bu task uchun matn yo'q.</div>
                                 )}
@@ -213,7 +216,10 @@ function Index() {
                                 <h2>Task 2</h2>
                                 <p className="writing-test-topic">{task2.topic}</p>
                                 {task2.text ? (
-                                    <div className="task-text">{task2.text}</div>
+                                    <div
+                                        className="task-text"
+                                        dangerouslySetInnerHTML={{ __html: task2.text }}
+                                    />
                                 ) : (
                                     <div className="no-image">Bu task uchun matn yo'q.</div>
                                 )}

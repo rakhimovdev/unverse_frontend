@@ -366,7 +366,6 @@ const wrapRangeInClass = (container, range, className) => {
     textNodes.forEach((node) => {
         const length = node.nodeValue?.length || 0;
         if (!length) return;
-
         const startOffset =
             node === range.startContainer ? range.startOffset : 0;
         const endOffset = node === range.endContainer ? range.endOffset : length;

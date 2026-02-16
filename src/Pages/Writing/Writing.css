@@ -172,6 +172,132 @@
     box-shadow: 0 0 0 3px rgba(179, 33, 28, 0.2);
 }
 
+.writing-editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.toolbar-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--writing-border);
+    background: rgba(179, 33, 28, 0.05);
+}
+
+.toolbar-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--writing-muted);
+}
+
+.toolbar-field input {
+    width: 64px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--u-border);
+    font-size: 12px;
+}
+
+.writing-editor-toolbar button {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--writing-border);
+    background: rgba(179, 33, 28, 0.08);
+    color: var(--writing-accent-dark);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.toolbar-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--writing-muted);
+}
+
+.task-editor {
+    width: 100%;
+    min-height: 160px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--u-border);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.task-editor:focus {
+    border-color: var(--writing-accent);
+    box-shadow: 0 0 0 3px rgba(179, 33, 28, 0.2);
+}
+
+.task-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--writing-muted);
+}
+
+.task-editor table,
+.task1-text-preview table,
+.text-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+}
+
+.writing-table-wrap {
+    display: inline-block;
+    max-width: 100%;
+    resize: both;
+    overflow: auto;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px dashed rgba(179, 33, 28, 0.35);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.writing-table-wrap table {
+    width: 100%;
+}
+
+.task-editor th,
+.task-editor td,
+.task1-text-preview th,
+.task1-text-preview td,
+.text-preview th,
+.text-preview td {
+    border: 1px solid var(--u-border);
+    padding: 8px;
+    text-align: left;
+}
+
+.task-editor img,
+.task1-text-preview img,
+.text-preview img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 12px 0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.task-editor input,
+.task1-text-preview input,
+.text-preview input {
+    border: 1px solid var(--u-border);
+    border-radius: 6px;
+    padding: 4px 6px;
+}
+
 .hint {
     margin: 16px 0 24px;
     color: var(--writing-muted);

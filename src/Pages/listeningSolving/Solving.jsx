@@ -72,9 +72,15 @@ const inputTypes = new Set([
     "summarycompletion",
 ]);
 
+const textareaTypes = new Set(["textarea", "long", "longanswer", "paragraph"]);
+
 const parseToken = (rawToken) => {
     const [rawType, rawOptions] = rawToken.split(/:(.*)/s);
     const type = normalizeTokenType(rawType);
+
+    if (textareaTypes.has(type)) {
+        return { kind: "textarea" };
+    }
 
     if (inputTypes.has(type)) {
         return { kind: "input" };
@@ -145,7 +151,7 @@ const getQuestionDefs = (html) => {
         if (!parsed) continue;
 
         defs.push({
-            type: parsed.kind === "input" ? "text" : "select",
+            type: parsed.kind === "input" || parsed.kind === "textarea" ? "text" : "select",
         });
     }
 
@@ -174,8 +180,11 @@ const isCorrectAnswer = (userValue, correctValue) => {
 function ListeningTest() {
     const { id } = useParams();
     const [test, setTest] = useState(null);
+    const [parts, setParts] = useState([]);
+    const [activePart, setActivePart] = useState(0);
     const [userAnswers, setUserAnswers] = useState([]);
     const [results, setResults] = useState(null);
+    const [scoreSummary, setScoreSummary] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -188,12 +197,30 @@ function ListeningTest() {
                 }
 
                 setTest(res.data);
+                const incomingParts =
+                    Array.isArray(res.data.parts) && res.data.parts.length
+                        ? res.data.parts
+                        : [
+                              {
+                                  partNumber: 1,
+                                  transcript: res.data.transcript || "",
+                                  testText: res.data.testText || "",
+                                  questions: res.data.questions || [],
+                                  imageUrl: res.data.imageUrl || null,
+                              },
+                          ];
 
-                const defs = res.data.testText
-                    ? getQuestionDefs(res.data.testText)
-                    : [];
-                const length = defs.length || (res.data.questions || []).length;
-                setUserAnswers(Array(length).fill(""));
+                setParts(incomingParts);
+                setActivePart(0);
+                setResults(null);
+                setScoreSummary(null);
+
+                const answers = incomingParts.map((part) => {
+                    const defs = part.testText ? getQuestionDefs(part.testText) : [];
+                    const length = defs.length || (part.questions || []).length;
+                    return Array(length).fill("");
+                });
+                setUserAnswers(answers);
             } catch (err) {
                 console.error("Test yuklashda xatolik:", err);
                 setError("Test yuklashda xatolik yuz berdi.");
@@ -203,41 +230,56 @@ function ListeningTest() {
     }, [id]);
 
     const handleChange = (val, index) => {
-        const updated = [...userAnswers];
-        updated[index] = val;
-        setUserAnswers(updated);
+        setUserAnswers((prev) => {
+            const next = prev.map((answers) => [...answers]);
+            if (!next[activePart]) next[activePart] = [];
+            next[activePart][index] = val;
+            return next;
+        });
     };
 
     const handleSubmit = useCallback(async () => {
-        if (!test?.questions || results) return;
+        if (!test || results) return;
 
-        const check = userAnswers.map((ans, idx) => {
-            const correct = test.questions[idx]?.value || "";
-            return isCorrectAnswer(ans, correct);
+        const check = parts.map((part, partIndex) => {
+            const answers = userAnswers[partIndex] || [];
+            return answers.map((ans, idx) => {
+                const correct = part.questions?.[idx]?.value || "";
+                return isCorrectAnswer(ans, correct);
+            });
         });
 
         setResults(check);
-        const score = check.filter((r) => r).length;
+        const partTotals = check.map((partResults) => ({
+            correct: partResults.filter(Boolean).length,
+            total: partResults.length,
+        }));
+        const totalCorrect = partTotals.reduce((sum, part) => sum + part.correct, 0);
+        const totalQuestions = partTotals.reduce((sum, part) => sum + part.total, 0);
+        setScoreSummary({ totalCorrect, totalQuestions, partTotals });
 
         try {
             await axios.post(
                 "/scorel/add",
-                { listeningId: test._id, score },
+                { listeningId: test._id, score: totalCorrect },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
             );
             console.log("Score saqlandi ✅");
         } catch (err) {
             console.error("Score saqlashda xato:", err.response?.data || err);
         }
-    }, [test, userAnswers, results]);
+    }, [test, parts, userAnswers, results]);
 
-    const renderQuestionHTML = () => {
-        const html = test?.testText || "";
+    const renderQuestionHTML = (part, partIndex) => {
+        const html = part?.testText || "";
         const regex = new RegExp(MARKER_REGEX);
         let questionIndex = 0;
         let nodeKey = 0;
         let lastIndex = 0;
         const nodes = [];
+        const answers = userAnswers[partIndex] || [];
+        const partResults = results?.[partIndex] || [];
+        const correctAnswers = part?.questions || [];
         let match;
 
         while ((match = regex.exec(html))) {
@@ -272,16 +314,39 @@ function ListeningTest() {
                     <span key={`input-wrap-${nodeKey++}`} className="answer-inline">
                         <input
                             type="text"
-                            value={userAnswers[currentIndex] || ""}
+                            value={answers[currentIndex] || ""}
                             onChange={(e) => handleChange(e.target.value, currentIndex)}
                             disabled={!!results}
                         />
                         {results &&
-                            (results[currentIndex] ? (
+                            (partResults[currentIndex] ? (
                                 <span className="correct">✅</span>
                             ) : (
                                 <span className="wrong">
-                                    ❌ To‘g‘ri: <b>{test.questions[currentIndex]?.value}</b>
+                                    ❌ To‘g‘ri: <b>{correctAnswers[currentIndex]?.value}</b>
+                                </span>
+                            ))}
+                    </span>
+                );
+                questionIndex++;
+            }
+
+            if (parsed.kind === "textarea") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <span key={`textarea-wrap-${nodeKey++}`} className="answer-inline">
+                        <textarea
+                            rows={3}
+                            value={answers[currentIndex] || ""}
+                            onChange={(e) => handleChange(e.target.value, currentIndex)}
+                            disabled={!!results}
+                        />
+                        {results &&
+                            (partResults[currentIndex] ? (
+                                <span className="correct">✅</span>
+                            ) : (
+                                <span className="wrong">
+                                    ❌ To‘g‘ri: <b>{correctAnswers[currentIndex]?.value}</b>
                                 </span>
                             ))}
                     </span>
@@ -294,7 +359,7 @@ function ListeningTest() {
                 nodes.push(
                     <span key={`select-wrap-${nodeKey++}`} className="answer-inline">
                         <select
-                            value={userAnswers[currentIndex] || ""}
+                            value={answers[currentIndex] || ""}
                             onChange={(e) => handleChange(e.target.value, currentIndex)}
                             disabled={!!results}
                         >
@@ -308,11 +373,11 @@ function ListeningTest() {
                             ))}
                         </select>
                         {results &&
-                            (results[currentIndex] ? (
+                            (partResults[currentIndex] ? (
                                 <span className="correct">✅</span>
                             ) : (
                                 <span className="wrong">
-                                    ❌ To‘g‘ri: <b>{test.questions[currentIndex]?.value}</b>
+                                    ❌ To‘g‘ri: <b>{correctAnswers[currentIndex]?.value}</b>
                                 </span>
                             ))}
                     </span>
@@ -325,12 +390,12 @@ function ListeningTest() {
                 nodes.push(
                     <span key={`radio-wrap-${nodeKey++}`} className="answer-inline">
                         {parsed.options.map((opt, optIndex) => (
-                            <label key={`radio-${currentIndex}-${optIndex}`}>
+                            <label key={`radio-${partIndex}-${currentIndex}-${optIndex}`}>
                                 <input
                                     type="radio"
-                                    name={`radio-${currentIndex}`}
+                                    name={`radio-${partIndex}-${currentIndex}`}
                                     value={opt}
-                                    checked={userAnswers[currentIndex] === opt}
+                                    checked={answers[currentIndex] === opt}
                                     onChange={(e) => handleChange(e.target.value, currentIndex)}
                                     disabled={!!results}
                                 />
@@ -338,11 +403,11 @@ function ListeningTest() {
                             </label>
                         ))}
                         {results &&
-                            (results[currentIndex] ? (
+                            (partResults[currentIndex] ? (
                                 <span className="correct">✅</span>
                             ) : (
                                 <span className="wrong">
-                                    ❌ To‘g‘ri: <b>{test.questions[currentIndex]?.value}</b>
+                                    ❌ To‘g‘ri: <b>{correctAnswers[currentIndex]?.value}</b>
                                 </span>
                             ))}
                     </span>
@@ -368,7 +433,12 @@ function ListeningTest() {
     if (error) return <p style={{ color: "red" }}>{error}</p>;
     if (!test) return <p>Loading test...</p>;
 
-    const hasTextQuestions = !!test.testText?.trim();
+    const activePartData = parts[activePart];
+    const hasTextQuestions = !!activePartData?.testText?.trim();
+    const partImageUrl = activePartData?.imageUrl || test.imageUrl;
+    const partQuestions = activePartData?.questions || [];
+    const partAnswers = userAnswers[activePart] || [];
+    const partResults = results?.[activePart] || [];
 
     return (
         <div className="listeningform">
@@ -378,6 +448,21 @@ function ListeningTest() {
                     All IELTS Listening Tests
                 </Link>
             </header>
+
+            {parts.length > 1 && (
+                <div className="listening-part-tabs">
+                    {parts.map((_, i) => (
+                        <button
+                            key={`part-tab-${i}`}
+                            type="button"
+                            className={activePart === i ? "active" : ""}
+                            onClick={() => setActivePart(i)}
+                        >
+                            Part {i + 1}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="media-section">
                 <div className="audio-player">
@@ -390,34 +475,34 @@ function ListeningTest() {
                 {hasTextQuestions ? (
                     <div
                         className={`listening-text-layout ${
-                            test.transcript?.trim() ? "has-transcript" : ""
+                            activePartData?.transcript?.trim() ? "has-transcript" : ""
                         }`}
                     >
-                        {test.transcript?.trim() && (
+                        {activePartData?.transcript?.trim() && (
                             <div
                                 className="listening-panel listening-transcript"
-                                dangerouslySetInnerHTML={{ __html: test.transcript }}
+                                dangerouslySetInnerHTML={{ __html: activePartData.transcript }}
                             />
                         )}
                         <div className="listening-panel listening-questions">
-                            {test.imageUrl && (
+                            {partImageUrl && (
                                 <img
                                     className="listening-inline-image"
-                                    src={test.imageUrl}
+                                    src={partImageUrl}
                                     alt="listening visual"
                                 />
                             )}
                             <div className="listening-question-text">
-                                {renderQuestionHTML()}
+                                {renderQuestionHTML(activePartData, activePart)}
                             </div>
                         </div>
                     </div>
                 ) : (
-                    test.imageUrl && (
+                    partImageUrl && (
                         <div className="test-image" style={{ position: "relative" }}>
-                            <img src={test.imageUrl} alt="listening" />
+                            <img src={partImageUrl} alt="listening" />
 
-                            {(test.questions || []).map((q, i) => (
+                            {partQuestions.map((q, i) => (
                                 <div
                                     key={i}
                                     style={{
@@ -430,14 +515,14 @@ function ListeningTest() {
                                     {q.type === "text" ? (
                                         <input
                                             type="text"
-                                            value={userAnswers[i] || ""}
+                                            value={partAnswers[i] || ""}
                                             onChange={(e) => handleChange(e.target.value, i)}
                                             disabled={!!results}
                                             style={{ width: "100%" }}
                                         />
                                     ) : q.type === "yn" ? (
                                         <select
-                                            value={userAnswers[i] || ""}
+                                            value={partAnswers[i] || ""}
                                             onChange={(e) => handleChange(e.target.value, i)}
                                             disabled={!!results}
                                             style={{ width: "100%" }}
@@ -449,7 +534,7 @@ function ListeningTest() {
                                         </select>
                                     ) : (
                                         <select
-                                            value={userAnswers[i] || ""}
+                                            value={partAnswers[i] || ""}
                                             onChange={(e) => handleChange(e.target.value, i)}
                                             disabled={!!results}
                                             style={{ width: "100%" }}
@@ -464,11 +549,11 @@ function ListeningTest() {
                                     )}
 
                                     {results &&
-                                        (results[i] ? (
+                                        (partResults[i] ? (
                                             <span className="correct">✅</span>
                                         ) : (
                                             <span className="wrong">
-                                                ❌ To‘g‘ri javob: <b>{test.questions[i]?.value}</b>
+                                                ❌ To‘g‘ri javob: <b>{partQuestions[i]?.value}</b>
                                             </span>
                                         ))}
                                 </div>
@@ -477,6 +562,27 @@ function ListeningTest() {
                     )
                 )}
             </div>
+
+            {scoreSummary && (
+                <div className="score-box">
+                    <div>
+                        <strong>Total raw score:</strong>{" "}
+                        {scoreSummary.totalCorrect} / {scoreSummary.totalQuestions}
+                    </div>
+                    {scoreSummary.partTotals.length > 0 && (
+                        <div className="score-breakdown">
+                            <strong>Per part:</strong>
+                            <div className="score-breakdown-list">
+                                {scoreSummary.partTotals.map((part, idx) => (
+                                    <span key={`part-score-${idx}`}>
+                                        Part {idx + 1}: {part.correct} / {part.total}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {!results && (
                 <button className="submit-btn" onClick={handleSubmit}>

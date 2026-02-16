@@ -167,6 +167,41 @@
     background: var(--u-tint);
 }
 
+.task-text table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+}
+
+.task-text th,
+.task-text td {
+    border: 1px solid var(--u-border);
+    padding: 8px;
+    text-align: left;
+}
+
+.task-text img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 12px 0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.task-text input {
+    border: 1px solid var(--u-border);
+    border-radius: 6px;
+    padding: 4px 6px;
+}
+
+.task-text .writing-table-wrap {
+    resize: none;
+    border: 1px solid var(--u-border);
+    background: transparent;
+    padding: 0;
+}
+
 .writing-test-answer h3 {
     margin: 0 0 12px;
 }

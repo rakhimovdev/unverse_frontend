@@ -71,9 +71,15 @@ const inputTypes = new Set([
     "summarycompletion",
 ]);
 
+const textareaTypes = new Set(["textarea", "long", "longanswer", "paragraph"]);
+
 const parseToken = (rawToken) => {
     const [rawType, rawOptions] = rawToken.split(/:(.*)/s);
     const type = normalizeTokenType(rawType);
+
+    if (textareaTypes.has(type)) {
+        return { kind: "textarea" };
+    }
 
     if (inputTypes.has(type)) {
         return { kind: "input" };
@@ -144,7 +150,7 @@ const getQuestionDefs = (html) => {
         if (!parsed) continue;
 
         defs.push({
-            type: parsed.kind === "input" ? "text" : "select",
+            type: parsed.kind === "input" || parsed.kind === "textarea" ? "text" : "select",
         });
     }
 
@@ -153,6 +159,7 @@ const getQuestionDefs = (html) => {
 
 const TOKEN_BUTTONS = [
     { key: "input", label: "Input", token: "[[input]]" },
+    { key: "textarea", label: "Textarea", token: "[[textarea]]" },
     { key: "mc", label: "Multiple choice", token: "[[mc]]" },
     { key: "matching", label: "Matching headings", token: "[[matching-headings]]" },
     { key: "tfng", label: "T/F/NG", token: "[[tfng]]" },
@@ -165,6 +172,14 @@ const TOKEN_BUTTONS = [
     { key: "summary", label: "Summary completion", token: "[[summary]]" },
     { key: "select", label: "Select (A|B|C)", token: "[[select: A|B|C]]" },
 ];
+
+const createEmptyPart = () => ({
+    transcriptHtml: "",
+    questionHtml: "",
+    questions: [],
+    imageFile: null,
+    imagePreview: null,
+});
 
 function Preview({ html, answers, onAnswersChange }) {
     const renderQuestionHTML = () => {
@@ -206,6 +221,23 @@ function Preview({ html, answers, onAnswersChange }) {
                 nodes.push(
                     <input
                         key={`input-${nodeKey++}`}
+                        value={answers[currentIndex] || ""}
+                        onChange={(e) => {
+                            const copy = [...answers];
+                            copy[currentIndex] = e.target.value;
+                            onAnswersChange(copy);
+                        }}
+                    />
+                );
+                questionIndex++;
+            }
+
+            if (parsed.kind === "textarea") {
+                const currentIndex = questionIndex;
+                nodes.push(
+                    <textarea
+                        key={`textarea-${nodeKey++}`}
+                        rows={3}
                         value={answers[currentIndex] || ""}
                         onChange={(e) => {
                             const copy = [...answers];
@@ -288,16 +320,25 @@ function Preview({ html, answers, onAnswersChange }) {
 function ListeningTest() {
     const [title, setTitle] = useState("");
     const [audioFile, setAudioFile] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
-    const [transcriptHtml, setTranscriptHtml] = useState("");
-    const [questionHtml, setQuestionHtml] = useState("");
-    const [questions, setQuestions] = useState([]);
+    const [activePart, setActivePart] = useState(0);
+    const [parts, setParts] = useState(() =>
+        Array.from({ length: 4 }, () => createEmptyPart())
+    );
+    const [tableConfig, setTableConfig] = useState({
+        rows: 2,
+        cols: 2,
+        width: 100,
+        height: 0,
+    });
+    const [activeEditor, setActiveEditor] = useState("questions");
     const [showPreview, setShowPreview] = useState(false);
     const [copiedKey, setCopiedKey] = useState(null);
     const [saving, setSaving] = useState(false);
 
     const transcriptRef = useRef(null);
     const questionEditorRef = useRef(null);
+
+    const currentPart = parts[activePart] || createEmptyPart();
 
     const syncQuestions = (html, existingQuestions = []) => {
         const defs = getQuestionDefs(html);
@@ -308,44 +349,155 @@ function ListeningTest() {
     };
 
     useEffect(() => {
-        if (transcriptRef.current && transcriptRef.current.innerHTML !== transcriptHtml) {
-            transcriptRef.current.innerHTML = transcriptHtml;
+        if (
+            transcriptRef.current &&
+            transcriptRef.current.innerHTML !== currentPart.transcriptHtml
+        ) {
+            transcriptRef.current.innerHTML = currentPart.transcriptHtml;
         }
-    }, [transcriptHtml]);
+    }, [currentPart.transcriptHtml]);
 
     useEffect(() => {
-        if (questionEditorRef.current && questionEditorRef.current.innerHTML !== questionHtml) {
-            questionEditorRef.current.innerHTML = questionHtml;
+        if (
+            questionEditorRef.current &&
+            questionEditorRef.current.innerHTML !== currentPart.questionHtml
+        ) {
+            questionEditorRef.current.innerHTML = currentPart.questionHtml;
         }
-    }, [questionHtml]);
+    }, [currentPart.questionHtml]);
+
+    const updatePart = (index, patch) => {
+        setParts((prev) => {
+            const next = [...prev];
+            const current = next[index] || createEmptyPart();
+            next[index] = { ...current, ...patch };
+            return next;
+        });
+    };
+
+    const saveCurrentPart = () => {
+        const transcriptHtml = transcriptRef.current?.innerHTML || "";
+        const questionHtml = questionEditorRef.current?.innerHTML || "";
+        updatePart(activePart, {
+            transcriptHtml,
+            questionHtml,
+            questions: syncQuestions(questionHtml, currentPart.questions),
+        });
+    };
 
     const handleTranscriptInput = () => {
         const html = transcriptRef.current?.innerHTML || "";
-        setTranscriptHtml(html);
+        updatePart(activePart, { transcriptHtml: html });
     };
 
     const handleQuestionInput = () => {
         const html = questionEditorRef.current?.innerHTML || "";
-        setQuestionHtml(html);
-        setQuestions((prev) => syncQuestions(html, prev));
+        updatePart(activePart, {
+            questionHtml: html,
+            questions: syncQuestions(html, currentPart.questions),
+        });
+    };
+
+    const insertHtml = (target, html) => {
+        const editor =
+            target === "transcript" ? transcriptRef.current : questionEditorRef.current;
+        if (!editor) return;
+
+        editor.focus();
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            editor.insertAdjacentHTML("beforeend", html);
+        } else {
+            const range = selection.getRangeAt(0);
+            if (!editor.contains(range.commonAncestorContainer)) {
+                editor.insertAdjacentHTML("beforeend", html);
+            } else {
+                range.deleteContents();
+                const fragment = range.createContextualFragment(html);
+                range.insertNode(fragment);
+                selection.removeAllRanges();
+                const nextRange = document.createRange();
+                nextRange.selectNodeContents(editor);
+                nextRange.collapse(false);
+                selection.addRange(nextRange);
+            }
+        }
+
+        if (target === "transcript") {
+            handleTranscriptInput();
+        } else {
+            handleQuestionInput();
+        }
+    };
+
+    const handleInsertTable = () => {
+        const rows = Math.max(1, Number(tableConfig.rows) || 1);
+        const cols = Math.max(1, Number(tableConfig.cols) || 1);
+        const width = Math.min(100, Math.max(20, Number(tableConfig.width) || 100));
+        const height = Math.max(0, Number(tableConfig.height) || 0);
+
+        const headerCells = Array.from({ length: cols }, (_, index) => {
+            return `<th>Header ${index + 1}</th>`;
+        }).join("");
+
+        const bodyRows = Array.from({ length: rows }, () => {
+            const cells = Array.from({ length: cols }, () => "<td>Cell</td>").join("");
+            return `<tr>${cells}</tr>`;
+        }).join("");
+
+        const heightStyle = height > 0 ? `height:${height}px;` : "";
+        const tableHtml = `
+<div class="listening-table-wrap" style="width:${width}%;${heightStyle}">
+    <table class="listening-inline-table" style="width:100%;${heightStyle}">
+        <thead>
+            <tr>${headerCells}</tr>
+        </thead>
+        <tbody>
+            ${bodyRows}
+        </tbody>
+    </table>
+</div>
+`;
+
+        insertHtml(activeEditor, tableHtml);
     };
 
     const handleAnswersChange = (nextAnswers) => {
-        setQuestions((prev) =>
-            prev.map((q, i) => ({
+        updatePart(activePart, {
+            questions: currentPart.questions.map((q, i) => ({
                 ...q,
                 value: nextAnswers[i] || "",
-            }))
-        );
+            })),
+        });
+    };
+
+    const handlePartImageChange = (index, e) => {
+        const file = e.target.files[0] || null;
+        setParts((prev) => {
+            const next = [...prev];
+            const current = next[index] || createEmptyPart();
+            if (current.imagePreview) {
+                URL.revokeObjectURL(current.imagePreview);
+            }
+            next[index] = {
+                ...current,
+                imageFile: file,
+                imagePreview: file ? URL.createObjectURL(file) : null,
+            };
+            return next;
+        });
     };
 
     const handleClear = () => {
+        parts.forEach((part) => {
+            if (part.imagePreview) {
+                URL.revokeObjectURL(part.imagePreview);
+            }
+        });
         setTitle("");
         setAudioFile(null);
-        setImageFile(null);
-        setTranscriptHtml("");
-        setQuestionHtml("");
-        setQuestions([]);
+        setActivePart(0);
+        setParts(Array.from({ length: 4 }, () => createEmptyPart()));
         setShowPreview(false);
         setCopiedKey(null);
         if (transcriptRef.current) transcriptRef.current.innerHTML = "";
@@ -382,22 +534,49 @@ function ListeningTest() {
             return;
         }
 
-        const questionHtmlValue = questionEditorRef.current?.innerHTML || "";
-        if (!questionHtmlValue.trim()) {
-            alert("Savollar matnini kiriting!");
+        const updatedParts = parts.map((part, index) => {
+            const transcriptHtml =
+                index === activePart
+                    ? transcriptRef.current?.innerHTML || part.transcriptHtml
+                    : part.transcriptHtml;
+            const questionHtml =
+                index === activePart
+                    ? questionEditorRef.current?.innerHTML || part.questionHtml
+                    : part.questionHtml;
+            const syncedQuestions = syncQuestions(questionHtml, part.questions);
+            return {
+                ...part,
+                transcriptHtml,
+                questionHtml,
+                questions: syncedQuestions,
+            };
+        });
+
+        const emptyIndex = updatedParts.findIndex(
+            (part) => !part.questionHtml?.trim()
+        );
+        if (emptyIndex !== -1) {
+            alert(`Part ${emptyIndex + 1} savollar matnini kiriting!`);
             return;
         }
 
-        const syncedQuestions = syncQuestions(questionHtmlValue, questions);
-        setQuestions(syncedQuestions);
+        setParts(updatedParts);
+
+        const payloadParts = updatedParts.map((part) => ({
+            transcript: part.transcriptHtml,
+            testText: part.questionHtml,
+            questions: part.questions,
+        }));
 
         const formData = new FormData();
         formData.append("title", title);
         formData.append("audio", audioFile);
-        if (imageFile) formData.append("image", imageFile);
-        formData.append("transcript", transcriptRef.current?.innerHTML || "");
-        formData.append("testText", questionHtmlValue);
-        formData.append("questions", JSON.stringify(syncedQuestions));
+        formData.append("parts", JSON.stringify(payloadParts));
+        updatedParts.forEach((part, index) => {
+            if (part.imageFile) {
+                formData.append(`imagePart${index}`, part.imageFile);
+            }
+        });
 
         try {
             setSaving(true);
@@ -428,6 +607,22 @@ function ListeningTest() {
                     />
                 </div>
 
+                <div className="part-tabs">
+                    {parts.map((_, i) => (
+                        <button
+                            key={`part-${i}`}
+                            type="button"
+                            className={activePart === i ? "active" : ""}
+                            onClick={() => {
+                                saveCurrentPart();
+                                setActivePart(i);
+                            }}
+                        >
+                            Part {i + 1}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="listening-row">
                     <div className="listening-field">
                         <label>Audio fayl</label>
@@ -438,21 +633,25 @@ function ListeningTest() {
                         />
                         {audioFile && <p className="file-note">{audioFile.name}</p>}
                     </div>
+                </div>
 
+                <div className="part-image-row">
                     <div className="listening-field">
-                        <label>Rasm (ixtiyoriy)</label>
+                        <label>Part {activePart + 1} rasm (ixtiyoriy)</label>
                         <input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => setImageFile(e.target.files[0])}
+                            onChange={(e) => handlePartImageChange(activePart, e)}
                         />
-                        {imageFile && <p className="file-note">{imageFile.name}</p>}
+                        {currentPart.imageFile && (
+                            <p className="file-note">{currentPart.imageFile.name}</p>
+                        )}
                     </div>
                 </div>
 
-                {imageFile && (
+                {currentPart.imagePreview && (
                     <div className="image-preview">
-                        <img src={URL.createObjectURL(imageFile)} alt="preview" />
+                        <img src={currentPart.imagePreview} alt="preview" />
                     </div>
                 )}
 
@@ -471,40 +670,122 @@ function ListeningTest() {
                     ))}
                 </div>
 
+                <div className="listening-editor-toolbar">
+                    <span className="toolbar-label">Table:</span>
+                    <button type="button" onClick={handleInsertTable}>
+                        Insert Table
+                    </button>
+                    <div className="toolbar-field">
+                        <label htmlFor="listening-table-rows">Rows</label>
+                        <input
+                            id="listening-table-rows"
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={tableConfig.rows}
+                            onChange={(e) =>
+                                setTableConfig((prev) => ({
+                                    ...prev,
+                                    rows: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
+                    <div className="toolbar-field">
+                        <label htmlFor="listening-table-cols">Cols</label>
+                        <input
+                            id="listening-table-cols"
+                            type="number"
+                            min="1"
+                            max="12"
+                            value={tableConfig.cols}
+                            onChange={(e) =>
+                                setTableConfig((prev) => ({
+                                    ...prev,
+                                    cols: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
+                    <div className="toolbar-field">
+                        <label htmlFor="listening-table-width">Width %</label>
+                        <input
+                            id="listening-table-width"
+                            type="number"
+                            min="20"
+                            max="100"
+                            value={tableConfig.width}
+                            onChange={(e) =>
+                                setTableConfig((prev) => ({
+                                    ...prev,
+                                    width: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
+                    <div className="toolbar-field">
+                        <label htmlFor="listening-table-height">Height px</label>
+                        <input
+                            id="listening-table-height"
+                            type="number"
+                            min="0"
+                            max="800"
+                            value={tableConfig.height}
+                            onChange={(e) =>
+                                setTableConfig((prev) => ({
+                                    ...prev,
+                                    height: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
+                    <span className="toolbar-note">
+                        Active editor: {activeEditor === "transcript" ? "Transcript" : "Questions"}
+                    </span>
+                </div>
+
                 <div className="listening-editors">
                     <div className="editor-col">
-                        <h3>Transcript (ixtiyoriy)</h3>
+                        <h3>Transcript (Part {activePart + 1})</h3>
                         <div
                             className="editor-box"
                             ref={transcriptRef}
                             contentEditable
                             onInput={handleTranscriptInput}
+                            onFocus={() => setActiveEditor("transcript")}
                             data-placeholder="Listening transcriptni shu yerga yozing..."
                         />
                     </div>
 
                     <div className="editor-col">
-                        <h3>Questions</h3>
+                        <h3>Questions (Part {activePart + 1})</h3>
                         <div
                             className="editor-box"
                             ref={questionEditorRef}
                             contentEditable
                             onInput={handleQuestionInput}
+                            onFocus={() => setActiveEditor("questions")}
                             data-placeholder="Savollar matnini yozing va tokenlardan foydalaning..."
                         />
                     </div>
                 </div>
 
                 <div className="preview-toggle">
-                    <button type="button" onClick={() => setShowPreview((prev) => !prev)}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            saveCurrentPart();
+                            setShowPreview((prev) => !prev);
+                        }}
+                    >
                         {showPreview ? "Hide Answer Preview" : "Answer Preview"}
                     </button>
                 </div>
 
                 {showPreview && (
                     <Preview
-                        html={questionHtml}
-                        answers={questions.map((q) => q.value)}
+                        html={currentPart.questionHtml}
+                        answers={currentPart.questions.map((q) => q.value)}
                         onAnswersChange={handleAnswersChange}
                     />
                 )}

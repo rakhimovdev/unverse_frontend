@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "../../Api/Axios";
 import "./Writing.css";
 
@@ -30,6 +30,8 @@ const emptyForm = {
     taskText: ""
 };
 
+const INPUT_SNIPPET = `<input class="writing-inline-input" type="text" placeholder="Answer" />`;
+
 function Writing() {
     const [activeTask, setActiveTask] = useState("task1");
     const [forms, setForms] = useState({
@@ -38,6 +40,14 @@ function Writing() {
     });
     const [errors, setErrors] = useState({ task1: "", task2: "" });
     const [loading, setLoading] = useState(false);
+    const [tableConfig, setTableConfig] = useState({
+        rows: 2,
+        cols: 2,
+        width: 100,
+        height: 0
+    });
+    const task1EditorRef = useRef(null);
+    const task2EditorRef = useRef(null);
 
     const updateForm = (taskKey, patch) => {
         setForms((prev) => ({
@@ -58,6 +68,24 @@ function Writing() {
         setErrors((prev) => ({ ...prev, task1: "", task2: "" }));
     };
 
+    useEffect(() => {
+        if (
+            task1EditorRef.current &&
+            task1EditorRef.current.innerHTML !== forms.task1.taskText
+        ) {
+            task1EditorRef.current.innerHTML = forms.task1.taskText || "";
+        }
+    }, [forms.task1.taskText]);
+
+    useEffect(() => {
+        if (
+            task2EditorRef.current &&
+            task2EditorRef.current.innerHTML !== forms.task2.taskText
+        ) {
+            task2EditorRef.current.innerHTML = forms.task2.taskText || "";
+        }
+    }, [forms.task2.taskText]);
+
     const handleImageChange = (taskKey, e) => {
         const file = e.target.files[0] || null;
         setForms((prev) => {
@@ -76,9 +104,89 @@ function Writing() {
         setErrors((prev) => ({ ...prev, [taskKey]: "" }));
     };
 
-    const handleTextChange = (taskKey, value) => {
-        updateForm(taskKey, { taskText: value });
+    const handleEditorInput = (taskKey) => {
+        const editor =
+            taskKey === "task1" ? task1EditorRef.current : task2EditorRef.current;
+        const html = editor?.innerHTML || "";
+        updateForm(taskKey, { taskText: html });
         setErrors((prev) => ({ ...prev, [taskKey]: "" }));
+    };
+
+    const insertHtml = (taskKey, html) => {
+        const editor =
+            taskKey === "task1" ? task1EditorRef.current : task2EditorRef.current;
+        if (!editor) return;
+
+        editor.focus();
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            editor.insertAdjacentHTML("beforeend", html);
+            handleEditorInput(taskKey);
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) {
+            editor.insertAdjacentHTML("beforeend", html);
+            handleEditorInput(taskKey);
+            return;
+        }
+
+        range.deleteContents();
+        const fragment = range.createContextualFragment(html);
+        range.insertNode(fragment);
+        selection.removeAllRanges();
+        const nextRange = document.createRange();
+        nextRange.selectNodeContents(editor);
+        nextRange.collapse(false);
+        selection.addRange(nextRange);
+        handleEditorInput(taskKey);
+    };
+
+    const handleInsertTable = (taskKey) => {
+        const rows = Math.max(1, Number(tableConfig.rows) || 1);
+        const cols = Math.max(1, Number(tableConfig.cols) || 1);
+        const width = Math.min(100, Math.max(20, Number(tableConfig.width) || 100));
+        const height = Math.max(0, Number(tableConfig.height) || 0);
+
+        const headerCells = Array.from({ length: cols }, (_, index) => {
+            return `<th>Header ${index + 1}</th>`;
+        }).join("");
+
+        const bodyRows = Array.from({ length: rows }, () => {
+            const cells = Array.from({ length: cols }, () => "<td>Cell</td>").join("");
+            return `<tr>${cells}</tr>`;
+        }).join("");
+
+        const heightStyle = height > 0 ? `height:${height}px;` : "";
+        const tableHtml = `
+<div class="writing-table-wrap" style="width:${width}%;">
+    <table class="writing-inline-table" style="width:100%;${heightStyle}">
+        <thead>
+            <tr>${headerCells}</tr>
+        </thead>
+        <tbody>
+            ${bodyRows}
+        </tbody>
+    </table>
+</div>
+`;
+
+        insertHtml(taskKey, tableHtml);
+    };
+
+    const handleInsertInput = (taskKey) => {
+        insertHtml(taskKey, INPUT_SNIPPET);
+    };
+
+    const handleInsertImage = (taskKey) => {
+        const url = window.prompt("Image URL");
+        if (!url) return;
+        insertHtml(
+            taskKey,
+            `<img class="writing-inline-image" src="${url}" alt="writing visual" />`
+        );
     };
 
     const handleSubmit = async () => {
@@ -215,15 +323,107 @@ function Writing() {
                                                 >
                                                     {task.textLabel}
                                                 </label>
-                                                <textarea
+                                                <div className="writing-editor-toolbar">
+                                                    <span className="toolbar-label">Insert:</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleInsertTable(task.key)}
+                                                    >
+                                                        Table
+                                                    </button>
+                                                    <div className="toolbar-field">
+                                                        <label htmlFor={`rows-${task.key}`}>Rows</label>
+                                                        <input
+                                                            id={`rows-${task.key}`}
+                                                            type="number"
+                                                            min="1"
+                                                            max="12"
+                                                            value={tableConfig.rows}
+                                                            onChange={(e) =>
+                                                                setTableConfig((prev) => ({
+                                                                    ...prev,
+                                                                    rows: e.target.value
+                                                                }))
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div className="toolbar-field">
+                                                        <label htmlFor={`cols-${task.key}`}>Cols</label>
+                                                        <input
+                                                            id={`cols-${task.key}`}
+                                                            type="number"
+                                                            min="1"
+                                                            max="12"
+                                                            value={tableConfig.cols}
+                                                            onChange={(e) =>
+                                                                setTableConfig((prev) => ({
+                                                                    ...prev,
+                                                                    cols: e.target.value
+                                                                }))
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div className="toolbar-field">
+                                                        <label htmlFor={`width-${task.key}`}>Width %</label>
+                                                        <input
+                                                            id={`width-${task.key}`}
+                                                            type="number"
+                                                            min="20"
+                                                            max="100"
+                                                            value={tableConfig.width}
+                                                            onChange={(e) =>
+                                                                setTableConfig((prev) => ({
+                                                                    ...prev,
+                                                                    width: e.target.value
+                                                                }))
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div className="toolbar-field">
+                                                        <label htmlFor={`height-${task.key}`}>
+                                                            Height px
+                                                        </label>
+                                                        <input
+                                                            id={`height-${task.key}`}
+                                                            type="number"
+                                                            min="0"
+                                                            max="800"
+                                                            value={tableConfig.height}
+                                                            onChange={(e) =>
+                                                                setTableConfig((prev) => ({
+                                                                    ...prev,
+                                                                    height: e.target.value
+                                                                }))
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleInsertInput(task.key)}
+                                                    >
+                                                        Input
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleInsertImage(task.key)}
+                                                    >
+                                                        Image URL
+                                                    </button>
+                                                </div>
+                                                <div
                                                     id={`tasktext-${task.key}`}
-                                                    className="task-textarea"
-                                                    rows={6}
-                                                    placeholder={task.textPlaceholder}
-                                                    value={current.taskText}
-                                                    onChange={(e) =>
-                                                        handleTextChange(task.key, e.target.value)
+                                                    className="task-editor"
+                                                    ref={
+                                                        task.key === "task1"
+                                                            ? task1EditorRef
+                                                            : task2EditorRef
                                                     }
+                                                    contentEditable
+                                                    suppressContentEditableWarning
+                                                    role="textbox"
+                                                    aria-multiline="true"
+                                                    onInput={() => handleEditorInput(task.key)}
+                                                    data-placeholder={task.textPlaceholder}
                                                 />
                                             </>
                                         )}
@@ -256,9 +456,12 @@ function Writing() {
                                                         className="image-preview"
                                                     />
                                                     {current.taskText ? (
-                                                        <div className="task1-text-preview">
-                                                            {current.taskText}
-                                                        </div>
+                                                        <div
+                                                            className="task1-text-preview"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: current.taskText
+                                                            }}
+                                                        />
                                                     ) : (
                                                         <div className="task1-text-placeholder">
                                                             Matn hali yozilmagan
@@ -272,9 +475,10 @@ function Writing() {
                                                 </div>
                                             )
                                         ) : current.taskText ? (
-                                            <div className="text-preview">
-                                                <p>{current.taskText}</p>
-                                            </div>
+                                            <div
+                                                className="text-preview"
+                                                dangerouslySetInnerHTML={{ __html: current.taskText }}
+                                            />
                                         ) : (
                                             <div className="preview-placeholder">
                                                 <span>Matn hali yozilmagan</span>
