@@ -7,6 +7,7 @@ function Writing() {
     const [uploadedTests, setUploadedTests] = useState([]);
     const navigate = useNavigate();
 
+    const isAuthenticated = !!localStorage.getItem("token");
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
     const fetchTests = () => {
@@ -37,6 +38,15 @@ function Writing() {
         }
     }
 
+    const handleTakeTest = (id) => {
+        if (!isAuthenticated) {
+            alert("Siz ro'yxatdan o'tmagansiz. Avval ro'yxatdan o'ting.");
+            navigate("/sign_in");
+        } else {
+            navigate(`/writingpage/${id}`);
+        }
+    };
+
     return (
         <div className="writing_page">
             <div className="test_list">
@@ -47,7 +57,7 @@ function Writing() {
                         <div className="test_card" key={item._id}>
                             <h3>{item.task1Topic || item.topic}</h3>
                             <button
-                                onClick={() => navigate(`/writingpage/${item._id}`)}
+                                onClick={() => handleTakeTest(item._id)}
                                 className="start_btn"
                             >
                                 Start
