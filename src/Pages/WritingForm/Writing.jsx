@@ -52,7 +52,11 @@ function Writing() {
                             >
                                 Start
                             </button>
-                            <button onClick={() => handleDelete(item._id)}>Delete</button>
+                            {(userRole === "teacher" || userRole === "admin") && (
+                                <button onClick={() => handleDelete(item._id)}>
+                                    Delete
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>
