@@ -108,6 +108,12 @@ function Index() {
 
     const sharedTopic = test.task1Topic || test.topic || "";
 
+    const resolveImageSrc = (value) => {
+        if (!value) return "";
+        if (value.startsWith("http") || value.startsWith("data:")) return value;
+        return `${axios.defaults.baseURL}uploads/${value}`;
+    };
+
     const task1 = {
         topic: sharedTopic,
         image: test.task1Image || test.image || "",
@@ -172,10 +178,7 @@ function Index() {
                                 <h2>Task 1</h2>
                                 <p className="writing-test-topic">{task1.topic}</p>
                                 {task1.image ? (
-                                    <img
-                                        src={`${axios.defaults.baseURL}uploads/${task1.image}`}
-                                        alt="task 1"
-                                    />
+                                    <img src={resolveImageSrc(task1.image)} alt="task 1" />
                                 ) : (
                                     <div className="no-image">Bu task uchun rasm yo'q.</div>
                                 )}

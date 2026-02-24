@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from '../../Api/Axios';
 import { Link, useNavigate } from 'react-router-dom';
 import './Sign_up.css';
@@ -10,12 +10,60 @@ function Sign_up() {
         lastname: '',
         email: '',
         password: '',
-        role: 'student' // 🔥 student sifatida default
+        role: 'student', // 🔥 student sifatida default
+        teacherId: '',
+        timeGroup: '',
+        time: ''
     });
 
     const [loading, setLoading] = useState(false);
+    const [loadingOptions, setLoadingOptions] = useState(true);
+    const [teachers, setTeachers] = useState([]);
+    const [timeSlots, setTimeSlots] = useState([]);
     const [errorMsg, setErrorMsg] = useState('');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchTeachers = async () => {
+            setLoadingOptions(true);
+            try {
+                const tRes = await axios.get('/student/teachers');
+                setTeachers(tRes.data || []);
+            } catch (error) {
+                console.error('Teacher load error:', error);
+                setErrorMsg("Teacher ro'yxatini olishda xatolik ❌");
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+
+        fetchTeachers();
+    }, []);
+
+    useEffect(() => {
+        const fetchSlots = async () => {
+            if (!userData.teacherId || !userData.timeGroup) {
+                setTimeSlots([]);
+                setUserData((prev) => ({ ...prev, time: "" }));
+                return;
+            }
+            setLoadingOptions(true);
+            try {
+                const sRes = await axios.get('/student/timeslots', {
+                    params: { teacherId: userData.teacherId, group: userData.timeGroup }
+                });
+                setTimeSlots(sRes.data || []);
+                setUserData((prev) => ({ ...prev, time: "" }));
+            } catch (error) {
+                console.error('Time slots load error:', error);
+                setErrorMsg("Vaqtlar ro'yxatini olishda xatolik ❌");
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+
+        fetchSlots();
+    }, [userData.teacherId, userData.timeGroup]);
 
     const handleSignUpSubmit = async (e) => {
         e.preventDefault();
@@ -24,6 +72,12 @@ function Sign_up() {
 
         if (userData.password.length < 6) {
             setErrorMsg("Password must be at least 6 characters long ❌");
+            setLoading(false);
+            return;
+        }
+
+        if (!userData.teacherId || !userData.timeGroup || !userData.time) {
+            setErrorMsg("Teacher, juft/toq va vaqtni tanlang ❌");
             setLoading(false);
             return;
         }
@@ -104,6 +158,54 @@ function Sign_up() {
                         onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                         required
                     />
+                </div>
+
+                <div className="form-group">
+                    <label>Select Teacher</label>
+                    <select
+                        value={userData.teacherId}
+                        onChange={(e) => setUserData({ ...userData, teacherId: e.target.value })}
+                        required
+                        disabled={loadingOptions}
+                    >
+                        <option value="">Choose a teacher</option>
+                        {teachers.map((teacher) => (
+                            <option key={teacher._id} value={teacher._id}>
+                                {teacher.name} {teacher.lastname}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label>Juft / Toq</label>
+                    <select
+                        value={userData.timeGroup}
+                        onChange={(e) => setUserData({ ...userData, timeGroup: e.target.value })}
+                        required
+                        disabled={loadingOptions || !userData.teacherId}
+                    >
+                        <option value="">Juft yoki toq tanlang</option>
+                        <option value="juft">Juft (Seshanba, Payshanba, Shanba)</option>
+                        <option value="toq">Toq (Dushanba, Chorshanba, Juma)</option>
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label>Select Time</label>
+                    <select
+                        value={userData.time}
+                        onChange={(e) => setUserData({ ...userData, time: e.target.value })}
+                        required
+                        disabled={loadingOptions || !userData.teacherId || !userData.timeGroup}
+                    >
+                        <option value="">Choose a time</option>
+                        {timeSlots.map((slot) => (
+                            <option key={slot.time} value={slot.time}>
+                                {slot.time}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="form-group">

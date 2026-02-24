@@ -21,8 +21,9 @@ function Sign_in() {
                 // Tokenni localStorage'ga saqlash
                 localStorage.setItem('token', response.data.token);
 
-                // Hamma bu login orqali kirganlarni student sifatida belgilaymiz
-                localStorage.setItem('role', 'student');
+                // Rolni backenddan olamiz
+                localStorage.setItem('role', response.data.user?.role || 'student');
+                localStorage.setItem('user', JSON.stringify(response.data.user));
 
                 // Account/dashboard sahifasiga yo'naltirish
                 navigate('/account');

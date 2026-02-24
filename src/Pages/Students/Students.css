@@ -195,3 +195,12 @@
     background: var(--u-primary);
     color: white;
 }
+
+.carousel-tabs select {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--u-border);
+    background: var(--u-surface);
+    color: var(--u-ink);
+    font-weight: 600;
+}

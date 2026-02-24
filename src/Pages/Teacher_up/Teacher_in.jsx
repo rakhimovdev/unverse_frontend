@@ -21,11 +21,13 @@ function Teacher_in() {
                 // Tokenni localStorage'ga saqlash
                 localStorage.setItem('token', response.data.token);
 
-                // Teacher sifatida belgilash
-                localStorage.setItem('role', 'teacher');
+                // Rolni backenddan olamiz (teacher yoki admin)
+                const userRole = response.data.user?.role || 'teacher';
+                localStorage.setItem('role', userRole);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
 
                 // Teacher account sahifasiga yo'naltirish
-                navigate('/teachacc');
+                navigate(userRole === "admin" ? "/admin" : "/teachacc");
             } else {
                 alert('Login muvaffaqiyatli, lekin token topilmadi!');
             }

@@ -1,0 +1,375 @@
+.admin-page {
+    min-height: 100vh;
+    padding: 110px 24px 60px;
+    background: var(--u-bg);
+}
+
+.admin-header {
+    max-width: 1200px;
+    margin: 0 auto 24px;
+    text-align: center;
+}
+
+.admin-header h1 {
+    font-family: var(--u-display);
+    letter-spacing: 0.5px;
+    font-size: clamp(32px, 4vw, 44px);
+    margin-bottom: 6px;
+    color: var(--u-ink);
+}
+
+.admin-header p {
+    color: var(--u-muted);
+    margin: 0;
+}
+
+.admin-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+}
+
+.admin-panel {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-toggle {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.admin-card {
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: var(--u-shadow);
+}
+
+.admin-card h2 {
+    margin: 0 0 16px;
+    color: var(--u-ink);
+}
+
+.admin-banner {
+    max-width: 1200px;
+    margin: 0 auto 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(46, 125, 50, 0.12);
+    color: #245a2a;
+    border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.admin-banner--error {
+    background: rgba(179, 33, 28, 0.12);
+    color: #7a1212;
+    border: 1px solid rgba(179, 33, 28, 0.2);
+}
+
+.admin-table {
+    display: grid;
+    gap: 8px;
+}
+
+.admin-table__row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.3fr 1.2fr 1.1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--u-tint);
+}
+
+.admin-table__head {
+    font-weight: 600;
+    background: var(--u-tint-strong);
+}
+
+.admin-table input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--u-border);
+    background: #fff;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-form {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-form__row {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr auto;
+    gap: 10px;
+}
+
+.admin-form__row--days {
+    grid-template-columns: 1fr;
+}
+
+.admin-form select,
+.admin-form input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--u-border);
+    background: #fff;
+}
+
+.day-label {
+    font-weight: 600;
+    color: var(--u-muted);
+}
+
+.slot-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+}
+
+.slot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--u-tint);
+}
+
+.schedule-table {
+    display: grid;
+    gap: 8px;
+    overflow-x: auto;
+}
+
+.schedule-row {
+    display: grid;
+    grid-template-columns: 1.2fr repeat(7, 1fr);
+    gap: 6px;
+    align-items: stretch;
+}
+
+.schedule-head {
+    font-weight: 700;
+    background: var(--u-tint-strong);
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.schedule-row > div {
+    padding: 10px;
+    background: var(--u-tint);
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--u-border);
+    font-size: 14px;
+}
+
+.schedule-teacher {
+    text-align: left;
+    font-weight: 600;
+}
+
+.schedule-cell {
+    white-space: normal;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+
+.time-chip {
+    background: var(--u-primary);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.time-chip:hover {
+    background: var(--u-primary-dark);
+}
+
+.time-chip--checked {
+    background: #2e7d32;
+}
+
+.time-chip--checked:hover {
+    background: #1f5d24;
+}
+
+.schedule-students {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    box-shadow: var(--u-shadow);
+}
+
+.schedule-students h3 {
+    margin-top: 0;
+}
+
+.schedule-students ul {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: grid;
+    gap: 6px;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.attendance-table th,
+.attendance-table td {
+    border: 1px solid var(--u-border);
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.attendance-table th {
+    background: var(--u-tint-strong);
+    font-weight: 700;
+}
+
+.attendance-table select,
+.attendance-table input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--u-border);
+    background: #fff;
+}
+
+.attendance-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--u-primary);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.history-table {
+    margin-top: 16px;
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.history-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.history-table th,
+.history-table td {
+    border: 1px solid var(--u-border);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 13px;
+}
+
+.history-table th {
+    background: var(--u-tint-strong);
+    font-weight: 700;
+}
+
+.btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn--primary {
+    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(90, 13, 13, 0.18);
+}
+
+.btn--ghost {
+    background: #fff;
+    border: 1px solid var(--u-border);
+    color: var(--u-ink);
+}
+
+.btn--danger {
+    background: #7a1212;
+    color: #fff;
+}
+
+.btn--small {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+@media (max-width: 960px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-table__row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .admin-table__head {
+        display: none;
+    }
+
+    .admin-actions {
+        grid-column: span 2;
+    }
+
+    .admin-form__row {
+        grid-template-columns: 1fr;
+    }
+
+    .schedule-row {
+        grid-template-columns: 1.2fr repeat(7, 140px);
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-form {
+        grid-template-columns: 1fr;
+    }
+}

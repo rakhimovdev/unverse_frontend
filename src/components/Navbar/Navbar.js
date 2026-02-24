@@ -5,6 +5,9 @@ const Navbar = () => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
     const isLoggedIn = !!token;
+    const accountHref =
+        role === "teacher" ? "/teachacc" : role === "admin" ? "/admin" : "/account";
+    const accountLabel = role === "admin" ? "Admin" : "Account";
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -62,6 +65,9 @@ const Navbar = () => {
                                 <a className="nav-btn nav-btn--primary" href="/sign_up">
                                     Sign Up
                                 </a>
+                                <a className="nav-btn nav-btn--ghost" href="/admin_login">
+                                    Admin Login
+                                </a>
                             </>
                         )
                     ) : (
@@ -71,9 +77,9 @@ const Navbar = () => {
                             </button>
                             <a
                                 className="nav-btn nav-btn--ghost"
-                                href={role === "teacher" ? "/teachacc" : "/account"}
+                                href={accountHref}
                             >
-                                Account
+                                {accountLabel}
                             </a>
 
                             {role === "teacher" && (

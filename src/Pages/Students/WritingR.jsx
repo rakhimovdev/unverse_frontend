@@ -3,12 +3,18 @@ import { useEffect, useState, useCallback } from "react";
 import "./Students.css";
 import "../WritingPage/App.css";
 
-function WritingR() {
+function WritingR({ timeSlotId }) {
     const [data, setData] = useState([]);
     const [selected, setSelected] = useState(null);
     const [activeTask, setActiveTask] = useState("task1");
     const [saving, setSaving] = useState({});
     const token = localStorage.getItem("token");
+
+    const resolveImageSrc = (value) => {
+        if (!value) return "";
+        if (value.startsWith("http") || value.startsWith("data:")) return value;
+        return `${axios.defaults.baseURL}uploads/${value}`;
+    };
 
     // 📌 Barcha writing response'larni olish
     const fetchResponses = useCallback(() => {
@@ -68,7 +74,7 @@ function WritingR() {
         if (!response) return;
 
         const writingId = response.writingId?._id || response.writingId;
-        const studentId = response.userId;
+        const studentId = response.userId?._id || response.userId;
         if (!writingId || !studentId) return;
 
         setSaving((prev) => ({ ...prev, [id]: true }));
@@ -111,9 +117,26 @@ function WritingR() {
 
     const selectedData = selected ? getWritingData(selected) : null;
 
+    const filteredData = timeSlotId
+        ? data.filter((row) => {
+              const user = row.userId;
+              if (!user) return false;
+              const single = user.timeSlot;
+              const list = user.timeSlots || [];
+              const inList = Array.isArray(list)
+                  ? list.some((s) => (typeof s === "string" ? s === timeSlotId : s._id === timeSlotId))
+                  : false;
+              if (inList) return true;
+              if (!single) return false;
+              return typeof single === "string"
+                  ? single === timeSlotId
+                  : single._id === timeSlotId;
+          })
+        : data;
+
     return (
         <div className="students-container">
-            {data.length > 0 ? (
+            {filteredData.length > 0 ? (
                 <table className="students-table">
                     <thead>
                         <tr>
@@ -125,7 +148,7 @@ function WritingR() {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((response, index) => (
+                        {filteredData.map((response, index) => (
                             <tr key={response._id}>
                                 <td>{index + 1}</td>
                                 <td>{response.userName || "N/A"}</td>
@@ -228,7 +251,7 @@ function WritingR() {
                                             </p>
                                             {selectedData.task1.image ? (
                                                 <img
-                                                    src={`${axios.defaults.baseURL}uploads/${selectedData.task1.image}`}
+                                                    src={resolveImageSrc(selectedData.task1.image)}
                                                     alt="task 1"
                                                 />
                                             ) : (

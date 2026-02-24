@@ -46,6 +46,15 @@
     outline: none;
     background: var(--u-tint);
   }
+
+  .form-group select {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--u-border);
+    font-size: 16px;
+    outline: none;
+    background: var(--u-tint);
+  }
   
   .signup-button {
     background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));

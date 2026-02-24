@@ -2,7 +2,7 @@ import axios from "../../Api/Axios";
 import { useEffect, useState, useCallback } from "react";
 import "./Students.css"; // 👉 CSS alohida faylga chaqirilgan
 
-function ListeningR() {
+function ListeningR({ timeSlotId }) {
     const [data, setData] = useState([]);
     const token = localStorage.getItem("token");
 
@@ -36,9 +36,26 @@ function ListeningR() {
         fetchScores();
     }, [fetchScores]);
 
+    const filteredData = timeSlotId
+        ? data.filter((row) => {
+              const student = row.student;
+              if (!student) return false;
+              const single = student.timeSlot;
+              const list = student.timeSlots || [];
+              const inList = Array.isArray(list)
+                  ? list.some((s) => (typeof s === "string" ? s === timeSlotId : s._id === timeSlotId))
+                  : false;
+              if (inList) return true;
+              if (!single) return false;
+              return typeof single === "string"
+                  ? single === timeSlotId
+                  : single._id === timeSlotId;
+          })
+        : data;
+
     return (
         <div className="students-container">
-            {data.length > 0 ? (
+            {filteredData.length > 0 ? (
                 <table className="students-table">
                     <thead>
                         <tr>
@@ -51,7 +68,7 @@ function ListeningR() {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((student, index) => (
+                        {filteredData.map((student, index) => (
                             <tr key={student._id}>
                                 <td>{index + 1}</td>
                                 <td>{student.studentName || "N/A"}</td>

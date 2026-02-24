@@ -15,6 +15,10 @@ function Select_in() {
                     <Link to="/sign_in">
                         <button>Student</button>
                     </Link>
+                    <h1>OR</h1>
+                    <Link to="/admin_login">
+                        <button>Admin</button>
+                    </Link>
                 </div>
             </div>
         </div>

@@ -26,6 +26,9 @@ import Home from './Pages/Home/Home';
 import WritingForm from './Pages/WritingForm/Writing';
 import WritingPage from './Pages/WritingPage/Index';
 import WResult from './Pages/Writing_resault/wResault';
+import Admin from './Pages/Admin/Admin';
+import AdminLogin from './Pages/AdminLogin/AdminLogin';
+import AdminSignup from './Pages/AdminSignup/AdminSignup';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -55,6 +58,9 @@ root.render(
         <Route path='/writingform' element={<WritingForm />} />
         <Route path='/writingpage/:id' element={<WritingPage />} />
         <Route path='/wresault' element={<WResult />} />
+        <Route path='/admin' element={<Admin />} />
+        <Route path='/admin_login' element={<AdminLogin />} />
+        <Route path='/admin_signup' element={<AdminSignup />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

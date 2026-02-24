@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "../../Api/Axios";
 import Reading from "./ReadingR";
 import Listening from "./ListeningR";
 import Writing from "./WritingR";
@@ -6,6 +7,29 @@ import "./Students.css";
 
 function StudentsTabs() {
     const [activeTab, setActiveTab] = useState("reading"); // default tab
+    const [timeSlots, setTimeSlots] = useState([]);
+    const [selectedTime, setSelectedTime] = useState("");
+    const [loadingSlots, setLoadingSlots] = useState(true);
+    const storedUser = localStorage.getItem("user");
+    const userId = storedUser ? JSON.parse(storedUser)?.id : "";
+
+    useEffect(() => {
+        const loadSlots = async () => {
+            setLoadingSlots(true);
+            try {
+                const res = await axios.get("/student/timeslots", {
+                    params: userId ? { teacherId: userId } : {}
+                });
+                setTimeSlots(res.data || []);
+            } catch (err) {
+                console.error(err.response?.data || err.message);
+            } finally {
+                setLoadingSlots(false);
+            }
+        };
+
+        loadSlots();
+    }, []);
 
     return (
         <div className="students-container">
@@ -25,6 +49,19 @@ function StudentsTabs() {
                 >
                     🎧 Listening
                 </button>
+                <select
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    disabled={loadingSlots}
+                    aria-label="Dars vaqti"
+                >
+                    <option value="">Barcha vaqtlar</option>
+                    {timeSlots.map((slot) => (
+                        <option key={slot._id} value={slot._id}>
+                            {slot.day} · {slot.time}
+                        </option>
+                    ))}
+                </select>
                 <button
                     className={activeTab === "writing" ? "active" : ""}
                     onClick={() => setActiveTab("writing")}
@@ -34,9 +71,9 @@ function StudentsTabs() {
             </div>
 
             {/* Karuselga mos komponent */}
-            {activeTab === "reading" && <Reading />}
-            {activeTab === "listening" && <Listening />}
-            {activeTab === "writing" && <Writing />}
+            {activeTab === "reading" && <Reading timeSlotId={selectedTime} />}
+            {activeTab === "listening" && <Listening timeSlotId={selectedTime} />}
+            {activeTab === "writing" && <Writing timeSlotId={selectedTime} />}
         </div>
     );
 }
