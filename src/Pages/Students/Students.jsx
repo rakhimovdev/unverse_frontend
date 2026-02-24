@@ -11,7 +11,7 @@ function StudentsTabs() {
     const [selectedTime, setSelectedTime] = useState("");
     const [loadingSlots, setLoadingSlots] = useState(true);
     const storedUser = localStorage.getItem("user");
-    const userId = storedUser ? JSON.parse(storedUser)?.id : "";
+    const userId = useMemo(() => (storedUser ? JSON.parse(storedUser)?.id : ""), [storedUser]);
 
     useEffect(() => {
         const loadSlots = async () => {
@@ -29,7 +29,7 @@ function StudentsTabs() {
         };
 
         loadSlots();
-    }, []);
+    }, [userId]);
 
     return (
         <div className="students-container">

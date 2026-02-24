@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "../../Api/Axios";
 import "./Admin.css";
 
@@ -196,7 +196,7 @@ function Admin() {
 
     const headers = useMemo(() => ({ Authorization: token }), [token]);
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         setErrorMsg("");
         try {
@@ -211,13 +211,13 @@ function Admin() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [headers, todayKey]);
 
     useEffect(() => {
         if (role === "admin" && token) {
             loadData();
         }
-    }, [role, token, todayKey]);
+    }, [role, token, loadData]);
 
     useEffect(() => {
         slotStudentsRef.current = slotStudents;
