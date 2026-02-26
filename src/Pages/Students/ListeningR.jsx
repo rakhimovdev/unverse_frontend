@@ -2,7 +2,7 @@ import axios from "../../Api/Axios";
 import { useEffect, useState, useCallback } from "react";
 import "./Students.css"; // 👉 CSS alohida faylga chaqirilgan
 
-function ListeningR({ timeSlotId }) {
+function ListeningR({ timeSlotIds }) {
     const [data, setData] = useState([]);
     const token = localStorage.getItem("token");
 
@@ -36,20 +36,22 @@ function ListeningR({ timeSlotId }) {
         fetchScores();
     }, [fetchScores]);
 
-    const filteredData = timeSlotId
+    const selectedIds = Array.isArray(timeSlotIds)
+        ? timeSlotIds
+        : timeSlotIds
+            ? [timeSlotIds]
+            : [];
+
+    const filteredData = selectedIds.length
         ? data.filter((row) => {
               const student = row.student;
               if (!student) return false;
               const single = student.timeSlot;
-              const list = student.timeSlots || [];
-              const inList = Array.isArray(list)
-                  ? list.some((s) => (typeof s === "string" ? s === timeSlotId : s._id === timeSlotId))
-                  : false;
-              if (inList) return true;
-              if (!single) return false;
-              return typeof single === "string"
-                  ? single === timeSlotId
-                  : single._id === timeSlotId;
+              const list = Array.isArray(student.timeSlots) ? student.timeSlots : [];
+              const all = [...list, single].filter(Boolean);
+              return all.some((s) =>
+                  selectedIds.includes(typeof s === "string" ? s : s._id)
+              );
           })
         : data;
 

@@ -7,12 +7,15 @@ function Writing() {
     const [uploadedTests, setUploadedTests] = useState([]);
     const navigate = useNavigate();
 
-    const isAuthenticated = !!localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    const isAuthenticated = !!token;
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
     const fetchTests = () => {
         axios
-            .get("/posts/all")
+            .get("/posts/all", {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            })
             .then((res) => {
                 setUploadedTests(res.data || []);
             })

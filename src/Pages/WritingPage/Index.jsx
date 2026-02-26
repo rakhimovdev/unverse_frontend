@@ -10,6 +10,7 @@ const TASKS = [
 
 function Index() {
     const { id } = useParams();
+    const token = localStorage.getItem("token");
     const [test, setTest] = useState(null);
     const [activeTask, setActiveTask] = useState("task1");
     const [answers, setAnswers] = useState({ task1: "", task2: "" });
@@ -20,7 +21,9 @@ function Index() {
     useEffect(() => {
         const getTest = async () => {
             try {
-                const res = await axios.get(`/posts/${id}`);
+                const res = await axios.get(`/posts/${id}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
                 setTest(res.data);
             } catch (error) {
                 console.error("GET test error:", error);
@@ -82,6 +85,7 @@ function Index() {
         setError("");
 
         try {
+            // 1️⃣ SAVE JAVOB
             await axios.post(
                 "/scorew/response",
                 {
@@ -91,14 +95,49 @@ function Index() {
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                        Authorization: `Bearer ${token}`
                     }
                 }
             );
-            alert("Saved!");
+
+            // 2️⃣ AI CHECK (TASK 1)
+            const aiTask1 = await axios.post(
+                "/ai/writing/grade",
+                {
+                    essay: answers.task1.trim(),
+                    task: "task1",
+                    language: "uz"
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            // 3️⃣ AI CHECK (TASK 2)
+            const aiTask2 = await axios.post(
+                "/ai/writing/grade",
+                {
+                    essay: answers.task2.trim(),
+                    task: "task2",
+                    language: "uz"
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            console.log("AI Task1:", aiTask1.data);
+            console.log("AI Task2:", aiTask2.data);
+
+            alert("AI tekshiruv tugadi!");
+
         } catch (err) {
-            console.error("Response saqlashda xato:", err.response?.data || err);
-            setError("Javobni saqlashda xatolik bo'ldi!");
+            console.error("Xatolik:", err.response?.data || err);
+            setError("AI tekshiruvda xatolik bo'ldi!");
         }
 
         setSaving(false);
@@ -134,9 +173,8 @@ function Index() {
                 </div>
                 <div className="writing-test-meta">
                     <div
-                        className={`writing-test-timer ${
-                            timeLeft === 0 ? "is-done" : ""
-                        }`}
+                        className={`writing-test-timer ${timeLeft === 0 ? "is-done" : ""
+                            }`}
                         aria-live="polite"
                     >
                         <span className="writing-test-timer-label">Time left</span>
@@ -154,9 +192,8 @@ function Index() {
                         <button
                             key={task.key}
                             type="button"
-                            className={`writing-test-switch-btn ${
-                                activeTask === task.key ? "active" : ""
-                            }`}
+                            className={`writing-test-switch-btn ${activeTask === task.key ? "active" : ""
+                                }`}
                             onClick={() => setActiveTask(task.key)}
                             aria-pressed={activeTask === task.key}
                         >
@@ -167,9 +204,8 @@ function Index() {
             </div>
 
             <div
-                className={`writing-test-carousel ${
-                    activeTask === "task2" ? "is-task2" : ""
-                }`}
+                className={`writing-test-carousel ${activeTask === "task2" ? "is-task2" : ""
+                    }`}
             >
                 <div className="writing-test-track">
                     <div className="writing-test-panel">

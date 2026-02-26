@@ -9,13 +9,16 @@ function ListeningForm() {
     const navigate = useNavigate();
 
     // LocalStorage’dan token va role olish
-    const isAuthenticated = !!localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    const isAuthenticated = !!token;
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
     // Testlarni olish
     const fetchTests = () => {
         axios
-            .get("/testl/all")
+            .get("/testl/all", {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            })
             .then((res) => {
                 setUploadedTests(res.data || []);
             })

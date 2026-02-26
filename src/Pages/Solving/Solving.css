@@ -8,6 +8,29 @@
     background: var(--u-bg);
 }
 
+/* ================= TEST META ================= */
+
+.test-name-container {
+    display: grid;
+    gap: 10px;
+    max-width: 520px;
+    margin-bottom: 16px;
+}
+
+.test-name-label {
+    font-weight: 600;
+    color: var(--u-ink);
+}
+
+.test-name-input,
+.test-name-select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--u-border);
+    background: #fff;
+    font-size: 14px;
+}
+
 /* ================= PASSAGE TABS ================= */
 
 .passage-tools {

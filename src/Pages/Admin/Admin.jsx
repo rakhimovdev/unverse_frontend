@@ -2,19 +2,89 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import axios from "../../Api/Axios";
 import "./Admin.css";
 
+const READING_ACADEMIC_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 37, max: 38, band: 8.5 },
+    { min: 35, max: 36, band: 8 },
+    { min: 33, max: 34, band: 7.5 },
+    { min: 30, max: 32, band: 7 },
+    { min: 27, max: 29, band: 6.5 },
+    { min: 23, max: 26, band: 6 },
+    { min: 19, max: 22, band: 5.5 },
+    { min: 15, max: 18, band: 5 },
+    { min: 12, max: 14, band: 4.5 },
+    { min: 9, max: 11, band: 4 },
+    { min: 5, max: 8, band: 3 },
+    { min: 0, max: 4, band: 0 }
+];
+
+const READING_GENERAL_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 38, max: 38, band: 8.5 },
+    { min: 37, max: 37, band: 8 },
+    { min: 36, max: 36, band: 7.5 },
+    { min: 34, max: 35, band: 7 },
+    { min: 32, max: 33, band: 6.5 },
+    { min: 30, max: 31, band: 6 },
+    { min: 27, max: 29, band: 5.5 },
+    { min: 23, max: 26, band: 5 },
+    { min: 19, max: 22, band: 4.5 },
+    { min: 15, max: 18, band: 4 },
+    { min: 12, max: 14, band: 3 },
+    { min: 0, max: 11, band: 0 }
+];
+
+const LISTENING_BAND_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 37, max: 38, band: 8.5 },
+    { min: 35, max: 36, band: 8 },
+    { min: 32, max: 34, band: 7.5 },
+    { min: 30, max: 31, band: 7 },
+    { min: 26, max: 29, band: 6.5 },
+    { min: 23, max: 25, band: 6 },
+    { min: 18, max: 22, band: 5.5 },
+    { min: 16, max: 17, band: 5 },
+    { min: 13, max: 15, band: 4.5 },
+    { min: 10, max: 12, band: 4 },
+    { min: 6, max: 9, band: 3.5 },
+    { min: 4, max: 5, band: 3 },
+    { min: 2, max: 3, band: 2.5 },
+    { min: 1, max: 1, band: 1 },
+    { min: 0, max: 0, band: 0 }
+];
+
+const getBandScore = (rawScore, table) => {
+    const value = Number(rawScore);
+    if (!Number.isFinite(value)) return null;
+    const row = table.find((r) => value >= r.min && value <= r.max);
+    return row ? row.band : null;
+};
+
 function Admin() {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
     const [teachers, setTeachers] = useState([]);
     const [slots, setSlots] = useState([]);
+    const [moocStudents, setMoocStudents] = useState([]);
+    const [moocScores, setMoocScores] = useState(null);
+    const [moocScoresLoading, setMoocScoresLoading] = useState(false);
+    const [selectedMooc, setSelectedMooc] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState("");
     const [actionMsg, setActionMsg] = useState("");
+    const [moocSaving, setMoocSaving] = useState(false);
     const [newSlot, setNewSlot] = useState({
         group: "",
         time: "",
         teacherId: ""
+    });
+    const [moocForm, setMoocForm] = useState({
+        username: "",
+        name: "",
+        lastname: "",
+        email: "",
+        password: ""
     });
     const [passwords, setPasswords] = useState({});
     const [activeView, setActiveView] = useState("teachers");
@@ -200,12 +270,14 @@ function Admin() {
         setLoading(true);
         setErrorMsg("");
         try {
-            const [tRes, sRes] = await Promise.all([
+            const [tRes, sRes, mRes] = await Promise.all([
                 axios.get("/admin/teachers", { headers }),
-                axios.get("/admin/timeslots", { headers, params: { date: todayKey } })
+                axios.get("/admin/timeslots", { headers, params: { date: todayKey } }),
+                axios.get("/admin/mooc-students", { headers })
             ]);
             setTeachers(tRes.data || []);
             setSlots(sRes.data || []);
+            setMoocStudents(mRes.data || []);
         } catch (err) {
             setErrorMsg(err.response?.data?.message || "Ma'lumotlarni olishda xatolik ❌");
         } finally {
@@ -300,6 +372,73 @@ function Admin() {
         }
     };
 
+    const resetMoocForm = () =>
+        setMoocForm({
+            username: "",
+            name: "",
+            lastname: "",
+            email: "",
+            password: ""
+        });
+
+    const handleCreateMooc = async (e) => {
+        e.preventDefault();
+        if (moocSaving) return;
+        setActionMsg("");
+
+        if (!moocForm.username || !moocForm.name || !moocForm.lastname || !moocForm.email) {
+            setActionMsg("Barcha maydonlarni to'ldiring ❌");
+            return;
+        }
+
+        if ((moocForm.password || "").length < 6) {
+            setActionMsg("Parol kamida 6 ta belgidan iborat bo'lsin ❌");
+            return;
+        }
+
+        try {
+            setMoocSaving(true);
+            await axios.post("/admin/mooc-students", moocForm, { headers });
+            setActionMsg("MOOC student qo'shildi ✅");
+            resetMoocForm();
+            loadData();
+        } catch (err) {
+            setActionMsg(err.response?.data?.message || "MOOC student qo'shishda xatolik ❌");
+        } finally {
+            setMoocSaving(false);
+        }
+    };
+
+    const handleDeleteMooc = async (id) => {
+        if (!window.confirm("MOOC studentni o'chirishni xohlaysizmi?")) return;
+        setActionMsg("");
+        try {
+            await axios.delete(`/admin/mooc-students/${id}`, { headers });
+            setActionMsg("MOOC student o'chirildi ✅");
+            loadData();
+        } catch (err) {
+            setActionMsg(err.response?.data?.message || "MOOC student o'chirishda xatolik ❌");
+        }
+    };
+
+    const loadMoocScores = async (student) => {
+        if (!student?._id) return;
+        setSelectedMooc(student);
+        setMoocScores(null);
+        setMoocScoresLoading(true);
+        setActionMsg("");
+        try {
+            const res = await axios.get(`/admin/mooc-students/${student._id}/scores`, {
+                headers
+            });
+            setMoocScores(res.data || null);
+        } catch (err) {
+            setActionMsg(err.response?.data?.message || "Scorelarni olishda xatolik ❌");
+        } finally {
+            setMoocScoresLoading(false);
+        }
+    };
+
     if (role !== "admin") {
         return (
             <div className="admin-page">
@@ -327,6 +466,12 @@ function Admin() {
                 <div className="admin-panel">
                     <div className="admin-toggle">
                         <button
+                            className={`btn ${activeView === "mooc" ? "btn--primary" : "btn--ghost"}`}
+                            onClick={() => setActiveView("mooc")}
+                        >
+                            MOOC Accounts
+                        </button>
+                        <button
                             className={`btn ${activeView === "teachers" ? "btn--primary" : "btn--ghost"}`}
                             onClick={() => setActiveView("teachers")}
                         >
@@ -340,7 +485,246 @@ function Admin() {
                         </button>
                     </div>
 
-                    {activeView === "teachers" ? (
+                    {activeView === "mooc" ? (
+                        <div className="admin-grid">
+                            <section className="admin-card">
+                                <h2>MOOC Student qo'shish</h2>
+                                <form className="admin-form" onSubmit={handleCreateMooc}>
+                                    <div className="admin-form__grid">
+                                        <input
+                                            type="text"
+                                            placeholder="Ism"
+                                            value={moocForm.name}
+                                            onChange={(e) =>
+                                                setMoocForm((prev) => ({ ...prev, name: e.target.value }))
+                                            }
+                                            required
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Familiya"
+                                            value={moocForm.lastname}
+                                            onChange={(e) =>
+                                                setMoocForm((prev) => ({ ...prev, lastname: e.target.value }))
+                                            }
+                                            required
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Username"
+                                            value={moocForm.username}
+                                            onChange={(e) =>
+                                                setMoocForm((prev) => ({ ...prev, username: e.target.value }))
+                                            }
+                                            required
+                                        />
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={moocForm.email}
+                                            onChange={(e) =>
+                                                setMoocForm((prev) => ({ ...prev, email: e.target.value }))
+                                            }
+                                            required
+                                        />
+                                        <input
+                                            type="password"
+                                            placeholder="Parol"
+                                            value={moocForm.password}
+                                            onChange={(e) =>
+                                                setMoocForm((prev) => ({ ...prev, password: e.target.value }))
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <button className="btn btn--primary" type="submit" disabled={moocSaving}>
+                                        {moocSaving ? "Saqlanmoqda..." : "Qo'shish"}
+                                    </button>
+                                </form>
+                            </section>
+
+                            <section className="admin-card">
+                                <h2>MOOC Students</h2>
+                                {moocStudents.length === 0 ? (
+                                    <p>MOOC student topilmadi.</p>
+                                ) : (
+                                    <div className="admin-table admin-table--mooc">
+                                        <div className="admin-table__row admin-table__head">
+                                            <div>Ism</div>
+                                            <div>Username</div>
+                                            <div>Email</div>
+                                            <div>Amallar</div>
+                                        </div>
+                                        {moocStudents.map((student) => (
+                                            <div className="admin-table__row" key={student._id}>
+                                                <div>{student.name} {student.lastname}</div>
+                                                <div>{student.username}</div>
+                                                <div>{student.email}</div>
+                                                <div className="admin-actions">
+                                                    <button
+                                                        className="btn btn--ghost"
+                                                        onClick={() => loadMoocScores(student)}
+                                                    >
+                                                        Scorelar
+                                                    </button>
+                                                    <button
+                                                        className="btn btn--danger"
+                                                        onClick={() => handleDeleteMooc(student._id)}
+                                                    >
+                                                        O'chirish
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+
+                            <section className="admin-card admin-card--scores">
+                                <h2>MOOC Scorelar</h2>
+                                {moocScoresLoading ? (
+                                    <p>Yuklanmoqda...</p>
+                                ) : moocScores ? (
+                                    <div className="admin-scores">
+                                        <h3>
+                                            {moocScores.student?.name} {moocScores.student?.lastname} ·{" "}
+                                            {moocScores.student?.email}
+                                        </h3>
+
+                                        <div className="admin-score-block">
+                                            <h4>Reading</h4>
+                                            {moocScores.reading?.length ? (
+                                                <table className="admin-score-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Test</th>
+                                                            <th>Raw</th>
+                                                            <th>Band (A/G)</th>
+                                                            <th>Sana</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {moocScores.reading.map((r) => {
+                                                            const academic = getBandScore(
+                                                                r.score,
+                                                                READING_ACADEMIC_TABLE
+                                                            );
+                                                            const general = getBandScore(
+                                                                r.score,
+                                                                READING_GENERAL_TABLE
+                                                            );
+                                                            return (
+                                                                <tr key={r._id}>
+                                                                    <td>{r.testName || r.test?.name || "Reading Test"}</td>
+                                                                    <td>{r.score}</td>
+                                                                    <td>{academic ?? "N/A"} / {general ?? "N/A"}</td>
+                                                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            ) : (
+                                                <p>Reading score yo'q.</p>
+                                            )}
+                                        </div>
+
+                                        <div className="admin-score-block">
+                                            <h4>Listening</h4>
+                                            {moocScores.listening?.length ? (
+                                                <table className="admin-score-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Test</th>
+                                                            <th>Raw</th>
+                                                            <th>Band</th>
+                                                            <th>Sana</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {moocScores.listening.map((r) => {
+                                                            const band = getBandScore(
+                                                                r.score,
+                                                                LISTENING_BAND_TABLE
+                                                            );
+                                                            return (
+                                                                <tr key={r._id}>
+                                                                    <td>{r.testName || r.test?.title || "Listening Test"}</td>
+                                                                    <td>{r.score}</td>
+                                                                    <td>{band ?? "N/A"}</td>
+                                                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            ) : (
+                                                <p>Listening score yo'q.</p>
+                                            )}
+                                        </div>
+
+                                        <div className="admin-score-block">
+                                            <h4>Writing (AI)</h4>
+                                            {moocScores.writingAi?.length ? (
+                                                <table className="admin-score-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Task</th>
+                                                            <th>Raw</th>
+                                                            <th>Band</th>
+                                                            <th>Sana</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {moocScores.writingAi.map((r) => (
+                                                            <tr key={r._id}>
+                                                                <td>{r.taskType || "task2"}</td>
+                                                                <td>{r.result?.raw_score ?? "—"}</td>
+                                                                <td>{r.result?.estimated_band ?? "N/A"}</td>
+                                                                <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            ) : (
+                                                <p>Writing AI score yo'q.</p>
+                                            )}
+                                        </div>
+
+                                        {moocScores.writingScores?.length ? (
+                                            <div className="admin-score-block">
+                                                <h4>Writing (Teacher)</h4>
+                                                <table className="admin-score-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Test</th>
+                                                            <th>Raw</th>
+                                                            <th>Band</th>
+                                                            <th>Sana</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {moocScores.writingScores.map((r) => (
+                                                            <tr key={r._id}>
+                                                                <td>{r.testName || "Writing Test"}</td>
+                                                                <td>{r.score}</td>
+                                                                <td>{r.score}</td>
+                                                                <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ) : selectedMooc ? (
+                                    <p>Scorelar topilmadi.</p>
+                                ) : (
+                                    <p>Scorelarni ko'rish uchun studentni tanlang.</p>
+                                )}
+                            </section>
+                        </div>
+                    ) : activeView === "teachers" ? (
                         <div className="admin-grid">
                             <section className="admin-card">
                                 <h2>Teacher Accounts</h2>

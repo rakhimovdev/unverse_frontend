@@ -25,6 +25,37 @@
     margin-bottom: 32px;
 }
 
+.writing-hero-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.writing-type {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+}
+
+.writing-type label {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--writing-muted);
+}
+
+.writing-type select {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(179, 33, 28, 0.25);
+    background: #fff;
+    font-size: 14px;
+    font-family: inherit;
+}
+
 .writing-eyebrow {
     text-transform: uppercase;
     letter-spacing: 0.2em;

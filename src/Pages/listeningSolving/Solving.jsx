@@ -179,6 +179,7 @@ const isCorrectAnswer = (userValue, correctValue) => {
 
 function ListeningTest() {
     const { id } = useParams();
+    const token = localStorage.getItem("token");
     const [test, setTest] = useState(null);
     const [parts, setParts] = useState([]);
     const [activePart, setActivePart] = useState(0);
@@ -190,7 +191,9 @@ function ListeningTest() {
     useEffect(() => {
         const fetchTest = async () => {
             try {
-                const res = await axios.get(`/testl/info/${id}`);
+                const res = await axios.get(`/testl/info/${id}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
                 if (!res.data) {
                     setError("Test ma'lumotlari topilmadi.");
                     return;
@@ -207,6 +210,7 @@ function ListeningTest() {
                                   testText: res.data.testText || "",
                                   questions: res.data.questions || [],
                                   imageUrl: res.data.imageUrl || null,
+                                  audioUrl: res.data.audioUrl || null,
                               },
                           ];
 
@@ -467,7 +471,10 @@ function ListeningTest() {
             <div className="media-section">
                 <div className="audio-player">
                     <audio controls onEnded={handleSubmit}>
-                        <source src={test.audioUrl} type="audio/mpeg" />
+                        <source
+                            src={activePartData?.audioUrl || test.audioUrl}
+                            type="audio/mpeg"
+                        />
                         Sizning brauzeringiz audio qo‘llab-quvvatlamaydi.
                     </audio>
                 </div>

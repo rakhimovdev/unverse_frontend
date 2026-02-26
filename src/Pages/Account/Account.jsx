@@ -1,11 +1,72 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "../../Api/Axios";
+
+const READING_ACADEMIC_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 37, max: 38, band: 8.5 },
+    { min: 35, max: 36, band: 8 },
+    { min: 33, max: 34, band: 7.5 },
+    { min: 30, max: 32, band: 7 },
+    { min: 27, max: 29, band: 6.5 },
+    { min: 23, max: 26, band: 6 },
+    { min: 19, max: 22, band: 5.5 },
+    { min: 15, max: 18, band: 5 },
+    { min: 12, max: 14, band: 4.5 },
+    { min: 9, max: 11, band: 4 },
+    { min: 5, max: 8, band: 3 },
+    { min: 0, max: 4, band: 0 }
+];
+
+const READING_GENERAL_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 38, max: 38, band: 8.5 },
+    { min: 37, max: 37, band: 8 },
+    { min: 36, max: 36, band: 7.5 },
+    { min: 34, max: 35, band: 7 },
+    { min: 32, max: 33, band: 6.5 },
+    { min: 30, max: 31, band: 6 },
+    { min: 27, max: 29, band: 5.5 },
+    { min: 23, max: 26, band: 5 },
+    { min: 19, max: 22, band: 4.5 },
+    { min: 15, max: 18, band: 4 },
+    { min: 12, max: 14, band: 3 },
+    { min: 0, max: 11, band: 0 }
+];
+
+const LISTENING_BAND_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 37, max: 38, band: 8.5 },
+    { min: 35, max: 36, band: 8 },
+    { min: 32, max: 34, band: 7.5 },
+    { min: 30, max: 31, band: 7 },
+    { min: 26, max: 29, band: 6.5 },
+    { min: 23, max: 25, band: 6 },
+    { min: 18, max: 22, band: 5.5 },
+    { min: 16, max: 17, band: 5 },
+    { min: 13, max: 15, band: 4.5 },
+    { min: 10, max: 12, band: 4 },
+    { min: 6, max: 9, band: 3.5 },
+    { min: 4, max: 5, band: 3 },
+    { min: 2, max: 3, band: 2.5 },
+    { min: 1, max: 1, band: 1 },
+    { min: 0, max: 0, band: 0 }
+];
+
+const getBandScore = (rawScore, table) => {
+    const value = Number(rawScore);
+    if (!Number.isFinite(value)) return null;
+    const row = table.find((r) => value >= r.min && value <= r.max);
+    return row ? row.band : null;
+};
 
 function Account() {
     const [results, setResults] = useState([]);
     const [writingResults, setWritingResults] = useState([]);
+    const [listeningResults, setListeningResults] = useState([]);
+    const [writingAiResults, setWritingAiResults] = useState([]);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const role = localStorage.getItem("role");
 
     // Foydalanuvchi va natijalarni olish
     useEffect(() => {
@@ -26,10 +87,24 @@ function Account() {
                 });
                 setResults(resScores.data);
 
-                const resWriting = await axios.get("/scorew/my", {
+                const resListening = await axios.get("/scorel/my", {
                     headers: { Authorization: token }
                 });
-                setWritingResults(resWriting.data);
+                setListeningResults(resListening.data);
+
+                if (role === "mooc" || role === "mock_user") {
+                    const resWritingAi = await axios.get("/api/writing/ai-results", {
+                        headers: { Authorization: token }
+                    });
+                    setWritingAiResults(resWritingAi.data || []);
+                    setWritingResults([]);
+                } else {
+                    const resWriting = await axios.get("/scorew/my", {
+                        headers: { Authorization: token }
+                    });
+                    setWritingResults(resWriting.data);
+                    setWritingAiResults([]);
+                }
             } catch (err) {
                 console.error("Error loading account:", err);
             } finally {
@@ -38,7 +113,25 @@ function Account() {
         };
 
         fetchData();
-    }, []);
+    }, [role]);
+
+    const readingBands = useMemo(
+        () =>
+            results.map((r) => {
+                const raw = r.score;
+                return {
+                    academic: getBandScore(raw, READING_ACADEMIC_TABLE),
+                    general: getBandScore(raw, READING_GENERAL_TABLE)
+                };
+            }),
+        [results]
+    );
+
+    const listeningBands = useMemo(
+        () =>
+            listeningResults.map((r) => getBandScore(r.score, LISTENING_BAND_TABLE)),
+        [listeningResults]
+    );
 
     if (loading) return <p>Loading...</p>;
 
@@ -54,21 +147,25 @@ function Account() {
             </div>
 
             <div className="results">
-                <h2>My Results</h2>
+                <h2>My Reading Results</h2>
                 {results.length > 0 ? (
                     <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
                         <thead>
                             <tr>
                                 <th>Test Name</th>
-                                <th>Score</th>
+                                <th>Raw Score</th>
+                                <th>Band (A/G)</th>
                                 <th>Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {results.map((r, i) => (
                                 <tr key={i}>
-                                    <td>{r.test?.name || "Unknown Test"}</td>
+                                    <td>{r.testName || r.test?.name || "Unknown Test"}</td>
                                     <td>{r.score}</td>
+                                    <td>
+                                        {readingBands[i]?.academic ?? "N/A"} / {readingBands[i]?.general ?? "N/A"}
+                                    </td>
                                     <td>{new Date(r.createdAt).toLocaleString()}</td>
                                 </tr>
                             ))}
@@ -80,13 +177,63 @@ function Account() {
             </div>
 
             <div className="results" style={{ marginTop: "30px" }}>
-                <h2>My Writing Results</h2>
-                {writingResults.length > 0 ? (
+                <h2>My Listening Results</h2>
+                {listeningResults.length > 0 ? (
                     <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
                         <thead>
                             <tr>
                                 <th>Test Name</th>
-                                <th>Score</th>
+                                <th>Raw Score</th>
+                                <th>Band</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {listeningResults.map((r, i) => (
+                                <tr key={i}>
+                                    <td>{r.testName || r.test?.title || "Listening Test"}</td>
+                                    <td>{r.score}</td>
+                                    <td>{listeningBands[i] ?? "N/A"}</td>
+                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p>You have no listening results yet.</p>
+                )}
+            </div>
+
+            <div className="results" style={{ marginTop: "30px" }}>
+                <h2>My Writing Results</h2>
+                {writingAiResults.length > 0 ? (
+                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Raw Score</th>
+                                <th>Band</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {writingAiResults.map((r, i) => (
+                                <tr key={i}>
+                                    <td>{r.taskType || "task2"}</td>
+                                    <td>{r.result?.raw_score ?? "—"}</td>
+                                    <td>{r.result?.estimated_band ?? "N/A"}</td>
+                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : writingResults.length > 0 ? (
+                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Raw Score</th>
+                                <th>Band</th>
                                 <th>Date</th>
                             </tr>
                         </thead>
@@ -94,6 +241,7 @@ function Account() {
                             {writingResults.map((r, i) => (
                                 <tr key={i}>
                                     <td>{r.testName || "Writing Test"}</td>
+                                    <td>{r.score}</td>
                                     <td>{r.score}</td>
                                     <td>{new Date(r.createdAt).toLocaleString()}</td>
                                 </tr>

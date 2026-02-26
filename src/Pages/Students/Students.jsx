@@ -7,20 +7,31 @@ import "./Students.css";
 
 function StudentsTabs() {
     const [activeTab, setActiveTab] = useState("reading"); // default tab
-    const [timeSlots, setTimeSlots] = useState([]);
+    const [timeGroup, setTimeGroup] = useState("");
+    const [timeOptions, setTimeOptions] = useState([]);
     const [selectedTime, setSelectedTime] = useState("");
+    const [selectedSlotIds, setSelectedSlotIds] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(true);
     const storedUser = localStorage.getItem("user");
     const userId = useMemo(() => (storedUser ? JSON.parse(storedUser)?.id : ""), [storedUser]);
 
     useEffect(() => {
         const loadSlots = async () => {
+            if (!userId || !timeGroup) {
+                setTimeOptions([]);
+                setSelectedTime("");
+                setSelectedSlotIds([]);
+                setLoadingSlots(false);
+                return;
+            }
             setLoadingSlots(true);
             try {
                 const res = await axios.get("/student/timeslots", {
-                    params: userId ? { teacherId: userId } : {}
+                    params: { teacherId: userId, group: timeGroup }
                 });
-                setTimeSlots(res.data || []);
+                setTimeOptions(res.data || []);
+                setSelectedTime("");
+                setSelectedSlotIds([]);
             } catch (err) {
                 console.error(err.response?.data || err.message);
             } finally {
@@ -29,7 +40,7 @@ function StudentsTabs() {
         };
 
         loadSlots();
-    }, [userId]);
+    }, [userId, timeGroup]);
 
     return (
         <div className="students-container">
@@ -50,15 +61,30 @@ function StudentsTabs() {
                     🎧 Listening
                 </button>
                 <select
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
+                    value={timeGroup}
+                    onChange={(e) => setTimeGroup(e.target.value)}
                     disabled={loadingSlots}
+                    aria-label="Juft yoki toq"
+                >
+                    <option value="">Juft/Toq</option>
+                    <option value="juft">Juft</option>
+                    <option value="toq">Toq</option>
+                </select>
+                <select
+                    value={selectedTime}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSelectedTime(value);
+                        const match = timeOptions.find((t) => t.time === value);
+                        setSelectedSlotIds(match?.slotIds || []);
+                    }}
+                    disabled={loadingSlots || !timeGroup}
                     aria-label="Dars vaqti"
                 >
-                    <option value="">Barcha vaqtlar</option>
-                    {timeSlots.map((slot) => (
-                        <option key={slot._id} value={slot._id}>
-                            {slot.day} · {slot.time}
+                    <option value="">Vaqt tanlang</option>
+                    {timeOptions.map((slot) => (
+                        <option key={slot.time} value={slot.time}>
+                            {slot.time}
                         </option>
                     ))}
                 </select>
@@ -71,9 +97,9 @@ function StudentsTabs() {
             </div>
 
             {/* Karuselga mos komponent */}
-            {activeTab === "reading" && <Reading timeSlotId={selectedTime} />}
-            {activeTab === "listening" && <Listening timeSlotId={selectedTime} />}
-            {activeTab === "writing" && <Writing timeSlotId={selectedTime} />}
+            {activeTab === "reading" && <Reading timeSlotIds={selectedSlotIds} />}
+            {activeTab === "listening" && <Listening timeSlotIds={selectedSlotIds} />}
+            {activeTab === "writing" && <Writing timeSlotIds={selectedSlotIds} />}
         </div>
     );
 }

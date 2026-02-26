@@ -34,6 +34,7 @@ const INPUT_SNIPPET = `<input class="writing-inline-input" type="text" placehold
 
 function Writing() {
     const [activeTask, setActiveTask] = useState("task1");
+    const [audience, setAudience] = useState("regular");
     const [forms, setForms] = useState({
         task1: { ...emptyForm },
         task2: { ...emptyForm }
@@ -222,6 +223,7 @@ function Writing() {
         formData.append("task2Topic", sharedTopic);
         formData.append("task2Text", task2.taskText.trim());
         formData.append("topic", sharedTopic);
+        formData.append("audience", audience);
         if (task1.image) {
             formData.append("image", task1.image);
         }
@@ -242,6 +244,7 @@ function Writing() {
                 URL.revokeObjectURL(task2.preview);
             }
             setForms({ task1: { ...emptyForm }, task2: { ...emptyForm } });
+            setAudience("regular");
         } catch (err) {
             console.error(err);
             setErrors({ task1: "Xatolik yuz berdi!", task2: "Xatolik yuz berdi!" });
@@ -262,18 +265,30 @@ function Writing() {
                     </p>
                 </div>
 
-                <div className="task-switch" role="tablist" aria-label="IELTS task switch">
-                    {TASKS.map((task) => (
-                        <button
-                            key={task.key}
-                            type="button"
-                            className={`switch-btn ${activeTask === task.key ? "active" : ""}`}
-                            onClick={() => setActiveTask(task.key)}
-                            aria-pressed={activeTask === task.key}
+                <div className="writing-hero-controls">
+                    <div className="writing-type">
+                        <label>Test turi</label>
+                        <select
+                            value={audience}
+                            onChange={(e) => setAudience(e.target.value)}
                         >
-                            {task.label}
-                        </button>
-                    ))}
+                            <option value="regular">Oddiy test</option>
+                            <option value="mooc">Mooc test uchun</option>
+                        </select>
+                    </div>
+                    <div className="task-switch" role="tablist" aria-label="IELTS task switch">
+                        {TASKS.map((task) => (
+                            <button
+                                key={task.key}
+                                type="button"
+                                className={`switch-btn ${activeTask === task.key ? "active" : ""}`}
+                                onClick={() => setActiveTask(task.key)}
+                                aria-pressed={activeTask === task.key}
+                            >
+                                {task.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

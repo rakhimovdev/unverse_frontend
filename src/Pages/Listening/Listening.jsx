@@ -179,6 +179,7 @@ const createEmptyPart = () => ({
     questions: [],
     imageFile: null,
     imagePreview: null,
+    audioFile: null,
 });
 
 function Preview({ html, answers, onAnswersChange }) {
@@ -319,7 +320,7 @@ function Preview({ html, answers, onAnswersChange }) {
 
 function ListeningTest() {
     const [title, setTitle] = useState("");
-    const [audioFile, setAudioFile] = useState(null);
+    const [audience, setAudience] = useState("regular");
     const [activePart, setActivePart] = useState(0);
     const [parts, setParts] = useState(() =>
         Array.from({ length: 4 }, () => createEmptyPart())
@@ -488,6 +489,19 @@ function ListeningTest() {
         });
     };
 
+    const handlePartAudioChange = (index, e) => {
+        const file = e.target.files[0] || null;
+        setParts((prev) => {
+            const next = [...prev];
+            const current = next[index] || createEmptyPart();
+            next[index] = {
+                ...current,
+                audioFile: file,
+            };
+            return next;
+        });
+    };
+
     const handleClear = () => {
         parts.forEach((part) => {
             if (part.imagePreview) {
@@ -495,7 +509,7 @@ function ListeningTest() {
             }
         });
         setTitle("");
-        setAudioFile(null);
+        setAudience("regular");
         setActivePart(0);
         setParts(Array.from({ length: 4 }, () => createEmptyPart()));
         setShowPreview(false);
@@ -529,8 +543,8 @@ function ListeningTest() {
     };
 
     const handleSubmitFull = async () => {
-        if (!title || !audioFile) {
-            alert("Iltimos, title va audio faylni kiriting!");
+        if (!title) {
+            alert("Iltimos, test nomini kiriting!");
             return;
         }
 
@@ -560,6 +574,14 @@ function ListeningTest() {
             return;
         }
 
+        const missingAudioIndex = updatedParts.findIndex(
+            (part) => !part.audioFile
+        );
+        if (missingAudioIndex !== -1) {
+            alert(`Part ${missingAudioIndex + 1} uchun audio fayl tanlang!`);
+            return;
+        }
+
         setParts(updatedParts);
 
         const payloadParts = updatedParts.map((part) => ({
@@ -570,11 +592,14 @@ function ListeningTest() {
 
         const formData = new FormData();
         formData.append("title", title);
-        formData.append("audio", audioFile);
+        formData.append("audience", audience);
         formData.append("parts", JSON.stringify(payloadParts));
         updatedParts.forEach((part, index) => {
             if (part.imageFile) {
                 formData.append(`imagePart${index}`, part.imageFile);
+            }
+            if (part.audioFile) {
+                formData.append(`audioPart${index}`, part.audioFile);
             }
         });
 
@@ -607,6 +632,17 @@ function ListeningTest() {
                     />
                 </div>
 
+                <div className="listening-field">
+                    <label>Test turi</label>
+                    <select
+                        value={audience}
+                        onChange={(e) => setAudience(e.target.value)}
+                    >
+                        <option value="regular">Oddiy test</option>
+                        <option value="mooc">Mooc test uchun</option>
+                    </select>
+                </div>
+
                 <div className="part-tabs">
                     {parts.map((_, i) => (
                         <button
@@ -623,19 +659,18 @@ function ListeningTest() {
                     ))}
                 </div>
 
-                <div className="listening-row">
+                <div className="part-image-row">
                     <div className="listening-field">
-                        <label>Audio fayl</label>
+                        <label>Part {activePart + 1} audio (majburiy)</label>
                         <input
                             type="file"
                             accept="audio/*"
-                            onChange={(e) => setAudioFile(e.target.files[0])}
+                            onChange={(e) => handlePartAudioChange(activePart, e)}
                         />
-                        {audioFile && <p className="file-note">{audioFile.name}</p>}
+                        {currentPart.audioFile && (
+                            <p className="file-note">{currentPart.audioFile.name}</p>
+                        )}
                     </div>
-                </div>
-
-                <div className="part-image-row">
                     <div className="listening-field">
                         <label>Part {activePart + 1} rasm (ixtiyoriy)</label>
                         <input

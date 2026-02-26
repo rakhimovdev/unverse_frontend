@@ -393,6 +393,7 @@ const wrapRangeInClass = (container, range, className) => {
 
 function ReadingForm() {
     const { testId } = useParams();
+    const token = localStorage.getItem("token");
 
     /* ================= STATE ================= */
 
@@ -422,7 +423,9 @@ function ReadingForm() {
 
     useEffect(() => {
         axios
-            .get(`/test/${testId}`)
+            .get(`/test/${testId}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            })
             .then((res) => {
                 const data = res.data;
                 setTest(data);

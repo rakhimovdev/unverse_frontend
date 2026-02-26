@@ -11,14 +11,18 @@ function Banner() {
   const navigate = useNavigate();
 
   // LocalStorage'dan token va role olish
-  const isAuthenticated = !!localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  const isAuthenticated = !!token;
   const userRole = localStorage.getItem("role"); // student | teacher | admin
 
   // Testlarni backenddan olish
   const fetchTests = () => {
     setLoading(true);
     setErrorMsg("");
-    axios.get('/test/all', { params: { summary: 1 } })
+    axios.get('/test/all', {
+      params: { summary: 1 },
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
       .then(res => {
         setUploadedTests(res.data || []);
         setLoading(false);

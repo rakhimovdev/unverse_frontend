@@ -329,6 +329,7 @@ const TOKEN_BUTTONS = [
 
 export default function CreateReadingTest() {
     const [testName, setTestName] = useState("");
+    const [audience, setAudience] = useState("regular");
     const [activePassage, setActivePassage] = useState(0);
     const [showPreview, setShowPreview] = useState(false);
     const [copiedKey, setCopiedKey] = useState(null);
@@ -508,6 +509,7 @@ export default function CreateReadingTest() {
         await axios.post("/test/upload", {
             name: testName,
             passages: payloadPassages,
+            audience,
         });
 
         alert("Saved");
@@ -606,6 +608,16 @@ export default function CreateReadingTest() {
                     value={testName}
                     onChange={(e) => setTestName(e.target.value)}
                 />
+
+                <label className="test-name-label">Test turi</label>
+                <select
+                    className="test-name-select"
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                >
+                    <option value="regular">Oddiy test</option>
+                    <option value="mooc">Mooc test uchun</option>
+                </select>
             </div>
 
             {/* EDITORS */}

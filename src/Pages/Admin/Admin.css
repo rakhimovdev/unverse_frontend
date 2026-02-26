@@ -51,6 +51,10 @@
     box-shadow: var(--u-shadow);
 }
 
+.admin-card--scores {
+    grid-column: 1 / -1;
+}
+
 .admin-card h2 {
     margin: 0 0 16px;
     color: var(--u-ink);
@@ -87,6 +91,10 @@
     background: var(--u-tint);
 }
 
+.admin-table--mooc .admin-table__row {
+    grid-template-columns: 1.4fr 1fr 1.6fr 0.8fr;
+}
+
 .admin-table__head {
     font-weight: 600;
     background: var(--u-tint-strong);
@@ -106,10 +114,51 @@
     flex-wrap: wrap;
 }
 
+.admin-scores {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-score-block {
+    background: var(--u-tint);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--u-border);
+}
+
+.admin-score-block h4 {
+    margin: 0 0 10px;
+}
+
+.admin-score-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.admin-score-table th,
+.admin-score-table td {
+    border: 1px solid var(--u-border);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 13px;
+}
+
+.admin-score-table th {
+    background: var(--u-tint-strong);
+    font-weight: 700;
+}
+
 .admin-form {
     display: grid;
     gap: 12px;
     margin-bottom: 16px;
+}
+
+.admin-form__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
 }
 
 .admin-form__row {

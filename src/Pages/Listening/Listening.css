@@ -68,6 +68,14 @@
   font-size: 14px;
 }
 
+.listening-field select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--u-border);
+  background: #fff;
+  font-size: 14px;
+}
+
 .listening-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

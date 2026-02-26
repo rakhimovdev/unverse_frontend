@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import "./Students.css";
 import "../WritingPage/App.css";
 
-function WritingR({ timeSlotId }) {
+function WritingR({ timeSlotIds }) {
     const [data, setData] = useState([]);
     const [selected, setSelected] = useState(null);
     const [activeTask, setActiveTask] = useState("task1");
@@ -117,20 +117,22 @@ function WritingR({ timeSlotId }) {
 
     const selectedData = selected ? getWritingData(selected) : null;
 
-    const filteredData = timeSlotId
+    const selectedIds = Array.isArray(timeSlotIds)
+        ? timeSlotIds
+        : timeSlotIds
+            ? [timeSlotIds]
+            : [];
+
+    const filteredData = selectedIds.length
         ? data.filter((row) => {
               const user = row.userId;
               if (!user) return false;
               const single = user.timeSlot;
-              const list = user.timeSlots || [];
-              const inList = Array.isArray(list)
-                  ? list.some((s) => (typeof s === "string" ? s === timeSlotId : s._id === timeSlotId))
-                  : false;
-              if (inList) return true;
-              if (!single) return false;
-              return typeof single === "string"
-                  ? single === timeSlotId
-                  : single._id === timeSlotId;
+              const list = Array.isArray(user.timeSlots) ? user.timeSlots : [];
+              const all = [...list, single].filter(Boolean);
+              return all.some((s) =>
+                  selectedIds.includes(typeof s === "string" ? s : s._id)
+              );
           })
         : data;
 
