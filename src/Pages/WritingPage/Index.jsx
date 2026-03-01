@@ -31,7 +31,7 @@ function Index() {
         };
 
         getTest();
-    }, [id]);
+    }, [id, token]);
 
     useEffect(() => {
         setTimeLeft(60 * 60);

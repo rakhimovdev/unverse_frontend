@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "../../Api/Axios";
 import { useNavigate } from "react-router-dom";
 import "./Writing.css";
@@ -11,7 +11,7 @@ function Writing() {
     const isAuthenticated = !!token;
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
-    const fetchTests = () => {
+    const fetchTests = useCallback(() => {
         axios
             .get("/posts/all", {
                 headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -20,11 +20,11 @@ function Writing() {
                 setUploadedTests(res.data || []);
             })
             .catch(() => setUploadedTests([]));
-    };
+    }, [token]);
 
     useEffect(() => {
         fetchTests();
-    }, []);
+    }, [fetchTests]);
 
     const handleDelete = async (id) => {
         if (userRole === "teacher" || userRole === "admin") {

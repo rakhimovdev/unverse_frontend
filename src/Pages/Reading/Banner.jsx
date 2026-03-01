@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import "./Banner.css";
 import { useNavigate } from 'react-router-dom';
 import axios from '../../Api/Axios';
@@ -16,7 +16,7 @@ function Banner() {
   const userRole = localStorage.getItem("role"); // student | teacher | admin
 
   // Testlarni backenddan olish
-  const fetchTests = () => {
+  const fetchTests = useCallback(() => {
     setLoading(true);
     setErrorMsg("");
     axios.get('/test/all', {
@@ -32,11 +32,11 @@ function Banner() {
         setErrorMsg("Testlarni yuklashda muammo bo'ldi. Qayta urinib ko'ring.");
         setLoading(false);
       });
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchTests();
-  }, []);
+  }, [fetchTests]);
 
   // Testni o'chirish (faqat teacher va admin)
   const handleDelete = async (id) => {

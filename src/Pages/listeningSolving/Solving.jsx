@@ -231,7 +231,7 @@ function ListeningTest() {
             }
         };
         fetchTest();
-    }, [id]);
+    }, [id, token]);
 
     const handleChange = (val, index) => {
         setUserAnswers((prev) => {

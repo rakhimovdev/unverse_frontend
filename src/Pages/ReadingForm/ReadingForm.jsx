@@ -442,7 +442,7 @@ function ReadingForm() {
             .catch((err) => {
                 console.log("LOAD ERROR:", err.response?.data || err);
             });
-    }, [testId]);
+    }, [testId, token]);
 
     useEffect(() => {
         setHighlightMenu((prev) =>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./ListeningForm.css";
 import { useNavigate } from "react-router-dom";
 import axios from "../../Api/Axios";
@@ -14,7 +14,7 @@ function ListeningForm() {
     const userRole = localStorage.getItem("role"); // student | teacher | admin
 
     // Testlarni olish
-    const fetchTests = () => {
+    const fetchTests = useCallback(() => {
         axios
             .get("/testl/all", {
                 headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -23,11 +23,11 @@ function ListeningForm() {
                 setUploadedTests(res.data || []);
             })
             .catch(() => setUploadedTests([]));
-    };
+    }, [token]);
 
     useEffect(() => {
         fetchTests();
-    }, []);
+    }, [fetchTests]);
 
     // Testni o‘chirish
     const handleDelete = async (id) => {
