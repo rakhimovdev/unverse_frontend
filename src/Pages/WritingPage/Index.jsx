@@ -106,7 +106,8 @@ function Index() {
                 {
                     essay: answers.task1.trim(),
                     task: "task1",
-                    language: "uz"
+                    language: "uz",
+                    writingId: test._id
                 },
                 {
                     headers: {
@@ -121,7 +122,8 @@ function Index() {
                 {
                     essay: answers.task2.trim(),
                     task: "task2",
-                    language: "uz"
+                    language: "uz",
+                    writingId: test._id
                 },
                 {
                     headers: {
@@ -133,7 +135,16 @@ function Index() {
             console.log("AI Task1:", aiTask1.data);
             console.log("AI Task2:", aiTask2.data);
 
-            alert("AI tekshiruv tugadi!");
+            const overallBand =
+                aiTask2.data?.overall?.result?.band_score ??
+                aiTask2.data?.overall?.band_score ??
+                null;
+
+            if (overallBand != null) {
+                alert(`AI tekshiruv tugadi! Overall band: ${overallBand}`);
+            } else {
+                alert("AI tekshiruv tugadi!");
+            }
 
         } catch (err) {
             console.error("Xatolik:", err.response?.data || err);

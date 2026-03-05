@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "../../Api/Axios";
+import WritingResult from "../../components/WritingResult";
 
 const READING_ACADEMIC_TABLE = [
     { min: 39, max: 40, band: 9 },
@@ -59,6 +60,16 @@ const getBandScore = (rawScore, table) => {
     return row ? row.band : null;
 };
 
+const getLatestByDate = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return items.reduce((latest, current) => {
+        if (!latest) return current;
+        const latestTime = new Date(latest.createdAt).getTime();
+        const currentTime = new Date(current.createdAt).getTime();
+        return currentTime > latestTime ? current : latest;
+    }, null);
+};
+
 function Account() {
     const [results, setResults] = useState([]);
     const [writingResults, setWritingResults] = useState([]);
@@ -67,6 +78,7 @@ function Account() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const role = localStorage.getItem("role");
+    const isAiUser = role === "mooc" || role === "mock_user";
 
     // Foydalanuvchi va natijalarni olish
     useEffect(() => {
@@ -133,6 +145,16 @@ function Account() {
         [listeningResults]
     );
 
+    const latestReadingBand = useMemo(() => {
+        const latest = getLatestByDate(results);
+        return latest ? getBandScore(latest.score, READING_ACADEMIC_TABLE) : null;
+    }, [results]);
+
+    const latestListeningBand = useMemo(() => {
+        const latest = getLatestByDate(listeningResults);
+        return latest ? getBandScore(latest.score, LISTENING_BAND_TABLE) : null;
+    }, [listeningResults]);
+
     if (loading) return <p>Loading...</p>;
 
     return (
@@ -146,7 +168,15 @@ function Account() {
                 </div>
             </div>
 
-            <div className="results">
+            {isAiUser ? (
+                <WritingResult
+                    user={user}
+                    readingBand={latestReadingBand}
+                    listeningBand={latestListeningBand}
+                />
+            ) : (
+                <>
+                    <div className="results">
                 <h2>My Reading Results</h2>
                 {results.length > 0 ? (
                     <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
@@ -154,7 +184,7 @@ function Account() {
                             <tr>
                                 <th>Test Name</th>
                                 <th>Raw Score</th>
-                                <th>Band (A/G)</th>
+                                <th>Band (Academic)</th>
                                 <th>Date</th>
                             </tr>
                         </thead>
@@ -163,95 +193,95 @@ function Account() {
                                 <tr key={i}>
                                     <td>{r.testName || r.test?.name || "Unknown Test"}</td>
                                     <td>{r.score}</td>
-                                    <td>
-                                        {readingBands[i]?.academic ?? "N/A"} / {readingBands[i]?.general ?? "N/A"}
-                                    </td>
+                                    <td>{readingBands[i]?.academic ?? "N/A"}</td>
                                     <td>{new Date(r.createdAt).toLocaleString()}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                ) : (
-                    <p>You have not completed any tests yet.</p>
-                )}
-            </div>
+                        ) : (
+                            <p>You have not completed any tests yet.</p>
+                        )}
+                    </div>
 
-            <div className="results" style={{ marginTop: "30px" }}>
-                <h2>My Listening Results</h2>
-                {listeningResults.length > 0 ? (
-                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                        <thead>
-                            <tr>
-                                <th>Test Name</th>
-                                <th>Raw Score</th>
-                                <th>Band</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {listeningResults.map((r, i) => (
-                                <tr key={i}>
-                                    <td>{r.testName || r.test?.title || "Listening Test"}</td>
-                                    <td>{r.score}</td>
-                                    <td>{listeningBands[i] ?? "N/A"}</td>
-                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p>You have no listening results yet.</p>
-                )}
-            </div>
+                    <div className="results" style={{ marginTop: "30px" }}>
+                        <h2>My Listening Results</h2>
+                        {listeningResults.length > 0 ? (
+                            <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+                                <thead>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th>Raw Score</th>
+                                        <th>Band</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {listeningResults.map((r, i) => (
+                                        <tr key={i}>
+                                            <td>{r.testName || r.test?.title || "Listening Test"}</td>
+                                            <td>{r.score}</td>
+                                            <td>{listeningBands[i] ?? "N/A"}</td>
+                                            <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>You have no listening results yet.</p>
+                        )}
+                    </div>
 
-            <div className="results" style={{ marginTop: "30px" }}>
-                <h2>My Writing Results</h2>
-                {writingAiResults.length > 0 ? (
-                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                        <thead>
-                            <tr>
-                                <th>Task</th>
-                                <th>Raw Score</th>
-                                <th>Band</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {writingAiResults.map((r, i) => (
-                                <tr key={i}>
-                                    <td>{r.taskType || "task2"}</td>
-                                    <td>{r.result?.raw_score ?? "—"}</td>
-                                    <td>{r.result?.estimated_band ?? "N/A"}</td>
-                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : writingResults.length > 0 ? (
-                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                        <thead>
-                            <tr>
-                                <th>Test Name</th>
-                                <th>Raw Score</th>
-                                <th>Band</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {writingResults.map((r, i) => (
-                                <tr key={i}>
-                                    <td>{r.testName || "Writing Test"}</td>
-                                    <td>{r.score}</td>
-                                    <td>{r.score}</td>
-                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <p>You have no writing results yet.</p>
-                )}
-            </div>
+                    <div className="results" style={{ marginTop: "30px" }}>
+                        <h2>My Writing Results</h2>
+                        {writingAiResults.length > 0 ? (
+                            <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Raw Score</th>
+                                        <th>Band</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {writingAiResults.map((r, i) => (
+                                        <tr key={i}>
+                                            <td>{r.taskType || "task2"}</td>
+                                            <td>{r.result?.raw_score ?? "—"}</td>
+                                            <td>{r.result?.estimated_band ?? "N/A"}</td>
+                                            <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : writingResults.length > 0 ? (
+                            <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+                                <thead>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th>Raw Score</th>
+                                        <th>Band</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {writingResults.map((r, i) => (
+                                        <tr key={i}>
+                                            <td>{r.testName || "Writing Test"}</td>
+                                            <td>{r.score}</td>
+                                            <td>{r.score}</td>
+                                            <td>{new Date(r.createdAt).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>You have no writing results yet.</p>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

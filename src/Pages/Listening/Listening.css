@@ -172,6 +172,10 @@
   font-size: 12px;
 }
 
+.toolbar-field--wide input {
+  width: 180px;
+}
+
 .toolbar-note {
   font-size: 11px;
   color: var(--u-muted);
@@ -180,7 +184,7 @@
 
 .listening-editors {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -249,25 +253,97 @@
 }
 
 .listening-preview {
+  margin-top: 12px;
   padding: 16px;
   border-radius: 14px;
   border: 1px solid var(--u-border);
   background: #fff;
   line-height: 1.7;
+  white-space: pre-wrap;
 }
 
 .listening-preview input,
 .listening-preview select,
 .listening-preview textarea {
-  margin: 0 6px;
+  display: inline-block;
+  vertical-align: baseline;
+  width: 12ch;
+  min-width: 8ch;
+  max-width: 100%;
+  margin: 0 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--u-border);
+  font-size: 13px;
+}
+
+.listening-preview input[type="checkbox"],
+.listening-preview input[type="radio"] {
+  width: auto;
+  min-width: 0;
+  margin: 0 6px 0 0;
+  padding: 0;
+  border-radius: 4px;
+}
+
+.listening-preview .preview-multi label,
+.listening-preview span > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
 }
 
 .listening-preview textarea {
   min-height: 80px;
+  vertical-align: top;
+  resize: vertical;
+}
+
+.listening-answer-key {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--u-border);
+  background: #fff;
+}
+
+.listening-answer-key h4 {
+  margin-bottom: 10px;
+}
+
+.answer-key-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.answer-key-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.answer-key-row span {
+  font-weight: 600;
+  color: var(--u-muted);
+  min-width: 32px;
+}
+
+.answer-key-row input {
+  flex: 1;
+  min-width: 0;
   padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid var(--u-border);
-  resize: vertical;
+  font-size: 13px;
+}
+
+.answer-key-empty {
+  margin-top: 12px;
+  color: var(--u-muted);
+  font-size: 13px;
 }
 
 .actions {
@@ -291,6 +367,7 @@
 }
 
 @media (max-width: 900px) {
+
   .listening-row,
   .listening-editors {
     grid-template-columns: 1fr;

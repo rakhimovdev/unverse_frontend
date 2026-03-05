@@ -90,6 +90,55 @@ const parseOptionsStrict = (rawOptions) => {
         .filter(Boolean);
 };
 
+const parseCheckboxOptions = (rawOptions, fallbackOptions, fallbackMax = 2) => {
+    const cleaned = normalizeOptionsString(rawOptions);
+    if (!cleaned) {
+        return { max: fallbackMax, options: fallbackOptions };
+    }
+
+    const parts = cleaned.split(/:(.+)/s);
+    const maybeMax = Number.parseInt(parts[0], 10);
+
+    if (Number.isFinite(maybeMax) && maybeMax > 0) {
+        const optionsSource = parts[1] || "";
+        return {
+            max: maybeMax,
+            options: parseOptions(optionsSource, fallbackOptions),
+        };
+    }
+
+    return {
+        max: fallbackMax,
+        options: parseOptions(cleaned, fallbackOptions),
+    };
+};
+
+const splitMultiValue = (value) =>
+    String(value || "")
+        .split(/[,|&+]/g)
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+const toggleMultiValue = (currentValue, option, max) => {
+    const normalizedOption = String(option || "").trim();
+    if (!normalizedOption) return currentValue || "";
+    const current = splitMultiValue(currentValue);
+    const existsIndex = current.findIndex(
+        (item) => item.toLowerCase() === normalizedOption.toLowerCase()
+    );
+
+    if (existsIndex >= 0) {
+        const next = current.filter((_, idx) => idx !== existsIndex);
+        return next.join(", ");
+    }
+
+    if (current.length >= max) {
+        return current.join(", ");
+    }
+
+    return [...current, normalizedOption].join(", ");
+};
+
 const inputTypes = new Set([
     "input",
     "short",
@@ -166,6 +215,19 @@ const parseToken = (rawToken) => {
         };
     }
 
+    if (type === "checkbox" || type === "multi") {
+        const { max, options } = parseCheckboxOptions(
+            rawOptions,
+            DEFAULT_MC_OPTIONS,
+            2
+        );
+        return {
+            kind: "multi",
+            options,
+            max,
+        };
+    }
+
     return null;
 };
 
@@ -178,8 +240,17 @@ const getQuestionDefs = (html) => {
         const parsed = parseToken(match[1]);
         if (!parsed) continue;
 
+        const isMulti = parsed.kind === "multi";
+        const max = isMulti ? Math.max(1, Number(parsed.max) || 1) : 1;
+
         defs.push({
-            type: parsed.kind === "input" ? "text" : "select",
+            type:
+                parsed.kind === "input"
+                    ? "text"
+                    : parsed.kind === "multi"
+                        ? "multi"
+                        : "select",
+            max,
         });
     }
 
@@ -191,6 +262,28 @@ const normalizeAnswer = (value) =>
         .trim()
         .replace(/\s+/g, " ")
         .toLowerCase();
+
+const normalizeMultiList = (value) =>
+    Array.from(
+        new Set(
+            splitMultiValue(value)
+                .map((item) => normalizeAnswer(item))
+                .filter(Boolean)
+        )
+    );
+
+const getMultiScore = (userValue, correctValue) => {
+    const userList = normalizeMultiList(userValue);
+    const correctList = normalizeMultiList(correctValue);
+    if (!userList.length || !correctList.length) return 0;
+
+    const correctSet = new Set(correctList);
+    let score = 0;
+    userList.forEach((item) => {
+        if (correctSet.has(item)) score += 1;
+    });
+    return score;
+};
 
 const isCorrectAnswer = (userValue, correctValue) => {
     const user = normalizeAnswer(userValue);
@@ -535,18 +628,27 @@ function ReadingForm() {
             const answers = userAnswers[pIndex] || [];
             const correctAnswers = p.questions || [];
 
-            defs.forEach((_, qIndex) => {
-                totalQuestions += 1;
-                passageResults[pIndex].total += 1;
-                if (pIndex === activePassage) passageTotal += 1;
+            defs.forEach((def, qIndex) => {
+                const weight = def.type === "multi" ? def.max || 1 : 1;
+                totalQuestions += weight;
+                passageResults[pIndex].total += weight;
+                if (pIndex === activePassage) passageTotal += weight;
 
                 const correctValue = correctAnswers[qIndex]?.value || "";
                 if (correctValue.trim()) hasAnswerKey = true;
 
-                if (isCorrectAnswer(answers[qIndex], correctValue)) {
-                    totalCorrect += 1;
-                    passageResults[pIndex].correct += 1;
-                    if (pIndex === activePassage) passageCorrect += 1;
+                let earned = 0;
+                if (def.type === "multi") {
+                    earned = getMultiScore(answers[qIndex], correctValue);
+                    earned = Math.min(earned, weight);
+                } else if (isCorrectAnswer(answers[qIndex], correctValue)) {
+                    earned = 1;
+                }
+
+                if (earned > 0) {
+                    totalCorrect += earned;
+                    passageResults[pIndex].correct += earned;
+                    if (pIndex === activePassage) passageCorrect += earned;
                 }
             });
         });
@@ -683,6 +785,44 @@ function ReadingForm() {
                         value={userAnswers[activePassage]?.[currentIndex] || ""}
                         onChange={(e) => handleChange(e.target.value, currentIndex)}
                     />
+                );
+                questionIndex++;
+            }
+
+            if (parsed.kind === "multi") {
+                const currentIndex = questionIndex;
+                const selected = splitMultiValue(
+                    userAnswers[activePassage]?.[currentIndex]
+                );
+                nodes.push(
+                    <span key={`multi-${nodeKey++}`} className="preview-multi">
+                        {parsed.options.map((opt, optIndex) => {
+                            const checked = selected.some(
+                                (item) => item.toLowerCase() === opt.toLowerCase()
+                            );
+                            return (
+                                <label key={`multi-${currentIndex}-${optIndex}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={() =>
+                                            handleChange(
+                                                toggleMultiValue(
+                                                    userAnswers[activePassage]?.[
+                                                    currentIndex
+                                                    ],
+                                                    opt,
+                                                    parsed.max || 2
+                                                ),
+                                                currentIndex
+                                            )
+                                        }
+                                    />
+                                    {opt}
+                                </label>
+                            );
+                        })}
+                    </span>
                 );
                 questionIndex++;
             }

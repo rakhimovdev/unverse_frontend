@@ -55,6 +55,58 @@ const parseOptionsStrict = (rawOptions) => {
         .filter(Boolean);
 };
 
+const parseCheckboxOptions = (rawOptions, fallbackOptions, fallbackMax = 2) => {
+    const cleaned = normalizeOptionsString(rawOptions);
+    if (!cleaned) {
+        return { max: fallbackMax, options: fallbackOptions };
+    }
+
+    const parts = cleaned.split(/:(.+)/s);
+    const maybeMax = Number.parseInt(parts[0], 10);
+
+    if (Number.isFinite(maybeMax) && maybeMax > 0) {
+        const optionsSource = parts[1] || "";
+        return {
+            max: maybeMax,
+            options: parseOptions(optionsSource, fallbackOptions),
+        };
+    }
+
+    return {
+        max: fallbackMax,
+        options: parseOptions(cleaned, fallbackOptions),
+    };
+};
+
+const parseSingleDimension = (rawValue, defaultUnit) => {
+    if (!rawValue) return null;
+    const value = rawValue.trim();
+    if (!value) return null;
+    if (value.toLowerCase() === "auto") return "auto";
+    const match = value.match(/^(\d+(?:\.\d+)?)(px|%|em|rem|ch|vh|vw)?$/i);
+    if (!match) return null;
+    const number = match[1];
+    const unit = match[2] || defaultUnit;
+    return `${number}${unit}`;
+};
+
+const parseDimensionList = (rawValue, defaultUnit) => {
+    if (!rawValue) return [];
+    return rawValue
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => {
+            if (item.toLowerCase() === "auto") return "auto";
+            const match = item.match(/^(\d+(?:\.\d+)?)(px|%|em|rem|vh|vw)?$/i);
+            if (!match) return null;
+            const value = match[1];
+            const unit = match[2] || defaultUnit;
+            return `${value}${unit}`;
+        })
+        .filter(Boolean);
+};
+
 const inputTypes = new Set([
     "input",
     "short",
@@ -78,11 +130,43 @@ const parseToken = (rawToken) => {
     const type = normalizeTokenType(rawType);
 
     if (textareaTypes.has(type)) {
-        return { kind: "textarea" };
+        return {
+            kind: "textarea",
+            width: parseSingleDimension(rawOptions, "ch"),
+        };
     }
 
     if (inputTypes.has(type)) {
-        return { kind: "input" };
+        return {
+            kind: "input",
+            width: parseSingleDimension(rawOptions, "ch"),
+        };
+    }
+
+    if (
+        type === "multi" ||
+        type === "multi2" ||
+        type === "choose2" ||
+        type === "twoselect"
+    ) {
+        return {
+            kind: "multi",
+            options: parseOptions(rawOptions, DEFAULT_MC_OPTIONS),
+            max: 2,
+        };
+    }
+
+    if (type === "checkbox") {
+        const { max, options } = parseCheckboxOptions(
+            rawOptions,
+            DEFAULT_MC_OPTIONS,
+            2
+        );
+        return {
+            kind: "multi",
+            options,
+            max,
+        };
     }
 
     if (type === "select") {
@@ -150,7 +234,12 @@ const getQuestionDefs = (html) => {
         if (!parsed) continue;
 
         defs.push({
-            type: parsed.kind === "input" || parsed.kind === "textarea" ? "text" : "select",
+            type:
+                parsed.kind === "input" || parsed.kind === "textarea"
+                    ? "text"
+                    : parsed.kind === "multi"
+                        ? "multi"
+                        : "select",
         });
     }
 
@@ -161,6 +250,9 @@ const TOKEN_BUTTONS = [
     { key: "input", label: "Input", token: "[[input]]" },
     { key: "textarea", label: "Textarea", token: "[[textarea]]" },
     { key: "mc", label: "Multiple choice", token: "[[mc]]" },
+    { key: "multi", label: "Multi (choose 2)", token: "[[multi: A|B|C|D|E]]" },
+    { key: "checkbox2", label: "Checkbox (2)", token: "[[checkbox:2]]" },
+    { key: "checkbox3", label: "Checkbox (3)", token: "[[checkbox:3]]" },
     { key: "matching", label: "Matching headings", token: "[[matching-headings]]" },
     { key: "tfng", label: "T/F/NG", token: "[[tfng]]" },
     { key: "ynng", label: "Y/N/NG", token: "[[ynng]]" },
@@ -174,7 +266,6 @@ const TOKEN_BUTTONS = [
 ];
 
 const createEmptyPart = () => ({
-    transcriptHtml: "",
     questionHtml: "",
     questions: [],
     imageFile: null,
@@ -182,140 +273,324 @@ const createEmptyPart = () => ({
     audioFile: null,
 });
 
-function Preview({ html, answers, onAnswersChange }) {
-    const renderQuestionHTML = () => {
-        const regex = new RegExp(MARKER_REGEX);
-        let questionIndex = 0;
-        let nodeKey = 0;
-        let lastIndex = 0;
-        const nodes = [];
-        let match;
+const splitMultiValue = (value) =>
+    String(value || "")
+        .split(/[,|&+]/g)
+        .map((item) => item.trim())
+        .filter(Boolean);
 
-        while ((match = regex.exec(html))) {
-            const rawToken = match[1];
-            nodes.push(
-                <span
-                    key={`text-${nodeKey++}`}
-                    dangerouslySetInnerHTML={{
-                        __html: html.slice(lastIndex, match.index),
+const toggleMultiValue = (currentValue, option, max) => {
+    const normalizedOption = String(option || "").trim();
+    if (!normalizedOption) return currentValue || "";
+    const current = splitMultiValue(currentValue);
+    const existsIndex = current.findIndex(
+        (item) => item.toLowerCase() === normalizedOption.toLowerCase()
+    );
+
+    if (existsIndex >= 0) {
+        const next = current.filter((_, idx) => idx !== existsIndex);
+        return next.join(", ");
+    }
+
+    if (current.length >= max) {
+        return current.join(", ");
+    }
+
+    return [...current, normalizedOption].join(", ");
+};
+
+const parseInlineStyle = (styleText) => {
+    if (!styleText) return undefined;
+    const style = {};
+    styleText.split(";").forEach((chunk) => {
+        const [rawKey, rawValue] = chunk.split(":");
+        if (!rawKey || !rawValue) return;
+        const key = rawKey
+            .trim()
+            .toLowerCase()
+            .replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+        const value = rawValue.trim();
+        if (key) {
+            style[key] = value;
+        }
+    });
+    return style;
+};
+
+const mapAttributesToProps = (attributes) => {
+    const props = {};
+    Array.from(attributes || []).forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        const value = attr.value;
+
+        if (name === "class") {
+            props.className = value;
+            return;
+        }
+        if (name === "for") {
+            props.htmlFor = value;
+            return;
+        }
+        if (name === "style") {
+            const style = parseInlineStyle(value);
+            if (style && Object.keys(style).length) {
+                props.style = style;
+            }
+            return;
+        }
+        if (name === "colspan") {
+            props.colSpan = Number(value) || value;
+            return;
+        }
+        if (name === "rowspan") {
+            props.rowSpan = Number(value) || value;
+            return;
+        }
+        props[name] = value;
+    });
+    return props;
+};
+
+const VOID_TAGS = new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
+]);
+
+function Preview({ html, answers, onAnswersChange }) {
+    const renderTokenInput = (parsed, index) => {
+        if (parsed.kind === "input") {
+            return (
+                <input
+                    key={`input-${index}`}
+                    type="text"
+                    style={parsed.width ? { width: parsed.width } : undefined}
+                    value={answers[index] || ""}
+                    onChange={(e) => {
+                        const copy = [...answers];
+                        copy[index] = e.target.value;
+                        onAnswersChange(copy);
                     }}
                 />
             );
+        }
 
-            const parsed = parseToken(rawToken);
+        if (parsed.kind === "textarea") {
+            return (
+                <textarea
+                    key={`textarea-${index}`}
+                    rows={3}
+                    style={parsed.width ? { width: parsed.width } : undefined}
+                    value={answers[index] || ""}
+                    onChange={(e) => {
+                        const copy = [...answers];
+                        copy[index] = e.target.value;
+                        onAnswersChange(copy);
+                    }}
+                />
+            );
+        }
 
-            if (!parsed) {
-                nodes.push(
-                    <span
-                        key={`unknown-${nodeKey++}`}
-                        dangerouslySetInnerHTML={{
-                            __html: html.slice(match.index, regex.lastIndex),
-                        }}
-                    />
-                );
-                lastIndex = regex.lastIndex;
-                continue;
-            }
-
-            if (parsed.kind === "input") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <input
-                        key={`input-${nodeKey++}`}
-                        value={answers[currentIndex] || ""}
-                        onChange={(e) => {
-                            const copy = [...answers];
-                            copy[currentIndex] = e.target.value;
-                            onAnswersChange(copy);
-                        }}
-                    />
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "textarea") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <textarea
-                        key={`textarea-${nodeKey++}`}
-                        rows={3}
-                        value={answers[currentIndex] || ""}
-                        onChange={(e) => {
-                            const copy = [...answers];
-                            copy[currentIndex] = e.target.value;
-                            onAnswersChange(copy);
-                        }}
-                    />
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "select") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <select
-                        key={`select-${nodeKey++}`}
-                        value={answers[currentIndex] || ""}
-                        onChange={(e) => {
-                            const copy = [...answers];
-                            copy[currentIndex] = e.target.value;
-                            onAnswersChange(copy);
-                        }}
-                    >
-                        {parsed.includeEmpty !== false && (
-                            <option value=""></option>
-                        )}
-                        {parsed.options.map((opt, optIndex) => (
-                            <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
-                                {opt}
-                            </option>
-                        ))}
-                    </select>
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "radio") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <span key={`radio-${nodeKey++}`}>
-                        {parsed.options.map((opt, optIndex) => (
-                            <label key={`radio-${currentIndex}-${optIndex}`}>
+        if (parsed.kind === "multi") {
+            const selected = splitMultiValue(answers[index]);
+            return (
+                <span key={`multi-${index}`} className="preview-multi">
+                    {parsed.options.map((opt, optIndex) => {
+                        const checked = selected.some(
+                            (item) => item.toLowerCase() === opt.toLowerCase()
+                        );
+                        return (
+                            <label key={`multi-${index}-${optIndex}`}>
                                 <input
-                                    type="radio"
-                                    name={`radio-${currentIndex}`}
-                                    value={opt}
-                                    checked={answers[currentIndex] === opt}
-                                    onChange={(e) => {
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => {
                                         const copy = [...answers];
-                                        copy[currentIndex] = e.target.value;
+                                        copy[index] = toggleMultiValue(
+                                            copy[index],
+                                            opt,
+                                            parsed.max || 2
+                                        );
                                         onAnswersChange(copy);
                                     }}
                                 />
                                 {opt}
                             </label>
-                        ))}
-                    </span>
-                );
-                questionIndex++;
-            }
-
-            lastIndex = regex.lastIndex;
+                        );
+                    })}
+                </span>
+            );
         }
 
-        nodes.push(
-            <span
-                key={`end-${nodeKey++}`}
-                dangerouslySetInnerHTML={{
-                    __html: html.slice(lastIndex),
-                }}
-            />
-        );
+        if (parsed.kind === "select") {
+            return (
+                <select
+                    key={`select-${index}`}
+                    value={answers[index] || ""}
+                    onChange={(e) => {
+                        const copy = [...answers];
+                        copy[index] = e.target.value;
+                        onAnswersChange(copy);
+                    }}
+                >
+                    {parsed.includeEmpty !== false && <option value=""></option>}
+                    {parsed.options.map((opt, optIndex) => (
+                        <option key={`select-${index}-${optIndex}`} value={opt}>
+                            {opt}
+                        </option>
+                    ))}
+                </select>
+            );
+        }
 
-        return nodes;
+        if (parsed.kind === "radio") {
+            return (
+                <span key={`radio-${index}`}>
+                    {parsed.options.map((opt, optIndex) => (
+                        <label key={`radio-${index}-${optIndex}`}>
+                            <input
+                                type="radio"
+                                name={`radio-${index}`}
+                                value={opt}
+                                checked={answers[index] === opt}
+                                onChange={(e) => {
+                                    const copy = [...answers];
+                                    copy[index] = e.target.value;
+                                    onAnswersChange(copy);
+                                }}
+                            />
+                            {opt}
+                        </label>
+                    ))}
+                </span>
+            );
+        }
+
+        return null;
     };
 
-    return <div className="listening-preview">{renderQuestionHTML()}</div>;
+    const renderWithTokens = () => {
+        if (!html) return null;
+        if (typeof window === "undefined" || !window.DOMParser) {
+            return <span dangerouslySetInnerHTML={{ __html: html }} />;
+        }
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(`<div>${html}</div>`, "text/html");
+        const root = doc.body.firstChild;
+        if (!root) return null;
+
+        let questionIndex = 0;
+
+        const renderNode = (node, key) => {
+            if (node.nodeType === 3) {
+                const text = node.textContent || "";
+                if (!text) return null;
+
+                const regex = new RegExp(MARKER_REGEX);
+                const parts = [];
+                let lastIndex = 0;
+                let match;
+
+                while ((match = regex.exec(text))) {
+                    if (match.index > lastIndex) {
+                        parts.push(text.slice(lastIndex, match.index));
+                    }
+
+                    const parsed = parseToken(match[1]);
+                    if (!parsed) {
+                        parts.push(match[0]);
+                    } else {
+                        const currentIndex = questionIndex;
+                        parts.push(renderTokenInput(parsed, currentIndex));
+                        questionIndex++;
+                    }
+
+                    lastIndex = match.index + match[0].length;
+                }
+
+                if (lastIndex < text.length) {
+                    parts.push(text.slice(lastIndex));
+                }
+
+                return parts.filter((part) => part !== null);
+            }
+
+            if (node.nodeType === 1) {
+                const tag = node.tagName.toLowerCase();
+                const props = mapAttributesToProps(node.attributes);
+                if (VOID_TAGS.has(tag)) {
+                    return React.createElement(tag, { ...props, key });
+                }
+                const children = [];
+                node.childNodes.forEach((child, idx) => {
+                    const rendered = renderNode(child, `${key}-${idx}`);
+                    if (Array.isArray(rendered)) {
+                        children.push(...rendered);
+                    } else if (rendered != null) {
+                        children.push(rendered);
+                    }
+                });
+                return React.createElement(tag, { ...props, key }, children);
+            }
+
+            return null;
+        };
+
+        return Array.from(root.childNodes).map((child, idx) =>
+            renderNode(child, `root-${idx}`)
+        );
+    };
+
+    return <div className="listening-preview">{renderWithTokens()}</div>;
+}
+
+function AnswerKey({ questions, onAnswersChange }) {
+    const answers = questions.map((q) => q.value || "");
+
+    if (!questions.length) {
+        return <p className="answer-key-empty">Savollar yo'q.</p>;
+    }
+
+    return (
+        <div className="listening-answer-key">
+            <h4>Answer Key</h4>
+            <div className="answer-key-list">
+                {questions.map((q, index) => (
+                    <label className="answer-key-row" key={`answer-${index}`}>
+                        <span>Q{index + 1}</span>
+                        <input
+                            type="text"
+                            value={answers[index]}
+                            onChange={(e) => {
+                                const next = [...answers];
+                                next[index] = e.target.value;
+                                onAnswersChange(next);
+                            }}
+                            placeholder={
+                                q.type === "multi"
+                                    ? "A,B"
+                                    : q.type === "select"
+                                        ? "A / B / C"
+                                        : "Correct answer"
+                            }
+                        />
+                    </label>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 function ListeningTest() {
@@ -330,13 +605,13 @@ function ListeningTest() {
         cols: 2,
         width: 100,
         height: 0,
+        rowHeights: "",
+        colWidths: "",
     });
-    const [activeEditor, setActiveEditor] = useState("questions");
     const [showPreview, setShowPreview] = useState(false);
     const [copiedKey, setCopiedKey] = useState(null);
     const [saving, setSaving] = useState(false);
 
-    const transcriptRef = useRef(null);
     const questionEditorRef = useRef(null);
 
     const currentPart = parts[activePart] || createEmptyPart();
@@ -348,15 +623,6 @@ function ListeningTest() {
             type: def.type,
         }));
     };
-
-    useEffect(() => {
-        if (
-            transcriptRef.current &&
-            transcriptRef.current.innerHTML !== currentPart.transcriptHtml
-        ) {
-            transcriptRef.current.innerHTML = currentPart.transcriptHtml;
-        }
-    }, [currentPart.transcriptHtml]);
 
     useEffect(() => {
         if (
@@ -377,18 +643,11 @@ function ListeningTest() {
     };
 
     const saveCurrentPart = () => {
-        const transcriptHtml = transcriptRef.current?.innerHTML || "";
         const questionHtml = questionEditorRef.current?.innerHTML || "";
         updatePart(activePart, {
-            transcriptHtml,
             questionHtml,
             questions: syncQuestions(questionHtml, currentPart.questions),
         });
-    };
-
-    const handleTranscriptInput = () => {
-        const html = transcriptRef.current?.innerHTML || "";
-        updatePart(activePart, { transcriptHtml: html });
     };
 
     const handleQuestionInput = () => {
@@ -399,9 +658,8 @@ function ListeningTest() {
         });
     };
 
-    const insertHtml = (target, html) => {
-        const editor =
-            target === "transcript" ? transcriptRef.current : questionEditorRef.current;
+    const insertHtml = (html) => {
+        const editor = questionEditorRef.current;
         if (!editor) return;
 
         editor.focus();
@@ -424,11 +682,7 @@ function ListeningTest() {
             }
         }
 
-        if (target === "transcript") {
-            handleTranscriptInput();
-        } else {
-            handleQuestionInput();
-        }
+        handleQuestionInput();
     };
 
     const handleInsertTable = () => {
@@ -436,22 +690,40 @@ function ListeningTest() {
         const cols = Math.max(1, Number(tableConfig.cols) || 1);
         const width = Math.min(100, Math.max(20, Number(tableConfig.width) || 100));
         const height = Math.max(0, Number(tableConfig.height) || 0);
+        const rowHeights = parseDimensionList(tableConfig.rowHeights, "px");
+        const colWidths = parseDimensionList(tableConfig.colWidths, "%");
+
+        const headerHeight =
+            rowHeights.length === rows + 1 ? rowHeights[0] : null;
+        const bodyRowHeights =
+            rowHeights.length === rows + 1 ? rowHeights.slice(1) : rowHeights;
 
         const headerCells = Array.from({ length: cols }, (_, index) => {
             return `<th>Header ${index + 1}</th>`;
         }).join("");
 
-        const bodyRows = Array.from({ length: rows }, () => {
+        const bodyRows = Array.from({ length: rows }, (_, rowIndex) => {
             const cells = Array.from({ length: cols }, () => "<td>Cell</td>").join("");
-            return `<tr>${cells}</tr>`;
+            const rowHeight = bodyRowHeights[rowIndex];
+            const rowStyle = rowHeight ? ` style="height:${rowHeight};"` : "";
+            return `<tr${rowStyle}>${cells}</tr>`;
         }).join("");
 
         const heightStyle = height > 0 ? `height:${height}px;` : "";
+        const headerStyle = headerHeight ? ` style="height:${headerHeight};"` : "";
+        const colGroupHtml = colWidths.length
+            ? `<colgroup>${Array.from({ length: cols }, (_, index) => {
+                  const widthValue = colWidths[index];
+                  return widthValue ? `<col style="width:${widthValue};" />` : "<col />";
+              }).join("")}</colgroup>`
+            : "";
+        const tableLayout = colWidths.length ? "table-layout:fixed;" : "";
         const tableHtml = `
 <div class="listening-table-wrap" style="width:${width}%;${heightStyle}">
-    <table class="listening-inline-table" style="width:100%;${heightStyle}">
+    <table class="listening-inline-table" style="width:100%;${heightStyle}${tableLayout}">
+        ${colGroupHtml}
         <thead>
-            <tr>${headerCells}</tr>
+            <tr${headerStyle}>${headerCells}</tr>
         </thead>
         <tbody>
             ${bodyRows}
@@ -460,7 +732,7 @@ function ListeningTest() {
 </div>
 `;
 
-        insertHtml(activeEditor, tableHtml);
+        insertHtml(tableHtml);
     };
 
     const handleAnswersChange = (nextAnswers) => {
@@ -514,7 +786,6 @@ function ListeningTest() {
         setParts(Array.from({ length: 4 }, () => createEmptyPart()));
         setShowPreview(false);
         setCopiedKey(null);
-        if (transcriptRef.current) transcriptRef.current.innerHTML = "";
         if (questionEditorRef.current) questionEditorRef.current.innerHTML = "";
     };
 
@@ -549,10 +820,6 @@ function ListeningTest() {
         }
 
         const updatedParts = parts.map((part, index) => {
-            const transcriptHtml =
-                index === activePart
-                    ? transcriptRef.current?.innerHTML || part.transcriptHtml
-                    : part.transcriptHtml;
             const questionHtml =
                 index === activePart
                     ? questionEditorRef.current?.innerHTML || part.questionHtml
@@ -560,7 +827,6 @@ function ListeningTest() {
             const syncedQuestions = syncQuestions(questionHtml, part.questions);
             return {
                 ...part,
-                transcriptHtml,
                 questionHtml,
                 questions: syncedQuestions,
             };
@@ -585,7 +851,7 @@ function ListeningTest() {
         setParts(updatedParts);
 
         const payloadParts = updatedParts.map((part) => ({
-            transcript: part.transcriptHtml,
+            transcript: "",
             testText: part.questionHtml,
             questions: part.questions,
         }));
@@ -774,24 +1040,44 @@ function ListeningTest() {
                             }
                         />
                     </div>
+                    <div className="toolbar-field toolbar-field--wide">
+                        <label htmlFor="listening-table-row-heights">Row heights</label>
+                        <input
+                            id="listening-table-row-heights"
+                            type="text"
+                            placeholder="e.g. 36, 44, 52 (px)"
+                            title="Comma-separated row heights. If you give rows+1 values, the first one is used for the header row."
+                            value={tableConfig.rowHeights}
+                            onChange={(e) =>
+                                setTableConfig((prev) => ({
+                                    ...prev,
+                                    rowHeights: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
+                    <div className="toolbar-field toolbar-field--wide">
+                        <label htmlFor="listening-table-col-widths">Col widths</label>
+                        <input
+                            id="listening-table-col-widths"
+                            type="text"
+                            placeholder="e.g. 30, 70 or 120px, 200px"
+                            title="Comma-separated column widths. Numbers default to %, or use px explicitly."
+                            value={tableConfig.colWidths}
+                            onChange={(e) =>
+                                setTableConfig((prev) => ({
+                                    ...prev,
+                                    colWidths: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
                     <span className="toolbar-note">
-                        Active editor: {activeEditor === "transcript" ? "Transcript" : "Questions"}
+                        Editor: Questions
                     </span>
                 </div>
 
                 <div className="listening-editors">
-                    <div className="editor-col">
-                        <h3>Transcript (Part {activePart + 1})</h3>
-                        <div
-                            className="editor-box"
-                            ref={transcriptRef}
-                            contentEditable
-                            onInput={handleTranscriptInput}
-                            onFocus={() => setActiveEditor("transcript")}
-                            data-placeholder="Listening transcriptni shu yerga yozing..."
-                        />
-                    </div>
-
                     <div className="editor-col">
                         <h3>Questions (Part {activePart + 1})</h3>
                         <div
@@ -799,7 +1085,6 @@ function ListeningTest() {
                             ref={questionEditorRef}
                             contentEditable
                             onInput={handleQuestionInput}
-                            onFocus={() => setActiveEditor("questions")}
                             data-placeholder="Savollar matnini yozing va tokenlardan foydalaning..."
                         />
                     </div>
@@ -813,16 +1098,22 @@ function ListeningTest() {
                             setShowPreview((prev) => !prev);
                         }}
                     >
-                        {showPreview ? "Hide Answer Preview" : "Answer Preview"}
+                        {showPreview ? "Hide Preview" : "Preview (1:1)"}
                     </button>
                 </div>
 
                 {showPreview && (
-                    <Preview
-                        html={currentPart.questionHtml}
-                        answers={currentPart.questions.map((q) => q.value)}
-                        onAnswersChange={handleAnswersChange}
-                    />
+                    <>
+                        <Preview
+                            html={currentPart.questionHtml}
+                            answers={currentPart.questions.map((q) => q.value)}
+                            onAnswersChange={handleAnswersChange}
+                        />
+                        <AnswerKey
+                            questions={currentPart.questions}
+                            onAnswersChange={handleAnswersChange}
+                        />
+                    </>
                 )}
 
                 <div className="actions">

@@ -268,6 +268,21 @@
     font-size: 14px;
 }
 
+.container-blue input[type="checkbox"],
+.container-blue input[type="radio"] {
+    margin-left: 0;
+    margin-right: 6px;
+    padding: 0;
+}
+
+.container-blue .preview-multi label,
+.container-blue span > label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 8px;
+}
+
 /* preview highlight */
 
 .container-blue .highlight-bold {

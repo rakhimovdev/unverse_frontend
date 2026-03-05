@@ -13,7 +13,8 @@ function Sign_up() {
         role: 'student', // 🔥 student sifatida default
         teacherId: '',
         timeGroup: '',
-        time: ''
+        time: '',
+        timeSlotIds: []
     });
 
     const [loading, setLoading] = useState(false);
@@ -44,7 +45,7 @@ function Sign_up() {
         const fetchSlots = async () => {
             if (!userData.teacherId || !userData.timeGroup) {
                 setTimeSlots([]);
-                setUserData((prev) => ({ ...prev, time: "" }));
+                setUserData((prev) => ({ ...prev, time: "", timeSlotIds: [] }));
                 return;
             }
             setLoadingOptions(true);
@@ -53,7 +54,7 @@ function Sign_up() {
                     params: { teacherId: userData.teacherId, group: userData.timeGroup }
                 });
                 setTimeSlots(sRes.data || []);
-                setUserData((prev) => ({ ...prev, time: "" }));
+                setUserData((prev) => ({ ...prev, time: "", timeSlotIds: [] }));
             } catch (error) {
                 console.error('Time slots load error:', error);
                 setErrorMsg("Vaqtlar ro'yxatini olishda xatolik ❌");
@@ -195,7 +196,15 @@ function Sign_up() {
                     <label>Select Time</label>
                     <select
                         value={userData.time}
-                        onChange={(e) => setUserData({ ...userData, time: e.target.value })}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            const match = timeSlots.find((slot) => slot.time === value);
+                            setUserData({
+                                ...userData,
+                                time: value,
+                                timeSlotIds: match?.slotIds || []
+                            });
+                        }}
                         required
                         disabled={loadingOptions || !userData.teacherId || !userData.timeGroup}
                     >
