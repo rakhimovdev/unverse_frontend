@@ -1,20 +1,23 @@
 @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --u-ink: #1a0b0b;
-  --u-muted: #6b4b4b;
-  --u-primary: #b3211c;
-  --u-primary-dark: #7a1212;
-  --u-primary-deep: #5c0d0d;
-  --u-accent: #e34a42;
-  --u-gold: #f2c66b;
-  --u-surface: #fff7f3;
-  --u-bg: #f6e6e3;
-  --u-tint: #fff1ed;
-  --u-tint-strong: #f2d9d5;
-  --u-border: rgba(179, 33, 28, 0.16);
-  --u-shadow: 0 20px 45px rgba(60, 12, 12, 0.18);
-  --u-shadow-strong: 0 26px 60px rgba(60, 12, 12, 0.22);
+  --u-ink: #0b1f3a;
+  --u-muted: #4b6a8a;
+  --u-primary: #1055a4;
+  --u-primary-dark: #053585;
+  --u-primary-deep: #04245c;
+  --u-accent: #fea508;
+  --u-gold: #fecf05;
+  --u-surface: #f7faff;
+  --u-bg: #e9f1fb;
+  --u-tint: #f1f6fd;
+  --u-tint-strong: #dbe7f6;
+  --u-primary-rgb: 16, 85, 164;
+  --u-primary-dark-rgb: 5, 53, 133;
+  --u-shadow-rgb: 5, 24, 52;
+  --u-border: rgba(var(--u-primary-rgb), 0.16);
+  --u-shadow: 0 20px 45px rgba(var(--u-shadow-rgb), 0.18);
+  --u-shadow-strong: 0 26px 60px rgba(var(--u-shadow-rgb), 0.24);
   --u-display: "Bebas Neue", "Manrope", sans-serif;
 }
 
@@ -33,9 +36,9 @@ body,
 body {
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--u-ink);
-  background: radial-gradient(circle at 15% 10%, rgba(255, 220, 210, 0.9) 0%, transparent 45%),
-    radial-gradient(circle at 90% 0%, rgba(255, 200, 190, 0.6) 0%, transparent 45%),
-    linear-gradient(120deg, #f9efe9 0%, #f6e6e3 60%, #f3d9d4 100%);
+  background: radial-gradient(circle at 12% 8%, rgba(254, 207, 5, 0.25) 0%, transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(8, 139, 225, 0.18) 0%, transparent 45%),
+    linear-gradient(120deg, #f7faff 0%, #edf4fb 60%, #e2ecf8 100%);
   position: relative;
   overflow-x: hidden;
 }
@@ -46,8 +49,8 @@ body::before {
   inset: 0;
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(179, 33, 28, 0.05) 0px,
-    rgba(179, 33, 28, 0.05) 1px,
+    rgba(var(--u-primary-rgb), 0.06) 0px,
+    rgba(var(--u-primary-rgb), 0.06) 1px,
     transparent 1px,
     transparent 14px
   );
@@ -60,7 +63,7 @@ body::after {
   content: "";
   position: fixed;
   inset: -20% 0 0 0;
-  background: radial-gradient(circle at 50% 0%, rgba(179, 33, 28, 0.25) 0%, transparent 55%);
+  background: radial-gradient(circle at 50% 0%, rgba(var(--u-primary-rgb), 0.2) 0%, transparent 55%);
   pointer-events: none;
   z-index: -1;
 }

@@ -1,15 +1,15 @@
 {
-  "short_name": "Nine LS",
-  "name": "Nine Language School",
+  "short_name": "DigiEdu",
+  "name": "DigiEduSystem",
   "icons": [
     {
-      "src": "nine-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "digiedusystem-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#5c0d0d",
-  "background_color": "#f6e6e3"
+  "theme_color": "#1055a4",
+  "background_color": "#e9f1fb"
 }

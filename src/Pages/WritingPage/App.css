@@ -42,8 +42,8 @@
     gap: 10px;
     padding: 10px 14px;
     border-radius: 12px;
-    background: rgba(179, 33, 28, 0.08);
-    border: 1px solid rgba(179, 33, 28, 0.2);
+    background: rgba(var(--u-primary-rgb), 0.08);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.2);
     font-weight: 600;
 }
 
@@ -94,8 +94,8 @@
     gap: 8px;
     padding: 6px;
     border-radius: 999px;
-    background: rgba(179, 33, 28, 0.08);
-    border: 1px solid rgba(179, 33, 28, 0.2);
+    background: rgba(var(--u-primary-rgb), 0.08);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.2);
 }
 
 .writing-test-switch-btn {
@@ -112,7 +112,7 @@
 .writing-test-switch-btn.active {
     background: var(--u-primary);
     color: #fff;
-    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.25);
 }
 
 .writing-test-carousel {
@@ -253,7 +253,7 @@
 .writing-test-save:hover {
     background: var(--u-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.3);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.3);
 }
 
 .writing-test-save:disabled {

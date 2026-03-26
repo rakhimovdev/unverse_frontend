@@ -1,7 +1,7 @@
 .announcement {
     width: 100%;
-    background: linear-gradient(120deg, #5c0d0d 0%, #b3211c 55%, #5c0d0d 100%);
-    color: #fff7f3;
+    background: linear-gradient(120deg, var(--u-primary-deep) 0%, var(--u-primary) 55%, var(--u-primary-deep) 100%);
+    color: var(--u-surface);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px 0;
 }
@@ -42,7 +42,7 @@
 }
 
 .announcement__link {
-    color: #fff7f3;
+    color: var(--u-surface);
     text-decoration: underline;
     text-underline-offset: 4px;
 }

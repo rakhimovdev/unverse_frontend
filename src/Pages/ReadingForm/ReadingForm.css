@@ -122,13 +122,13 @@
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.25);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 28px rgba(90, 13, 13, 0.3);
+    box-shadow: 0 16px 28px rgba(var(--u-primary-dark-rgb), 0.3);
 }
 
 /* ===== SCORE BOX ===== */

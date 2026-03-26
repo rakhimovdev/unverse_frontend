@@ -32,7 +32,7 @@
 
 .start_btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.25);
 }
 
 .test_screen {

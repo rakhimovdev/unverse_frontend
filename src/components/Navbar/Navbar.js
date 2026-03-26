@@ -22,12 +22,12 @@ const Navbar = () => {
                 <a className="brand" href="/">
                     <span className="brand-mark">
                         <img
-                            src={`${process.env.PUBLIC_URL}/nine-logo.svg`}
-                            alt="Nine Language School logo"
+                            src={`${process.env.PUBLIC_URL}/digiedusystem-logo.png`}
+                            alt="DigiEduSystem logo"
                         />
                     </span>
                     <div className="brand-text">
-                        <span>Universe</span>
+                        <span>DigiEduSystem</span>
                         <span>Language School</span>
                     </div>
                 </a>

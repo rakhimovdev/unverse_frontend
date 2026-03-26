@@ -3,15 +3,15 @@
     --writing-muted: var(--u-muted);
     --writing-accent: var(--u-primary);
     --writing-accent-dark: var(--u-primary-dark);
-    --writing-card: rgba(255, 247, 243, 0.92);
-    --writing-border: rgba(179, 33, 28, 0.18);
+    --writing-card: rgba(247, 250, 255, 0.92);
+    --writing-border: rgba(var(--u-primary-rgb), 0.18);
     --writing-shadow: var(--u-shadow);
 }
 
 .writing-page {
     min-height: 100vh;
     padding: 42px 6vw 64px;
-    background: radial-gradient(circle at top, #fff4ef 0%, var(--u-tint-strong) 45%, #f3d9d4 100%);
+    background: radial-gradient(circle at top, var(--u-tint) 0%, var(--u-tint-strong) 45%, var(--u-bg) 100%);
     color: var(--writing-ink);
     font-family: "Manrope", "Segoe UI", sans-serif;
 }
@@ -50,7 +50,7 @@
 .writing-type select {
     padding: 10px 16px;
     border-radius: 999px;
-    border: 1px solid rgba(179, 33, 28, 0.25);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.25);
     background: #fff;
     font-size: 14px;
     font-family: inherit;
@@ -83,8 +83,8 @@
     gap: 8px;
     padding: 6px;
     border-radius: 999px;
-    background: rgba(179, 33, 28, 0.08);
-    border: 1px solid rgba(179, 33, 28, 0.2);
+    background: rgba(var(--u-primary-rgb), 0.08);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.2);
 }
 
 .switch-btn {
@@ -101,13 +101,13 @@
 .switch-btn.active {
     background: var(--writing-accent);
     color: #fff;
-    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.25);
 }
 
 .task-carousel {
     border-radius: 28px;
-    background: rgba(255, 247, 243, 0.6);
-    border: 1px solid rgba(179, 33, 28, 0.18);
+    background: rgba(247, 250, 255, 0.6);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.18);
     overflow: hidden;
     box-shadow: var(--writing-shadow);
 }
@@ -155,7 +155,7 @@
 .panel-pill {
     padding: 6px 12px;
     border-radius: 999px;
-    background: rgba(179, 33, 28, 0.08);
+    background: rgba(var(--u-primary-rgb), 0.08);
     color: var(--writing-accent-dark);
     font-size: 12px;
     font-weight: 600;
@@ -182,7 +182,7 @@
 
 .panel-left input[type="text"]:focus {
     border-color: var(--writing-accent);
-    box-shadow: 0 0 0 3px rgba(179, 33, 28, 0.2);
+    box-shadow: 0 0 0 3px rgba(var(--u-primary-rgb), 0.2);
 }
 
 .task-textarea {
@@ -200,7 +200,7 @@
 
 .task-textarea:focus {
     border-color: var(--writing-accent);
-    box-shadow: 0 0 0 3px rgba(179, 33, 28, 0.2);
+    box-shadow: 0 0 0 3px rgba(var(--u-primary-rgb), 0.2);
 }
 
 .writing-editor-toolbar {
@@ -218,7 +218,7 @@
     padding: 4px 8px;
     border-radius: 10px;
     border: 1px solid var(--writing-border);
-    background: rgba(179, 33, 28, 0.05);
+    background: rgba(var(--u-primary-rgb), 0.05);
 }
 
 .toolbar-field label {
@@ -239,7 +239,7 @@
     padding: 6px 10px;
     border-radius: 8px;
     border: 1px solid var(--writing-border);
-    background: rgba(179, 33, 28, 0.08);
+    background: rgba(var(--u-primary-rgb), 0.08);
     color: var(--writing-accent-dark);
     font-size: 12px;
     font-weight: 600;
@@ -268,7 +268,7 @@
 
 .task-editor:focus {
     border-color: var(--writing-accent);
-    box-shadow: 0 0 0 3px rgba(179, 33, 28, 0.2);
+    box-shadow: 0 0 0 3px rgba(var(--u-primary-rgb), 0.2);
 }
 
 .task-editor:empty::before {
@@ -291,7 +291,7 @@
     overflow: auto;
     padding: 6px;
     border-radius: 10px;
-    border: 1px dashed rgba(179, 33, 28, 0.35);
+    border: 1px dashed rgba(var(--u-primary-rgb), 0.35);
     background: rgba(255, 255, 255, 0.7);
 }
 
@@ -350,16 +350,16 @@
 .file-btn {
     padding: 10px 18px;
     border-radius: 12px;
-    background: rgba(179, 33, 28, 0.1);
+    background: rgba(var(--u-primary-rgb), 0.1);
     color: var(--writing-accent-dark);
     font-weight: 600;
     cursor: pointer;
-    border: 1px solid rgba(179, 33, 28, 0.2);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.2);
     transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .file-btn:hover {
-    background: rgba(179, 33, 28, 0.18);
+    background: rgba(var(--u-primary-rgb), 0.18);
     transform: translateY(-1px);
 }
 
@@ -373,9 +373,9 @@
     align-items: center;
     justify-content: center;
     min-height: 260px;
-    background: linear-gradient(135deg, rgba(179, 33, 28, 0.08), rgba(255, 255, 255, 0.85));
+    background: linear-gradient(135deg, rgba(var(--u-primary-rgb), 0.08), rgba(255, 255, 255, 0.85));
     border-radius: 18px;
-    border: 1px dashed rgba(179, 33, 28, 0.25);
+    border: 1px dashed rgba(var(--u-primary-rgb), 0.25);
     padding: 18px;
 }
 
@@ -409,7 +409,7 @@
 .task1-text-placeholder {
     padding: 12px 14px;
     border-radius: 12px;
-    border: 1px dashed rgba(179, 33, 28, 0.25);
+    border: 1px dashed rgba(var(--u-primary-rgb), 0.25);
     color: var(--writing-muted);
     font-size: 14px;
     text-align: center;
@@ -465,7 +465,7 @@
 .saveBtn:hover {
     background: var(--writing-accent-dark);
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(90, 13, 13, 0.3);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.3);
 }
 
 .saveBtn:disabled {

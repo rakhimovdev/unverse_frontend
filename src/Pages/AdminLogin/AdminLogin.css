@@ -55,7 +55,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 12px 24px rgba(90, 13, 13, 0.25);
+  box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.25);
 }
 
 .signin-button:hover {
@@ -86,9 +86,9 @@
 }
 
 .error-message {
-  color: #7a1212;
-  background: rgba(179, 33, 28, 0.12);
-  border: 1px solid rgba(179, 33, 28, 0.2);
+  color: var(--u-primary-dark);
+  background: rgba(var(--u-primary-rgb), 0.12);
+  border: 1px solid rgba(var(--u-primary-rgb), 0.2);
   padding: 10px 12px;
   border-radius: 8px;
   margin: 0;

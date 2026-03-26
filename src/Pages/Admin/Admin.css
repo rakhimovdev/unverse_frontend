@@ -71,9 +71,9 @@
 }
 
 .admin-banner--error {
-    background: rgba(179, 33, 28, 0.12);
-    color: #7a1212;
-    border: 1px solid rgba(179, 33, 28, 0.2);
+    background: rgba(var(--u-primary-rgb), 0.12);
+    color: var(--u-primary-dark);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.2);
 }
 
 .admin-table {
@@ -371,7 +371,7 @@
 .btn--primary {
     background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
     color: #fff;
-    box-shadow: 0 10px 22px rgba(90, 13, 13, 0.18);
+    box-shadow: 0 10px 22px rgba(var(--u-primary-dark-rgb), 0.18);
 }
 
 .btn--ghost {
@@ -381,7 +381,7 @@
 }
 
 .btn--danger {
-    background: #7a1212;
+    background: var(--u-primary-dark);
     color: #fff;
 }
 

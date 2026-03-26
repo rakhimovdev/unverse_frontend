@@ -148,7 +148,8 @@ function Index() {
 
         } catch (err) {
             console.error("Xatolik:", err.response?.data || err);
-            setError("AI tekshiruvda xatolik bo'ldi!");
+            const message = err.response?.data?.message;
+            setError(message || "AI tekshiruvda xatolik bo'ldi!");
         }
 
         setSaving(false);
