@@ -5,6 +5,7 @@ import './Sign_up.css';
 
 function Sign_up() {
     const [userData, setUserData] = useState({
+        studentType: 'insider',
         username: '',
         name: '',
         lastname: '',
@@ -77,10 +78,12 @@ function Sign_up() {
             return;
         }
 
-        if (!userData.teacherId || !userData.timeGroup || !userData.time) {
-            setErrorMsg("Teacher, juft/toq va vaqtni tanlang ❌");
-            setLoading(false);
-            return;
+        if (userData.studentType !== "outsider") {
+            if (!userData.teacherId || !userData.timeGroup || !userData.time) {
+                setErrorMsg("Teacher, juft/toq va vaqtni tanlang ❌");
+                setLoading(false);
+                return;
+            }
         }
 
         try {
@@ -116,6 +119,28 @@ function Sign_up() {
 
             <form onSubmit={handleSignUpSubmit} className="signup-form">
                 {errorMsg && <p className="error-message">{errorMsg}</p>}
+
+                <div className="form-group">
+                    <label>Student turi</label>
+                    <select
+                        value={userData.studentType}
+                        onChange={(e) => {
+                            const nextType = e.target.value;
+                            setUserData((prev) => ({
+                                ...prev,
+                                studentType: nextType,
+                                teacherId: nextType === "outsider" ? "" : prev.teacherId,
+                                timeGroup: nextType === "outsider" ? "" : prev.timeGroup,
+                                time: nextType === "outsider" ? "" : prev.time,
+                                timeSlotIds: nextType === "outsider" ? [] : prev.timeSlotIds
+                            }));
+                        }}
+                        required
+                    >
+                        <option value="insider">Insider (teacher bilan)</option>
+                        <option value="outsider">Outsider (mustaqil)</option>
+                    </select>
+                </div>
 
                 <div className="form-group">
                     <label>Username</label>
@@ -161,61 +186,75 @@ function Sign_up() {
                     />
                 </div>
 
-                <div className="form-group">
-                    <label>Select Teacher</label>
-                    <select
-                        value={userData.teacherId}
-                        onChange={(e) => setUserData({ ...userData, teacherId: e.target.value })}
-                        required
-                        disabled={loadingOptions}
-                    >
-                        <option value="">Choose a teacher</option>
-                        {teachers.map((teacher) => (
-                            <option key={teacher._id} value={teacher._id}>
-                                {teacher.name} {teacher.lastname}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {userData.studentType !== "outsider" && (
+                    <>
+                        <div className="form-group">
+                            <label>Select Teacher</label>
+                            <select
+                                value={userData.teacherId}
+                                onChange={(e) =>
+                                    setUserData({ ...userData, teacherId: e.target.value })
+                                }
+                                required
+                                disabled={loadingOptions}
+                            >
+                                <option value="">Choose a teacher</option>
+                                {teachers.map((teacher) => (
+                                    <option key={teacher._id} value={teacher._id}>
+                                        {teacher.name} {teacher.lastname}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                <div className="form-group">
-                    <label>Juft / Toq</label>
-                    <select
-                        value={userData.timeGroup}
-                        onChange={(e) => setUserData({ ...userData, timeGroup: e.target.value })}
-                        required
-                        disabled={loadingOptions || !userData.teacherId}
-                    >
-                        <option value="">Juft yoki toq tanlang</option>
-                        <option value="juft">Juft (Seshanba, Payshanba, Shanba)</option>
-                        <option value="toq">Toq (Dushanba, Chorshanba, Juma)</option>
-                    </select>
-                </div>
+                        <div className="form-group">
+                            <label>Juft / Toq</label>
+                            <select
+                                value={userData.timeGroup}
+                                onChange={(e) =>
+                                    setUserData({ ...userData, timeGroup: e.target.value })
+                                }
+                                required
+                                disabled={loadingOptions || !userData.teacherId}
+                            >
+                                <option value="">Juft yoki toq tanlang</option>
+                                <option value="juft">
+                                    Juft (Seshanba, Payshanba, Shanba)
+                                </option>
+                                <option value="toq">
+                                    Toq (Dushanba, Chorshanba, Juma)
+                                </option>
+                            </select>
+                        </div>
 
-                <div className="form-group">
-                    <label>Select Time</label>
-                    <select
-                        value={userData.time}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            const match = timeSlots.find((slot) => slot.time === value);
-                            setUserData({
-                                ...userData,
-                                time: value,
-                                timeSlotIds: match?.slotIds || []
-                            });
-                        }}
-                        required
-                        disabled={loadingOptions || !userData.teacherId || !userData.timeGroup}
-                    >
-                        <option value="">Choose a time</option>
-                        {timeSlots.map((slot) => (
-                            <option key={slot.time} value={slot.time}>
-                                {slot.time}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        <div className="form-group">
+                            <label>Select Time</label>
+                            <select
+                                value={userData.time}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    const match = timeSlots.find((slot) => slot.time === value);
+                                    setUserData({
+                                        ...userData,
+                                        time: value,
+                                        timeSlotIds: match?.slotIds || []
+                                    });
+                                }}
+                                required
+                                disabled={
+                                    loadingOptions || !userData.teacherId || !userData.timeGroup
+                                }
+                            >
+                                <option value="">Choose a time</option>
+                                {timeSlots.map((slot) => (
+                                    <option key={slot.time} value={slot.time}>
+                                        {slot.time}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </>
+                )}
 
                 <div className="form-group">
                     <label>Password</label>
