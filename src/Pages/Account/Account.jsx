@@ -79,6 +79,8 @@ function Account() {
     const [loading, setLoading] = useState(true);
     const role = localStorage.getItem("role");
     const isAiUser = role === "mooc" || role === "mock_user";
+    const canUseAiWriting =
+        role === "student" || role === "mooc" || role === "mock_user";
 
     // Foydalanuvchi va natijalarni olish
     useEffect(() => {
@@ -104,18 +106,27 @@ function Account() {
                 });
                 setListeningResults(resListening.data);
 
-                if (role === "mooc" || role === "mock_user") {
+                if (canUseAiWriting) {
                     const resWritingAi = await axios.get("/api/writing/ai-results", {
                         headers: { Authorization: token }
                     });
-                    setWritingAiResults(resWritingAi.data || []);
-                    setWritingResults([]);
+                    const aiPayload = Array.isArray(resWritingAi.data)
+                        ? resWritingAi.data
+                        : Array.isArray(resWritingAi.data?.result)
+                        ? resWritingAi.data.result
+                        : [];
+                    setWritingAiResults(aiPayload);
                 } else {
+                    setWritingAiResults([]);
+                }
+
+                if (role === "student" || role === "mooc") {
                     const resWriting = await axios.get("/scorew/my", {
                         headers: { Authorization: token }
                     });
                     setWritingResults(resWriting.data);
-                    setWritingAiResults([]);
+                } else {
+                    setWritingResults([]);
                 }
             } catch (err) {
                 console.error("Error loading account:", err);
@@ -125,7 +136,7 @@ function Account() {
         };
 
         fetchData();
-    }, [role]);
+    }, [role, canUseAiWriting]);
 
     const readingBands = useMemo(
         () =>
@@ -176,6 +187,14 @@ function Account() {
                 />
             ) : (
                 <>
+                    {canUseAiWriting ? (
+                        <WritingResult
+                            user={user}
+                            readingBand={latestReadingBand}
+                            listeningBand={latestListeningBand}
+                        />
+                    ) : null}
+
                     <div className="results">
                 <h2>My Reading Results</h2>
                 {results.length > 0 ? (
@@ -247,9 +266,17 @@ function Account() {
                                 <tbody>
                                     {writingAiResults.map((r, i) => (
                                         <tr key={i}>
-                                            <td>{r.taskType || "task2"}</td>
+                                            <td>
+                                                {r.taskType === "overall"
+                                                    ? "overall"
+                                                    : r.taskType || "task2"}
+                                            </td>
                                             <td>{r.result?.raw_score ?? "—"}</td>
-                                            <td>{r.result?.estimated_band ?? "N/A"}</td>
+                                            <td>
+                                                {r.result?.estimated_band ??
+                                                    r.result?.band_score ??
+                                                    "N/A"}
+                                            </td>
                                             <td>{new Date(r.createdAt).toLocaleString()}</td>
                                         </tr>
                                     ))}

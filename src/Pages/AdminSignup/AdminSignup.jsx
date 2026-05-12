@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../../Api/Axios";
+import { useAuth } from "../../context/AuthContext";
 import "./AdminSignup.css";
 
 function AdminSignup() {
+    const { persistSession } = useAuth();
     const [userData, setUserData] = useState({
         username: "",
         name: "",
@@ -31,9 +33,10 @@ function AdminSignup() {
             const response = await axios.post("/user/register", userData);
 
             if (response.data.token) {
-                localStorage.setItem("token", response.data.token);
-                localStorage.setItem("role", response.data.user?.role || "admin");
-                localStorage.setItem("user", JSON.stringify(response.data.user));
+                persistSession({
+                    token: response.data.token,
+                    user: response.data.user
+                });
             }
 
             alert("Admin account created successfully! 🎉");

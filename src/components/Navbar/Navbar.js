@@ -1,25 +1,32 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { getStoredRole, getStoredToken } from "../../utils/authStorage";
+import { isAuthExperiencePath, resolveDashboardPath } from "../../utils/authRoutes";
 import "./Navbar.css";
 
 const Navbar = () => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+    const { token: authToken, user, logout } = useAuth();
+    const location = useLocation();
+    const token = authToken || getStoredToken();
+    const role = user?.role || getStoredRole();
     const isLoggedIn = !!token;
-    const accountHref =
-        role === "teacher" ? "/teachacc" : role === "admin" ? "/admin" : "/account";
+    const accountHref = resolveDashboardPath(role);
     const accountLabel = role === "admin" ? "Admin" : "Account";
 
+    if (isAuthExperiencePath(location.pathname)) {
+        return null;
+    }
+
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("user");
+        logout();
         window.location.href = "/";
     };
 
     return (
         <nav className="site-nav">
             <div className="site-nav__inner">
-                <a className="brand" href="/">
+                <Link className="brand" to="/">
                     <span className="brand-mark">
                         <img
                             src={`${process.env.PUBLIC_URL}/digiedusystem-logo.png`}
@@ -30,20 +37,20 @@ const Navbar = () => {
                         <span>DigiEduSystem</span>
                         <span>Language School</span>
                     </div>
-                </a>
+                </Link>
 
                 <ul className="site-nav__links">
                     <li>
-                        <a className="site-nav__link" href="/">Home</a>
+                        <Link className="site-nav__link" to="/">Home</Link>
                     </li>
                     <li>
-                        <a className="site-nav__link" href="/read">Reading</a>
+                        <Link className="site-nav__link" to="/read">Reading</Link>
                     </li>
                     <li>
-                        <a className="site-nav__link" href="/audio">Listening</a>
+                        <Link className="site-nav__link" to="/audio">Listening</Link>
                     </li>
                     <li>
-                        <a className="site-nav__link" href="/writingform">Writing</a>
+                        <Link className="site-nav__link" to="/writingform">Writing</Link>
                     </li>
                     <li>
                         <button
@@ -59,15 +66,15 @@ const Navbar = () => {
                     {!isLoggedIn ? (
                         role !== "teacher" && (
                             <>
-                                <a className="nav-btn nav-btn--ghost" href="/sign_in">
+                                <Link className="nav-btn nav-btn--ghost" to="/sign_in">
                                     Sign In
-                                </a>
-                                <a className="nav-btn nav-btn--primary" href="/sign_up">
+                                </Link>
+                                <Link className="nav-btn nav-btn--primary" to="/sign_up">
                                     Sign Up
-                                </a>
-                                <a className="nav-btn nav-btn--ghost" href="/admin_login">
+                                </Link>
+                                <Link className="nav-btn nav-btn--ghost" to="/admin_login">
                                     Admin Login
-                                </a>
+                                </Link>
                             </>
                         )
                     ) : (
@@ -75,21 +82,21 @@ const Navbar = () => {
                             <button className="nav-btn nav-btn--ghost" onClick={handleLogout}>
                                 Logout
                             </button>
-                            <a
+                            <Link
                                 className="nav-btn nav-btn--ghost"
-                                href={accountHref}
+                                to={accountHref}
                             >
                                 {accountLabel}
-                            </a>
+                            </Link>
 
                             {role === "teacher" && (
                                 <>
-                                    <a className="nav-btn nav-btn--ghost" href="/selectt">
+                                    <Link className="nav-btn nav-btn--ghost" to="/selectt">
                                         Add Test
-                                    </a>
-                                    <a className="nav-btn nav-btn--primary" href="/students">
+                                    </Link>
+                                    <Link className="nav-btn nav-btn--primary" to="/students">
                                         Your Students
-                                    </a>
+                                    </Link>
                                 </>
                             )}
                         </div>

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import "./Teacher.css";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../../Api/Axios';
+import { useAuth } from '../../context/AuthContext';
 
 function Teacher() {
+    const { persistSession } = useAuth();
     const [userData, setUserData] = useState({
         username: '',
         name: '',
@@ -32,9 +34,10 @@ function Teacher() {
             const response = await axios.post('/user/register', userData);
 
             if (response.data.token) {
-                localStorage.setItem("token", response.data.token);
-                localStorage.setItem("role", "teacher"); // 🔥 teacher sifatida saqlaymiz
-                localStorage.setItem("user", JSON.stringify(response.data.user));
+                persistSession({
+                    token: response.data.token,
+                    user: response.data.user
+                });
             }
 
             alert("Teacher account created successfully! 🎉");

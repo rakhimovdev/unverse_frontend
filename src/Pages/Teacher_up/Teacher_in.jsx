@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import "./Teacher_in.css";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../../Api/Axios';
+import { useAuth } from '../../context/AuthContext';
 
 function Teacher_in() {
+    const { persistSession } = useAuth();
     const [loginData, setLoginData] = useState({
         username: '',
         password: ''
@@ -18,13 +20,14 @@ function Teacher_in() {
 
             // Backenddan token keldi deb faraz qilamiz
             if (response.data.token) {
-                // Tokenni localStorage'ga saqlash
-                localStorage.setItem('token', response.data.token);
-
-                // Rolni backenddan olamiz (teacher yoki admin)
                 const userRole = response.data.user?.role || 'teacher';
-                localStorage.setItem('role', userRole);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+                persistSession({
+                    token: response.data.token,
+                    user: {
+                        ...response.data.user,
+                        role: userRole
+                    }
+                });
 
                 // Teacher account sahifasiga yo'naltirish
                 navigate(userRole === "admin" ? "/admin" : "/teachacc");

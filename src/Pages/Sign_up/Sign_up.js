@@ -1,132 +1,344 @@
-import React, { useEffect, useState } from 'react';
-import axios from '../../Api/Axios';
-import { Link, useNavigate } from 'react-router-dom';
-import './Sign_up.css';
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-function Sign_up() {
-    const [userData, setUserData] = useState({
-        studentType: 'insider',
-        username: '',
-        name: '',
-        lastname: '',
-        email: '',
-        password: '',
-        role: 'student', // 🔥 student sifatida default
-        teacherId: '',
-        timeGroup: '',
-        time: '',
+import axios from "../../Api/Axios";
+import AuthShell from "../../components/auth/AuthShell";
+import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
+import { useAuth } from "../../context/AuthContext";
+import {
+    setPendingVerificationEmail
+} from "../../utils/authStorage";
+import { resolveDashboardPath } from "../../utils/authRoutes";
+
+function SignUp() {
+    const navigate = useNavigate();
+    const { persistSession } = useAuth();
+
+    const [formData, setFormData] = useState({
+        fullname: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        studentType: "outsider",
+        teacherId: "",
+        timeGroup: "",
+        time: "",
         timeSlotIds: []
     });
-
-    const [loading, setLoading] = useState(false);
-    const [loadingOptions, setLoadingOptions] = useState(true);
     const [teachers, setTeachers] = useState([]);
     const [timeSlots, setTimeSlots] = useState([]);
-    const [errorMsg, setErrorMsg] = useState('');
-    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    const goToOtpScreen = (pendingEmail, message, retryAfter = 60) => {
+        if (!pendingEmail) return;
+
+        setPendingVerificationEmail(pendingEmail);
+        navigate(`/verify-otp?email=${encodeURIComponent(pendingEmail)}`, {
+            state: {
+                message,
+                retryAfter
+            }
+        });
+    };
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchTeachers = async () => {
             setLoadingOptions(true);
+
             try {
-                const tRes = await axios.get('/student/teachers');
-                setTeachers(tRes.data || []);
-            } catch (error) {
-                console.error('Teacher load error:', error);
-                setErrorMsg("Teacher ro'yxatini olishda xatolik ❌");
+                const response = await axios.get("/student/teachers");
+                if (isMounted) {
+                    setTeachers(response.data || []);
+                }
+            } catch (requestError) {
+                if (isMounted) {
+                    setError(
+                        requestError.response?.data?.message ||
+                            "Teacher list could not be loaded."
+                    );
+                }
             } finally {
-                setLoadingOptions(false);
+                if (isMounted) setLoadingOptions(false);
             }
         };
 
         fetchTeachers();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchSlots = async () => {
-            if (!userData.teacherId || !userData.timeGroup) {
+            if (
+                formData.studentType === "outsider" ||
+                !formData.teacherId ||
+                !formData.timeGroup
+            ) {
                 setTimeSlots([]);
-                setUserData((prev) => ({ ...prev, time: "", timeSlotIds: [] }));
                 return;
             }
+
             setLoadingOptions(true);
+
             try {
-                const sRes = await axios.get('/student/timeslots', {
-                    params: { teacherId: userData.teacherId, group: userData.timeGroup }
+                const response = await axios.get("/student/timeslots", {
+                    params: {
+                        teacherId: formData.teacherId,
+                        group: formData.timeGroup
+                    }
                 });
-                setTimeSlots(sRes.data || []);
-                setUserData((prev) => ({ ...prev, time: "", timeSlotIds: [] }));
-            } catch (error) {
-                console.error('Time slots load error:', error);
-                setErrorMsg("Vaqtlar ro'yxatini olishda xatolik ❌");
+
+                if (isMounted) {
+                    setTimeSlots(response.data || []);
+                }
+            } catch (requestError) {
+                if (isMounted) {
+                    setError(
+                        requestError.response?.data?.message ||
+                            "Time slot list could not be loaded."
+                    );
+                }
             } finally {
-                setLoadingOptions(false);
+                if (isMounted) setLoadingOptions(false);
             }
         };
 
         fetchSlots();
-    }, [userData.teacherId, userData.timeGroup]);
 
-    const handleSignUpSubmit = async (e) => {
-        e.preventDefault();
+        return () => {
+            isMounted = false;
+        };
+    }, [formData.studentType, formData.teacherId, formData.timeGroup]);
+
+    const finishGoogleAuth = (payload) => {
+        persistSession({
+            token: payload.token,
+            user: payload.user
+        });
+        navigate(resolveDashboardPath(payload.user?.role), { replace: true });
+    };
+
+    const handleGoogleSignup = async (credential) => {
+        if (!credential) {
+            setError("Google sign-up did not return a credential.");
+            return;
+        }
+
+        setGoogleLoading(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            const response = await axios.post("/auth/google", { credential });
+            finishGoogleAuth(response.data);
+        } catch (requestError) {
+            setError(
+                requestError.response?.data?.message ||
+                    "Google sign-up failed. Please try again."
+            );
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         setLoading(true);
-        setErrorMsg('');
+        setError("");
+        setSuccess("");
 
-        if (userData.password.length < 6) {
-            setErrorMsg("Password must be at least 6 characters long ❌");
+        if (formData.fullname.trim().length < 3) {
+            setError("Please enter your full name.");
             setLoading(false);
             return;
         }
 
-        if (userData.studentType !== "outsider") {
-            if (!userData.teacherId || !userData.timeGroup || !userData.time) {
-                setErrorMsg("Teacher, juft/toq va vaqtni tanlang ❌");
+        if (formData.password.length < 6) {
+            setError("Password must be at least 6 characters.");
+            setLoading(false);
+            return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match.");
+            setLoading(false);
+            return;
+        }
+
+        if (formData.studentType !== "outsider") {
+            if (!formData.teacherId || !formData.timeGroup || !formData.time) {
+                setError("Please choose your teacher and time slot.");
                 setLoading(false);
                 return;
             }
         }
 
         try {
-            // 1️⃣ Avval ro‘yxatdan o‘tish
-            await axios.post('/student/register', userData);
+            const payload = {
+                fullname: formData.fullname,
+                email: formData.email.trim(),
+                password: formData.password,
+                studentType: formData.studentType,
+                teacherId: formData.teacherId || undefined,
+                timeGroup: formData.timeGroup || undefined,
+                time: formData.time || undefined,
+                timeSlotIds: formData.timeSlotIds
+            };
 
-            // 2️⃣ So‘ng avtomatik login qilish
-            const loginRes = await axios.post('/student/login', {
-                username: userData.username,
-                password: userData.password
-            });
+            const response = await axios.post("/auth/register", payload);
+            const pendingEmail = response.data?.email || formData.email.trim().toLowerCase();
+            const nextMessage =
+                response.data?.message ||
+                "Your OTP code is on the way. Verify your email to continue.";
 
-            // 3️⃣ Tokenni saqlash
-            localStorage.setItem("token", loginRes.data.token);
-            localStorage.setItem("role", loginRes.data.user.role);
-            localStorage.setItem("user", JSON.stringify(loginRes.data.user));
-
-            alert("Registration successful! 🎉");
-            navigate("/account");
-
-        } catch (error) {
-            console.error('Registration error:', error);
-            setErrorMsg(error.response?.data?.message || "Registration failed ❌");
+            setSuccess(nextMessage);
+            goToOtpScreen(
+                pendingEmail,
+                nextMessage,
+                response.data?.cooldownSeconds || 60
+            );
+        } catch (requestError) {
+            setError(
+                requestError.response?.data?.message ||
+                    "We could not create your account right now."
+            );
         } finally {
             setLoading(false);
         }
     };
 
-
     return (
-        <div className="signup-page">
-            <h1 className="signup-title">Create Student Account</h1>
+        <AuthShell
+            badge="Create Account"
+            title="Start learning with a secure student account"
+            subtitle="Register with email + OTP or sign up instantly with Google. Everything is designed to feel fast, modern, and trustworthy."
+            footer={
+                <>
+                    Already have an account? <Link to="/sign_in">Sign in</Link>
+                </>
+            }
+        >
+            <div className="auth-card__header">
+                <h2>Create account</h2>
+                <p>
+                    We will send a 6-digit verification code to activate your
+                    account before first login.
+                </p>
+            </div>
 
-            <form onSubmit={handleSignUpSubmit} className="signup-form">
-                {errorMsg && <p className="error-message">{errorMsg}</p>}
+            {success ? <div className="auth-alert auth-alert--success">{success}</div> : null}
+            {error ? <div className="auth-alert auth-alert--error">{error}</div> : null}
 
-                <div className="form-group">
-                    <label>Student turi</label>
+            <GoogleAuthButton
+                onSuccess={handleGoogleSignup}
+                onError={() =>
+                    setError("Google sign-up could not be completed. Please try again.")
+                }
+            />
+
+            {googleLoading ? (
+                <div className="auth-helper-text">Creating your Google account...</div>
+            ) : null}
+
+            <div className="auth-divider">or</div>
+
+            <form className="auth-form" onSubmit={handleSubmit}>
+                <div className="auth-grid">
+                    <div className="auth-field">
+                        <label htmlFor="fullname">Full name</label>
+                        <input
+                            id="fullname"
+                            type="text"
+                            placeholder="Muhammad Ali"
+                            value={formData.fullname}
+                            autoComplete="name"
+                            onChange={(event) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    fullname: event.target.value
+                                }))
+                            }
+                            required
+                        />
+                    </div>
+
+                    <div className="auth-field">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="you@digiedu.com"
+                            value={formData.email}
+                            autoComplete="email"
+                            onChange={(event) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    email: event.target.value
+                                }))
+                            }
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="auth-grid">
+                    <div className="auth-field">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder="At least 6 characters"
+                            value={formData.password}
+                            autoComplete="new-password"
+                            onChange={(event) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    password: event.target.value
+                                }))
+                            }
+                            required
+                        />
+                    </div>
+
+                    <div className="auth-field">
+                        <label htmlFor="confirmPassword">Confirm password</label>
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            placeholder="Repeat your password"
+                            value={formData.confirmPassword}
+                            autoComplete="new-password"
+                            onChange={(event) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    confirmPassword: event.target.value
+                                }))
+                            }
+                            required
+                        />
+                    </div>
+                </div>
+
+                <span className="auth-section-title">Learning setup</span>
+
+                <div className="auth-field">
+                    <label htmlFor="studentType">Student type</label>
                     <select
-                        value={userData.studentType}
-                        onChange={(e) => {
-                            const nextType = e.target.value;
-                            setUserData((prev) => ({
+                        id="studentType"
+                        value={formData.studentType}
+                        onChange={(event) => {
+                            const nextType = event.target.value;
+                            setFormData((prev) => ({
                                 ...prev,
                                 studentType: nextType,
                                 teacherId: nextType === "outsider" ? "" : prev.teacherId,
@@ -134,116 +346,93 @@ function Sign_up() {
                                 time: nextType === "outsider" ? "" : prev.time,
                                 timeSlotIds: nextType === "outsider" ? [] : prev.timeSlotIds
                             }));
+                            setTimeSlots([]);
                         }}
-                        required
                     >
-                        <option value="insider">Insider (teacher bilan)</option>
-                        <option value="outsider">Outsider (mustaqil)</option>
+                        <option value="outsider">Outsider</option>
+                        <option value="insider">Insider</option>
                     </select>
+                    <span className="auth-field__hint">
+                        Choose outsider if you are learning independently, or insider if
+                        you need a teacher + schedule assignment.
+                    </span>
                 </div>
 
-                <div className="form-group">
-                    <label>Username</label>
-                    <input
-                        type="text"
-                        placeholder="Enter username"
-                        value={userData.username}
-                        onChange={(e) => setUserData({ ...userData, username: e.target.value })}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Name</label>
-                    <input
-                        type="text"
-                        placeholder="Enter name"
-                        value={userData.name}
-                        onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Lastname</label>
-                    <input
-                        type="text"
-                        placeholder="Enter lastname"
-                        value={userData.lastname}
-                        onChange={(e) => setUserData({ ...userData, lastname: e.target.value })}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Email</label>
-                    <input
-                        type="email"
-                        placeholder="Enter email"
-                        value={userData.email}
-                        onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                        required
-                    />
-                </div>
-
-                {userData.studentType !== "outsider" && (
-                    <>
-                        <div className="form-group">
-                            <label>Select Teacher</label>
+                {formData.studentType !== "outsider" ? (
+                    <div className="auth-grid">
+                        <div className="auth-field">
+                            <label htmlFor="teacherId">Teacher</label>
                             <select
-                                value={userData.teacherId}
-                                onChange={(e) =>
-                                    setUserData({ ...userData, teacherId: e.target.value })
+                                id="teacherId"
+                                value={formData.teacherId}
+                                onChange={(event) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        teacherId: event.target.value,
+                                        time: "",
+                                        timeSlotIds: []
+                                    }))
                                 }
-                                required
                                 disabled={loadingOptions}
+                                required
                             >
                                 <option value="">Choose a teacher</option>
                                 {teachers.map((teacher) => (
                                     <option key={teacher._id} value={teacher._id}>
-                                        {teacher.name} {teacher.lastname}
+                                        {teacher.fullname ||
+                                            [teacher.name, teacher.lastname].filter(Boolean).join(" ") ||
+                                            teacher.username}
                                     </option>
                                 ))}
                             </select>
                         </div>
 
-                        <div className="form-group">
-                            <label>Juft / Toq</label>
+                        <div className="auth-field">
+                            <label htmlFor="timeGroup">Group</label>
                             <select
-                                value={userData.timeGroup}
-                                onChange={(e) =>
-                                    setUserData({ ...userData, timeGroup: e.target.value })
+                                id="timeGroup"
+                                value={formData.timeGroup}
+                                onChange={(event) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        timeGroup: event.target.value,
+                                        time: "",
+                                        timeSlotIds: []
+                                    }))
                                 }
+                                disabled={loadingOptions || !formData.teacherId}
                                 required
-                                disabled={loadingOptions || !userData.teacherId}
                             >
-                                <option value="">Juft yoki toq tanlang</option>
+                                <option value="">Choose juft or toq</option>
                                 <option value="juft">
-                                    Juft (Seshanba, Payshanba, Shanba)
+                                    Juft (Tue / Thu / Sat)
                                 </option>
                                 <option value="toq">
-                                    Toq (Dushanba, Chorshanba, Juma)
+                                    Toq (Mon / Wed / Fri)
                                 </option>
                             </select>
                         </div>
 
-                        <div className="form-group">
-                            <label>Select Time</label>
+                        <div className="auth-field" style={{ gridColumn: "1 / -1" }}>
+                            <label htmlFor="time">Time slot</label>
                             <select
-                                value={userData.time}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    const match = timeSlots.find((slot) => slot.time === value);
-                                    setUserData({
-                                        ...userData,
+                                id="time"
+                                value={formData.time}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    const matched = timeSlots.find((slot) => slot.time === value);
+                                    setFormData((prev) => ({
+                                        ...prev,
                                         time: value,
-                                        timeSlotIds: match?.slotIds || []
-                                    });
+                                        timeSlotIds: matched?.slotIds || []
+                                    }));
                                 }}
-                                required
                                 disabled={
-                                    loadingOptions || !userData.teacherId || !userData.timeGroup
+                                    loadingOptions ||
+                                    !formData.teacherId ||
+                                    !formData.timeGroup
                                 }
+                                required
                             >
                                 <option value="">Choose a time</option>
                                 {timeSlots.map((slot) => (
@@ -253,33 +442,15 @@ function Sign_up() {
                                 ))}
                             </select>
                         </div>
-                    </>
-                )}
+                    </div>
+                ) : null}
 
-                <div className="form-group">
-                    <label>Password</label>
-                    <input
-                        type="password"
-                        placeholder="Enter password"
-                        value={userData.password}
-                        onChange={(e) => setUserData({ ...userData, password: e.target.value })}
-                        required
-                    />
-                </div>
-
-                <button type="submit" className="signup-button" disabled={loading}>
-                    {loading ? "Registering..." : "Register"}
+                <button className="auth-button" type="submit" disabled={loading}>
+                    {loading ? "Sending verification code..." : "Create account"}
                 </button>
-
-                <p className="signin-link">
-                    Already have an account?
-                    <Link to="/sign_in"> Sign In</Link>
-                </p>
             </form>
-
-            <Link to="/" className="back-link">← Back to Home</Link>
-        </div>
+        </AuthShell>
     );
 }
 
-export default Sign_up;
+export default SignUp;

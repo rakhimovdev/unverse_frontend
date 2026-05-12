@@ -9,7 +9,8 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
     const [loaded, setLoaded] = useState(false);
 
     const role = user?.role;
-    const canView = role === "mooc" || role === "mock_user";
+    const canView =
+        role === "student" || role === "mooc" || role === "mock_user";
 
     useEffect(() => {
         let isActive = true;
@@ -67,13 +68,22 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
         };
     }, [user, canView]);
 
-    const latest = useMemo(() => {
-        if (!results?.length) return null;
-        const sorted = [...results].sort(
+    const sortedResults = useMemo(() => {
+        if (!results?.length) return [];
+        return [...results].sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
-        return sorted[0];
     }, [results]);
+
+    const latestOverall = useMemo(
+        () => sortedResults.find((item) => item.taskType === "overall") || null,
+        [sortedResults]
+    );
+
+    const latestFeedback = useMemo(
+        () => sortedResults.find((item) => item.taskType !== "overall") || null,
+        [sortedResults]
+    );
 
     const formatBand = (value) => {
         if (value == null || value === "") return "—";
@@ -118,7 +128,10 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
     }
 
     const bandValue = formatBand(
-        latest?.result?.estimated_band ?? latest?.result?.band_score
+        latestOverall?.result?.estimated_band ??
+            latestOverall?.result?.band_score ??
+            latestFeedback?.result?.estimated_band ??
+            latestFeedback?.result?.band_score
     );
 
     const numericBand = (value) => {
@@ -167,7 +180,7 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
 
                 {loading ? (
                     <div className="writing-result-spinner" />
-                ) : error || !latest ? (
+                ) : error || (!latestOverall && !latestFeedback) ? (
                     <div className="writing-result-empty">No AI result available yet.</div>
                 ) : (
                     <>
@@ -206,28 +219,30 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
                             <div className="writing-result-section-header">
                                 <h2>Writing feedback</h2>
                                 <span className="writing-result-date">
-                                    {formatDate(latest.createdAt)}
+                                    {formatDate(
+                                        latestFeedback?.createdAt || latestOverall?.createdAt
+                                    )}
                                 </span>
                             </div>
                             <div className="writing-result-feedback">
                                 <div>
                                     <strong>Grammar:</strong>{" "}
-                                    {formatText(latest.result?.grammar_feedback)}
+                                    {formatText(latestFeedback?.result?.grammar_feedback)}
                                 </div>
                                 <div>
                                     <strong>Vocabulary:</strong>{" "}
-                                    {formatText(latest.result?.vocabulary_feedback)}
+                                    {formatText(latestFeedback?.result?.vocabulary_feedback)}
                                 </div>
                                 <div>
                                     <strong>Coherence:</strong>{" "}
-                                    {formatText(latest.result?.coherence_feedback)}
+                                    {formatText(latestFeedback?.result?.coherence_feedback)}
                                 </div>
                             </div>
                         </div>
 
                         <div className="writing-result-card writing-result-tips">
                             <div className="writing-result-label">Improvement Tips</div>
-                            <p>{formatText(latest.result?.improvement_tips)}</p>
+                            <p>{formatText(latestFeedback?.result?.improvement_tips)}</p>
                         </div>
                     </>
                 )}

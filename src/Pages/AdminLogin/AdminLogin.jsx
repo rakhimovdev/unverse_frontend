@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../../Api/Axios";
+import { useAuth } from "../../context/AuthContext";
 import "./AdminLogin.css";
 
 function AdminLogin() {
+    const { persistSession } = useAuth();
     const [loginData, setLoginData] = useState({
         username: "",
         password: ""
@@ -24,9 +26,13 @@ function AdminLogin() {
                     return;
                 }
 
-                localStorage.setItem("token", response.data.token);
-                localStorage.setItem("role", userRole);
-                localStorage.setItem("user", JSON.stringify(response.data.user));
+                persistSession({
+                    token: response.data.token,
+                    user: {
+                        ...response.data.user,
+                        role: userRole
+                    }
+                });
                 navigate("/admin");
             } else {
                 setErrorMsg("Token topilmadi ❌");
