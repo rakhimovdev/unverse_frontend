@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import axios from "../../Api/Axios";
+import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
 
 import "./Solving.css";
 
@@ -228,155 +229,108 @@ const getQuestionDefs = (html) => {
 
 function Preview({ passage, testName, answers = [], onAnswersChange }) {
     const html = passage.testText || "";
-    const markerRegex = MARKER_REGEX;
 
     const renderQuestionHTML = () => {
-        const regex = new RegExp(markerRegex);
-        let questionIndex = 0;
-        let nodeKey = 0;
-        let lastIndex = 0;
-        const nodes = [];
-        let match;
+        return renderHtmlWithQuestionTokens({
+            html,
+            parseToken,
+            rootKey: "preview-question",
+            renderToken: ({ parsed, currentIndex, key }) => {
+                if (parsed.kind === "input") {
+                    return (
+                        <input
+                            key={key}
+                            value={answers[currentIndex] || ""}
+                            onChange={(e) => {
+                                const copy = [...answers];
+                                copy[currentIndex] = e.target.value;
+                                onAnswersChange(copy);
+                            }}
+                        />
+                    );
+                }
 
-        while ((match = regex.exec(html))) {
-            const rawToken = match[1];
-            nodes.push(
-                <span
-                    key={`text-${nodeKey++}`}
-                    dangerouslySetInnerHTML={{
-                        __html: html.slice(lastIndex, match.index),
-                    }}
-                />
-            );
+                if (parsed.kind === "multi") {
+                    const selected = splitMultiValue(answers[currentIndex]);
+                    return (
+                        <span key={key} className="preview-multi">
+                            {parsed.options.map((opt, optIndex) => {
+                                const checked = selected.some(
+                                    (item) => item.toLowerCase() === opt.toLowerCase()
+                                );
+                                return (
+                                    <label key={`multi-${currentIndex}-${optIndex}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() => {
+                                                const copy = [...answers];
+                                                copy[currentIndex] = toggleMultiValue(
+                                                    copy[currentIndex],
+                                                    opt,
+                                                    parsed.max || 2
+                                                );
+                                                onAnswersChange(copy);
+                                            }}
+                                        />
+                                        {opt}
+                                    </label>
+                                );
+                            })}
+                        </span>
+                    );
+                }
 
-            const parsed = parseToken(rawToken);
+                if (parsed.kind === "select") {
+                    return (
+                        <select
+                            key={key}
+                            value={answers[currentIndex] || ""}
+                            onChange={(e) => {
+                                const copy = [...answers];
+                                copy[currentIndex] = e.target.value;
+                                onAnswersChange(copy);
+                            }}
+                        >
+                            {parsed.includeEmpty !== false && (
+                                <option value=""></option>
+                            )}
+                            {parsed.options.map((opt, optIndex) => (
+                                <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
+                                    {opt}
+                                </option>
+                            ))}
+                        </select>
+                    );
+                }
 
-            if (!parsed) {
-                nodes.push(
-                    <span
-                        key={`unknown-${nodeKey++}`}
-                        dangerouslySetInnerHTML={{
-                            __html: html.slice(match.index, regex.lastIndex),
-                        }}
-                    />
-                );
-                lastIndex = regex.lastIndex;
-                continue;
-            }
-
-            if (parsed.kind === "input") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <input
-                        key={`input-${nodeKey++}`}
-                        value={answers[currentIndex] || ""}
-                        onChange={(e) => {
-                            const copy = [...answers];
-                            copy[currentIndex] = e.target.value;
-                            onAnswersChange(copy);
-                        }}
-                    />
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "multi") {
-                const currentIndex = questionIndex;
-                const selected = splitMultiValue(answers[currentIndex]);
-                nodes.push(
-                    <span key={`multi-${nodeKey++}`} className="preview-multi">
-                        {parsed.options.map((opt, optIndex) => {
-                            const checked = selected.some(
-                                (item) => item.toLowerCase() === opt.toLowerCase()
-                            );
-                            return (
-                                <label key={`multi-${currentIndex}-${optIndex}`}>
+                if (parsed.kind === "radio") {
+                    return (
+                        <span key={key}>
+                            {parsed.options.map((opt, optIndex) => (
+                                <label key={`radio-${currentIndex}-${optIndex}`}>
                                     <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() => {
+                                        type="radio"
+                                        name={`radio-${currentIndex}`}
+                                        value={opt}
+                                        style={{ marginRight: "6px" }}
+                                        checked={answers[currentIndex] === opt}
+                                        onChange={(e) => {
                                             const copy = [...answers];
-                                            copy[currentIndex] = toggleMultiValue(
-                                                copy[currentIndex],
-                                                opt,
-                                                parsed.max || 2
-                                            );
+                                            copy[currentIndex] = e.target.value;
                                             onAnswersChange(copy);
                                         }}
                                     />
                                     {opt}
                                 </label>
-                            );
-                        })}
-                    </span>
-                );
-                questionIndex++;
-            }
+                            ))}
+                        </span>
+                    );
+                }
 
-            if (parsed.kind === "select") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <select
-                        key={`select-${nodeKey++}`}
-                        value={answers[currentIndex] || ""}
-                        onChange={(e) => {
-                            const copy = [...answers];
-                            copy[currentIndex] = e.target.value;
-                            onAnswersChange(copy);
-                        }}
-                    >
-                        {parsed.includeEmpty !== false && (
-                            <option value=""></option>
-                        )}
-                        {parsed.options.map((opt, optIndex) => (
-                            <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
-                                {opt}
-                            </option>
-                        ))}
-                    </select>
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "radio") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <span key={`radio-${nodeKey++}`}>
-                        {parsed.options.map((opt, optIndex) => (
-                            <label key={`radio-${currentIndex}-${optIndex}`}>
-                                <input
-                                    type="radio"
-                                    name={`radio-${currentIndex}`}
-                                    value={opt}
-                                    style={{ marginRight: "6px" }}
-                                    checked={answers[currentIndex] === opt}
-                                    onChange={(e) => {
-                                        const copy = [...answers];
-                                        copy[currentIndex] = e.target.value;
-                                        onAnswersChange(copy);
-                                    }}
-                                />
-                                {opt}
-                            </label>
-                        ))}
-                    </span>
-                );
-                questionIndex++;
-            }
-
-            lastIndex = regex.lastIndex;
-        }
-
-        nodes.push(
-            <span
-                key={`end-${nodeKey++}`}
-                dangerouslySetInnerHTML={{
-                    __html: html.slice(lastIndex),
-                }}
-            />
-        );
-
-        return nodes;
+                return null;
+            },
+        });
     };
 
     useEffect(() => {

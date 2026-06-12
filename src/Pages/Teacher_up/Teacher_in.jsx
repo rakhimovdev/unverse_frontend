@@ -76,9 +76,9 @@ function Teacher_in() {
 
                 <button type="submit" className="signin-button">Log In</button>
 
-                <p className="signup-link">
+                {/* <p className="signup-link">
                     Don't have an account? <Link to="/sign_up">Sign Up</Link>
-                </p>
+                </p> */}
             </form>
 
             <h1 className="back-link">

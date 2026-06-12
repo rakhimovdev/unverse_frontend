@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "../../Api/Axios";
+import AdminAnalyticsPanel from "./AdminAnalyticsPanel";
+import AdminProPanel from "./AdminProPanel";
+import AdminResultsPanel from "./AdminResultsPanel";
 import "./Admin.css";
 
 const READING_ACADEMIC_TABLE = [
@@ -96,6 +99,7 @@ function Admin() {
     const [historyStudent, setHistoryStudent] = useState(null);
     const [historyRecords, setHistoryRecords] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
+    const [analyticsRefreshNonce, setAnalyticsRefreshNonce] = useState(0);
 
     const todayKey = useMemo(() => {
         const now = new Date();
@@ -439,6 +443,10 @@ function Admin() {
         }
     };
 
+    const handleProActionComplete = () => {
+        setAnalyticsRefreshNonce((prev) => prev + 1);
+    };
+
     if (role !== "admin") {
         return (
             <div className="admin-page">
@@ -482,6 +490,24 @@ function Admin() {
                             onClick={() => setActiveView("schedule")}
                         >
                             Dars Jadvali
+                        </button>
+                        <button
+                            className={`btn ${activeView === "pro" ? "btn--primary" : "btn--ghost"}`}
+                            onClick={() => setActiveView("pro")}
+                        >
+                            PRO Panel
+                        </button>
+                        <button
+                            className={`btn ${activeView === "analytics" ? "btn--primary" : "btn--ghost"}`}
+                            onClick={() => setActiveView("analytics")}
+                        >
+                            Analytics
+                        </button>
+                        <button
+                            className={`btn ${activeView === "results" ? "btn--primary" : "btn--ghost"}`}
+                            onClick={() => setActiveView("results")}
+                        >
+                            All Results
                         </button>
                     </div>
 
@@ -851,6 +877,21 @@ function Admin() {
                                 )}
                             </section>
                         </div>
+                    ) : activeView === "pro" ? (
+                        <AdminProPanel
+                            headers={headers}
+                            onActionComplete={handleProActionComplete}
+                            setActionMsg={setActionMsg}
+                        />
+                    ) : activeView === "analytics" ? (
+                        <AdminAnalyticsPanel
+                            headers={headers}
+                            active={activeView === "analytics"}
+                            refreshNonce={analyticsRefreshNonce}
+                            setActionMsg={setActionMsg}
+                        />
+                    ) : activeView === "results" ? (
+                        <AdminResultsPanel active={activeView === "results"} />
                     ) : (
                         <section className="admin-card">
                             <h2>Dars Jadvali</h2>

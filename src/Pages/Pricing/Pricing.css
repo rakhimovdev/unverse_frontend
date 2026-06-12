@@ -1,0 +1,206 @@
+.upgrade-page {
+    min-height: calc(100vh - 120px);
+    padding: 120px 24px 56px;
+    background:
+        radial-gradient(circle at top left, rgba(255, 210, 120, 0.28), transparent 32%),
+        linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
+}
+
+.upgrade-hero,
+.upgrade-grid,
+.upgrade-footer {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.upgrade-hero {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 22px;
+    margin-bottom: 26px;
+}
+
+.upgrade-hero__copy,
+.upgrade-hero__note,
+.upgrade-card,
+.upgrade-footer {
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.14);
+    border-radius: 24px;
+    box-shadow: 0 18px 40px rgba(var(--u-shadow-rgb), 0.12);
+    backdrop-filter: blur(14px);
+}
+
+.upgrade-hero__copy,
+.upgrade-hero__note,
+.upgrade-footer {
+    padding: 28px;
+}
+
+.upgrade-hero__eyebrow {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(199, 142, 21, 0.12);
+    color: #8a5a00;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.upgrade-hero h1 {
+    margin: 18px 0 12px;
+    font-family: var(--u-display);
+    font-size: clamp(34px, 4vw, 54px);
+    line-height: 1.02;
+    color: var(--u-ink);
+}
+
+.upgrade-hero p,
+.upgrade-hero li,
+.upgrade-footer p {
+    color: var(--u-muted);
+    line-height: 1.6;
+}
+
+.upgrade-status {
+    margin-top: 18px;
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(var(--u-primary-rgb), 0.08);
+    color: var(--u-ink);
+}
+
+.upgrade-status.is-pro {
+    background: rgba(209, 160, 43, 0.12);
+    color: #7a5100;
+}
+
+.upgrade-hero__note h2 {
+    margin: 0 0 12px;
+    color: var(--u-ink);
+}
+
+.upgrade-hero__note ol {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.upgrade-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.upgrade-card {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.upgrade-card__badge {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(var(--u-primary-rgb), 0.08);
+    color: var(--u-primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.upgrade-card h2 {
+    margin: 12px 0 6px;
+    color: var(--u-ink);
+}
+
+.upgrade-card__price {
+    margin: 0;
+    font-size: 15px;
+    color: #8a5a00;
+    font-weight: 700;
+}
+
+.upgrade-card__benefits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+    color: var(--u-muted);
+}
+
+.upgrade-card__benefits li::before {
+    content: "•";
+    color: var(--u-primary);
+    font-weight: 700;
+    margin-right: 8px;
+}
+
+.upgrade-card__button,
+.upgrade-footer__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.upgrade-card__button {
+    margin-top: auto;
+    background: linear-gradient(135deg, #0f4fbf, #2b7cff);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(15, 79, 191, 0.2);
+}
+
+.upgrade-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.upgrade-footer p {
+    margin: 0;
+}
+
+.upgrade-footer__link {
+    background: rgba(var(--u-primary-rgb), 0.08);
+    color: var(--u-primary);
+}
+
+@media (max-width: 1080px) {
+    .upgrade-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 820px) {
+    .upgrade-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .upgrade-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .upgrade-page {
+        padding: 108px 16px 40px;
+    }
+
+    .upgrade-grid {
+        grid-template-columns: 1fr;
+    }
+}

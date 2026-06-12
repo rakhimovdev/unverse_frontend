@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "../../Api/Axios";
+import { createAttemptKey } from "../../utils/resultAttempt";
 import "./App.css";
 
 const TASKS = [
@@ -85,13 +86,16 @@ function Index() {
         setError("");
 
         try {
+            const attemptKey = createAttemptKey("writing", test._id);
+
             // 1️⃣ SAVE JAVOB
             await axios.post(
                 "/scorew/response",
                 {
                     writingId: test._id,
                     task1Answer: answers.task1.trim(),
-                    task2Answer: answers.task2.trim()
+                    task2Answer: answers.task2.trim(),
+                    attemptKey
                 },
                 {
                     headers: {
@@ -107,7 +111,9 @@ function Index() {
                     essay: answers.task1.trim(),
                     task: "task1",
                     language: "uz",
-                    writingId: test._id
+                    prompt: task1.text || task1.topic,
+                    writingId: test._id,
+                    attemptKey
                 },
                 {
                     headers: {
@@ -123,7 +129,9 @@ function Index() {
                     essay: answers.task2.trim(),
                     task: "task2",
                     language: "uz",
-                    writingId: test._id
+                    prompt: task2.text || task2.topic,
+                    writingId: test._id,
+                    attemptKey
                 },
                 {
                     headers: {

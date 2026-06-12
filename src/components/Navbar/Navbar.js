@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getStoredRole, getStoredToken } from "../../utils/authStorage";
 import { isAuthExperiencePath, resolveDashboardPath } from "../../utils/authRoutes";
+import { getPlanSummary } from "../../utils/subscription";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -13,6 +14,16 @@ const Navbar = () => {
     const isLoggedIn = !!token;
     const accountHref = resolveDashboardPath(role);
     const accountLabel = role === "admin" ? "Admin" : "Account";
+    const planSummary = getPlanSummary(user);
+    const displayName =
+        user?.fullname || user?.username || user?.email || accountLabel;
+    const initials = String(displayName)
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part[0] || "")
+        .join("")
+        .toUpperCase();
 
     if (isAuthExperiencePath(location.pathname)) {
         return null;
@@ -79,6 +90,32 @@ const Navbar = () => {
                         )
                     ) : (
                         <div className="site-nav__actions-group">
+                            <div className="site-nav__profile">
+                                <div className="site-nav__avatar">
+                                    {user?.avatar ? (
+                                        <img src={user.avatar} alt={displayName} />
+                                    ) : (
+                                        <span>{initials || "U"}</span>
+                                    )}
+                                </div>
+                                <div className="site-nav__profile-copy">
+                                    <strong>{displayName}</strong>
+                                    <span
+                                        className={`site-nav__plan ${
+                                            planSummary.isPro ? "is-pro" : ""
+                                        }`}
+                                    >
+                                        {planSummary.detail}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {!planSummary.isPro && role !== "admin" && role !== "teacher" && (
+                                <Link className="nav-btn nav-btn--primary" to="/upgrade">
+                                    Upgrade
+                                </Link>
+                            )}
+
                             <button className="nav-btn nav-btn--ghost" onClick={handleLogout}>
                                 Logout
                             </button>

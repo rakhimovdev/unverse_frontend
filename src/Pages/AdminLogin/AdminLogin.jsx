@@ -83,9 +83,9 @@ function AdminLogin() {
                 <p className="signup-link">
                     Teacher login? <Link to="/teacher_in">Teacher Sign In</Link>
                 </p>
-                <p className="signup-link">
+                {/* <p className="signup-link">
                     Admin account yo'qmi? <Link to="/admin_signup">Sign Up</Link>
-                </p>
+                </p> */}
             </form>
 
             <Link to="/" className="back-link">← Back to Home</Link>

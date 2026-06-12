@@ -35,6 +35,8 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
 import { studentRoles } from './utils/authRoutes';
+import Pricing from './Pages/Pricing/Pricing';
+import PaymentSuccess from './Pages/PaymentSuccess/PaymentSuccess';
 
 const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -69,6 +71,10 @@ root.render(
             <Route path='/writing' element={<Writing />} />
             <Route path='/writingform' element={<WritingForm />} />
             <Route path='/wresault' element={<WResult />} />
+            {/* Payme uchun yangi routelar */}
+            <Route path='/pricing' element={<Pricing />} />
+            <Route path='/upgrade' element={<Pricing />} />
+            <Route path='/payment/success' element={<PaymentSuccess />} />
 
             <Route element={<PublicOnlyRoute />}>
               <Route path='/sign_in' element={<SignIn />} />
@@ -83,6 +89,7 @@ root.render(
             <Route element={<ProtectedRoute roles={studentRoles} />}>
               <Route path='/account' element={<Account />} />
               <Route path='/dashboard' element={<Account />} />
+              <Route path='/results-center' element={<Account />} />
               <Route path='/reading/:testId' element={<ReadingForm />} />
               <Route path='/listening/audio/:id' element={<SolvingL />} />
               <Route path='/writingpage/:id' element={<WritingPage />} />

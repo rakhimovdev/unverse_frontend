@@ -1,12 +1,32 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "../../Api/Axios";
+import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
+import { createAttemptKey } from "../../utils/resultAttempt";
 import "./Solving.css";
 
 const MARKER_REGEX = /\[\[([^\]]+)\]\]/g;
 const TFNG_OPTIONS = ["True", "False", "Not Given"];
 const YNNG_OPTIONS = ["Yes", "No", "Not Given"];
 const DEFAULT_MC_OPTIONS = ["A", "B", "C", "D"];
+const LISTENING_BAND_TABLE = [
+    { min: 39, max: 40, band: 9 },
+    { min: 37, max: 38, band: 8.5 },
+    { min: 35, max: 36, band: 8 },
+    { min: 32, max: 34, band: 7.5 },
+    { min: 30, max: 31, band: 7 },
+    { min: 26, max: 29, band: 6.5 },
+    { min: 23, max: 25, band: 6 },
+    { min: 18, max: 22, band: 5.5 },
+    { min: 16, max: 17, band: 5 },
+    { min: 13, max: 15, band: 4.5 },
+    { min: 10, max: 12, band: 4 },
+    { min: 6, max: 9, band: 3.5 },
+    { min: 4, max: 5, band: 3 },
+    { min: 2, max: 3, band: 2.5 },
+    { min: 1, max: 1, band: 1 },
+    { min: 0, max: 0, band: 0 }
+];
 
 const normalizeTokenType = (rawType) =>
     rawType
@@ -307,120 +327,13 @@ const isCorrectAnswer = (userValue, correctValue, questionType) => {
     return alternatives.includes(user);
 };
 
-const parseInlineStyle = (styleText) => {
-    if (!styleText) return undefined;
-    const style = {};
-    styleText.split(";").forEach((chunk) => {
-        const [rawKey, rawValue] = chunk.split(":");
-        if (!rawKey || !rawValue) return;
-        const key = rawKey
-            .trim()
-            .toLowerCase()
-            .replace(/-([a-z])/g, (_, char) => char.toUpperCase());
-        const value = rawValue.trim();
-        if (key) {
-            style[key] = value;
-        }
-    });
-    return style;
-};
-
-const mapAttributesToProps = (attributes) => {
-    const props = {};
-    Array.from(attributes || []).forEach((attr) => {
-        const name = attr.name.toLowerCase();
-        const value = attr.value;
-
-        if (name === "class") {
-            props.className = value;
-            return;
-        }
-        if (name === "for") {
-            props.htmlFor = value;
-            return;
-        }
-        if (name === "style") {
-            const style = parseInlineStyle(value);
-            if (style && Object.keys(style).length) {
-                props.style = style;
-            }
-            return;
-        }
-        if (name === "colspan") {
-            props.colSpan = Number(value) || value;
-            return;
-        }
-        if (name === "rowspan") {
-            props.rowSpan = Number(value) || value;
-            return;
-        }
-        props[name] = value;
-    });
-    return props;
-};
-
-const VOID_TAGS = new Set([
-    "area",
-    "base",
-    "br",
-    "col",
-    "embed",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "source",
-    "track",
-    "wbr",
-]);
-
-const normalizeInlineTokens = (html) => {
-    if (!html || typeof window === "undefined" || !window.DOMParser) {
-        return html || "";
-    }
-
-    try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(`<div>${html}</div>`, "text/html");
-        const wrapper = doc.body.firstChild;
-        if (!wrapper) return html;
-
-        const tokenOnlyRegex = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
-        const isEmptyText = (node) =>
-            node && node.nodeType === 3 && !node.textContent.trim();
-
-        let node = wrapper.firstChild;
-        while (node) {
-            const nextNode = node.nextSibling;
-            let text = "";
-            if (node.nodeType === 3) {
-                text = node.textContent || "";
-            } else if (node.nodeType === 1) {
-                text = node.textContent || "";
-            }
-
-            const cleaned = text.replace(/\u00a0/g, " ").trim();
-            if (cleaned && tokenOnlyRegex.test(cleaned)) {
-                let prev = node.previousSibling;
-                while (prev && (isEmptyText(prev) || (prev.nodeType === 1 && !prev.textContent.trim()))) {
-                    prev = prev.previousSibling;
-                }
-
-                if (prev && prev.nodeType === 1) {
-                    prev.append(doc.createTextNode(` ${cleaned}`));
-                    wrapper.removeChild(node);
-                }
-            }
-
-            node = nextNode;
-        }
-
-        return wrapper.innerHTML;
-    } catch (err) {
-        return html;
-    }
+const getBandScore = (rawScore) => {
+    const value = Number(rawScore);
+    if (!Number.isFinite(value)) return null;
+    const row = LISTENING_BAND_TABLE.find(
+        (item) => value >= item.min && value <= item.max
+    );
+    return row ? row.band : null;
 };
 
 function ListeningTest() {
@@ -558,12 +471,41 @@ function ListeningTest() {
     const handleSubmit = useCallback(async () => {
         if (!test || results) return;
 
+        let globalQuestionNumber = 0;
+        const correctAnswers = [];
+        const wrongAnswers = [];
+
         const check = parts.map((part, partIndex) => {
             const answers = userAnswers[partIndex] || [];
+            const questionMeta = part.questions || [];
+            const defs = part.testText ? getQuestionDefs(part.testText) : [];
+
             return answers.map((ans, idx) => {
-                const correct = part.questions?.[idx]?.value || "";
-                const qType = part.questions?.[idx]?.type || "";
-                return isCorrectAnswer(ans, correct, qType);
+                globalQuestionNumber += 1;
+                const meta = questionMeta[idx] || {};
+                const correct = meta.value || "";
+                const qType = meta.type || defs[idx]?.type || "";
+                const isRight = isCorrectAnswer(ans, correct, qType);
+                const reviewItem = {
+                    questionNumber: globalQuestionNumber,
+                    groupNumber: partIndex + 1,
+                    label: `Section ${partIndex + 1} · Q${globalQuestionNumber}`,
+                    prompt: meta.question || `Question ${globalQuestionNumber}`,
+                    questionType: qType || "text",
+                    userAnswer: String(ans || ""),
+                    correctAnswer: correct,
+                    explanation: correct
+                        ? `Correct answer: ${correct}. Replay the matching moment in Section ${partIndex + 1}.`
+                        : "No official answer key was provided for this item."
+                };
+
+                if (isRight) {
+                    correctAnswers.push(reviewItem);
+                } else if (String(ans || "").trim() || String(correct || "").trim()) {
+                    wrongAnswers.push(reviewItem);
+                }
+
+                return isRight;
             });
         });
 
@@ -586,9 +528,27 @@ function ListeningTest() {
         setScoreSummary({ totalCorrect, totalQuestions, partTotals });
 
         try {
+            const attemptKey = createAttemptKey("listening", test._id);
             await axios.post(
                 "/scorel/add",
-                { listeningId: test._id, score: totalCorrect },
+                {
+                    listeningId: test._id,
+                    score: totalCorrect,
+                    attemptKey,
+                    listeningDetails: {
+                        sectionScores: partTotals.map((part, index) => ({
+                            label: `Section ${index + 1}`,
+                            correct: part.correct,
+                            total: part.total
+                        })),
+                        rawScore: totalCorrect,
+                        rawTotal: totalQuestions,
+                        academicBand: totalQuestions === 40 ? getBandScore(totalCorrect) : null,
+                        generalBand: totalQuestions === 40 ? getBandScore(totalCorrect) : null,
+                        correctAnswers,
+                        wrongAnswers
+                    }
+                },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
             );
             console.log("Score saqlandi ✅");
@@ -637,13 +597,6 @@ function ListeningTest() {
     }, [id]);
 
     const renderQuestionHTML = (part, partIndex) => {
-        const html = normalizeInlineTokens(part?.testText || "");
-        if (!html) return null;
-
-        if (typeof window === "undefined" || !window.DOMParser) {
-            return <span dangerouslySetInnerHTML={{ __html: html }} />;
-        }
-
         const answers = userAnswers[partIndex] || [];
         const partResults = results?.[partIndex] || [];
         const correctAnswers = part?.questions || [];
@@ -766,71 +719,13 @@ function ListeningTest() {
             return null;
         };
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(`<div>${html}</div>`, "text/html");
-        const root = doc.body.firstChild;
-        if (!root) return null;
-
-        let questionIndex = 0;
-
-        const renderNode = (node, key) => {
-            if (node.nodeType === 3) {
-                const text = node.textContent || "";
-                if (!text) return null;
-
-                const regex = new RegExp(MARKER_REGEX);
-                const parts = [];
-                let lastIndex = 0;
-                let match;
-
-                while ((match = regex.exec(text))) {
-                    if (match.index > lastIndex) {
-                        parts.push(text.slice(lastIndex, match.index));
-                    }
-
-                    const parsed = parseToken(match[1]);
-                    if (!parsed) {
-                        parts.push(match[0]);
-                    } else {
-                        const currentIndex = questionIndex;
-                        parts.push(renderTokenElement(parsed, currentIndex, `${key}-t-${currentIndex}`));
-                        questionIndex++;
-                    }
-
-                    lastIndex = match.index + match[0].length;
-                }
-
-                if (lastIndex < text.length) {
-                    parts.push(text.slice(lastIndex));
-                }
-
-                return parts.filter((part) => part !== null);
-            }
-
-            if (node.nodeType === 1) {
-                const tag = node.tagName.toLowerCase();
-                const props = mapAttributesToProps(node.attributes);
-                if (VOID_TAGS.has(tag)) {
-                    return React.createElement(tag, { ...props, key });
-                }
-                const children = [];
-                node.childNodes.forEach((child, idx) => {
-                    const rendered = renderNode(child, `${key}-${idx}`);
-                    if (Array.isArray(rendered)) {
-                        children.push(...rendered);
-                    } else if (rendered != null) {
-                        children.push(rendered);
-                    }
-                });
-                return React.createElement(tag, { ...props, key }, children);
-            }
-
-            return null;
-        };
-
-        return Array.from(root.childNodes).map((child, idx) =>
-            renderNode(child, `root-${partIndex}-${idx}`)
-        );
+        return renderHtmlWithQuestionTokens({
+            html: part?.testText || "",
+            parseToken,
+            rootKey: `listening-${partIndex}`,
+            renderToken: ({ parsed, currentIndex, key }) =>
+                renderTokenElement(parsed, currentIndex, key),
+        });
     };
 
     const activePartData = parts[activePart];

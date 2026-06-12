@@ -1,314 +1,258 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "../../Api/Axios";
-import WritingResult from "../../components/WritingResult";
-
-const READING_ACADEMIC_TABLE = [
-    { min: 39, max: 40, band: 9 },
-    { min: 37, max: 38, band: 8.5 },
-    { min: 35, max: 36, band: 8 },
-    { min: 33, max: 34, band: 7.5 },
-    { min: 30, max: 32, band: 7 },
-    { min: 27, max: 29, band: 6.5 },
-    { min: 23, max: 26, band: 6 },
-    { min: 19, max: 22, band: 5.5 },
-    { min: 15, max: 18, band: 5 },
-    { min: 12, max: 14, band: 4.5 },
-    { min: 9, max: 11, band: 4 },
-    { min: 5, max: 8, band: 3 },
-    { min: 0, max: 4, band: 0 }
-];
-
-const READING_GENERAL_TABLE = [
-    { min: 39, max: 40, band: 9 },
-    { min: 38, max: 38, band: 8.5 },
-    { min: 37, max: 37, band: 8 },
-    { min: 36, max: 36, band: 7.5 },
-    { min: 34, max: 35, band: 7 },
-    { min: 32, max: 33, band: 6.5 },
-    { min: 30, max: 31, band: 6 },
-    { min: 27, max: 29, band: 5.5 },
-    { min: 23, max: 26, band: 5 },
-    { min: 19, max: 22, band: 4.5 },
-    { min: 15, max: 18, band: 4 },
-    { min: 12, max: 14, band: 3 },
-    { min: 0, max: 11, band: 0 }
-];
-
-const LISTENING_BAND_TABLE = [
-    { min: 39, max: 40, band: 9 },
-    { min: 37, max: 38, band: 8.5 },
-    { min: 35, max: 36, band: 8 },
-    { min: 32, max: 34, band: 7.5 },
-    { min: 30, max: 31, band: 7 },
-    { min: 26, max: 29, band: 6.5 },
-    { min: 23, max: 25, band: 6 },
-    { min: 18, max: 22, band: 5.5 },
-    { min: 16, max: 17, band: 5 },
-    { min: 13, max: 15, band: 4.5 },
-    { min: 10, max: 12, band: 4 },
-    { min: 6, max: 9, band: 3.5 },
-    { min: 4, max: 5, band: 3 },
-    { min: 2, max: 3, band: 2.5 },
-    { min: 1, max: 1, band: 1 },
-    { min: 0, max: 0, band: 0 }
-];
-
-const getBandScore = (rawScore, table) => {
-    const value = Number(rawScore);
-    if (!Number.isFinite(value)) return null;
-    const row = table.find((r) => value >= r.min && value <= r.max);
-    return row ? row.band : null;
-};
-
-const getLatestByDate = (items) => {
-    if (!Array.isArray(items) || items.length === 0) return null;
-    return items.reduce((latest, current) => {
-        if (!latest) return current;
-        const latestTime = new Date(latest.createdAt).getTime();
-        const currentTime = new Date(current.createdAt).getTime();
-        return currentTime > latestTime ? current : latest;
-    }, null);
-};
+import { Link } from "react-router-dom";
+import { fetchResultDetail, fetchUserResults } from "../../Api/results";
+import BandCard from "../../components/results/BandCard";
+import HistoryChart from "../../components/results/HistoryChart";
+import ResultCard from "../../components/results/ResultCard";
+import "../../components/results/ResultsCenter.css";
+import { useAuth } from "../../context/AuthContext";
+import {
+    buildDashboardBands,
+    buildHistoryPoints,
+    filterResultsByModule,
+    getUserDisplayName,
+    RESULT_MODULE_OPTIONS,
+    sortResultsNewestFirst
+} from "../../utils/ieltsResults";
+import { getPlanSummary } from "../../utils/subscription";
 
 function Account() {
+    const { user, loading: authLoading, refreshCurrentUser } = useAuth();
     const [results, setResults] = useState([]);
-    const [writingResults, setWritingResults] = useState([]);
-    const [listeningResults, setListeningResults] = useState([]);
-    const [writingAiResults, setWritingAiResults] = useState([]);
-    const [user, setUser] = useState(null);
+    const [detailCache, setDetailCache] = useState({});
+    const [expandedId, setExpandedId] = useState("");
     const [loading, setLoading] = useState(true);
-    const role = localStorage.getItem("role");
-    const isAiUser = role === "mooc" || role === "mock_user";
-    const canUseAiWriting =
-        role === "student" || role === "mooc" || role === "mock_user";
+    const [error, setError] = useState("");
+    const [selectedModule, setSelectedModule] = useState("all");
+    const [searchValue, setSearchValue] = useState("");
 
-    // Foydalanuvchi va natijalarni olish
     useEffect(() => {
-        const fetchData = async () => {
+        let isActive = true;
+
+        const loadResults = async () => {
+            setLoading(true);
+            setError("");
+
             try {
-                // Tokenni olish
-                const token = localStorage.getItem("token");
-
-                // User ma'lumotlarini olish
-                const resUser = await axios.get("/score/me", {
-                    headers: { Authorization: token }
-                });
-                setUser(resUser.data);
-
-                // Natijalarni olish
-                const resScores = await axios.get("/score/my", {
-                    headers: { Authorization: token }
-                });
-                setResults(resScores.data);
-
-                const resListening = await axios.get("/scorel/my", {
-                    headers: { Authorization: token }
-                });
-                setListeningResults(resListening.data);
-
-                if (canUseAiWriting) {
-                    const resWritingAi = await axios.get("/api/writing/ai-results", {
-                        headers: { Authorization: token }
-                    });
-                    const aiPayload = Array.isArray(resWritingAi.data)
-                        ? resWritingAi.data
-                        : Array.isArray(resWritingAi.data?.result)
-                        ? resWritingAi.data.result
-                        : [];
-                    setWritingAiResults(aiPayload);
-                } else {
-                    setWritingAiResults([]);
+                if (!user) {
+                    await refreshCurrentUser();
                 }
 
-                if (role === "student" || role === "mooc") {
-                    const resWriting = await axios.get("/scorew/my", {
-                        headers: { Authorization: token }
-                    });
-                    setWritingResults(resWriting.data);
-                } else {
-                    setWritingResults([]);
-                }
+                const payload = await fetchUserResults();
+                if (!isActive) return;
+
+                setResults(sortResultsNewestFirst(payload));
             } catch (err) {
-                console.error("Error loading account:", err);
+                if (!isActive) return;
+                setError(err.response?.data?.message || "Failed to load results.");
             } finally {
-                setLoading(false);
+                if (isActive) setLoading(false);
             }
         };
 
-        fetchData();
-    }, [role, canUseAiWriting]);
+        loadResults();
 
-    const readingBands = useMemo(
-        () =>
-            results.map((r) => {
-                const raw = r.score;
-                return {
-                    academic: getBandScore(raw, READING_ACADEMIC_TABLE),
-                    general: getBandScore(raw, READING_GENERAL_TABLE)
-                };
-            }),
-        [results]
+        return () => {
+            isActive = false;
+        };
+    }, [refreshCurrentUser, user]);
+
+    const planSummary = useMemo(() => getPlanSummary(user), [user]);
+    const bands = useMemo(() => buildDashboardBands(results), [results]);
+    const historyPoints = useMemo(() => buildHistoryPoints(results), [results]);
+    const moduleResults = useMemo(
+        () => filterResultsByModule(results, selectedModule),
+        [results, selectedModule]
     );
 
-    const listeningBands = useMemo(
-        () =>
-            listeningResults.map((r) => getBandScore(r.score, LISTENING_BAND_TABLE)),
-        [listeningResults]
-    );
+    const displayedResults = useMemo(() => {
+        const safeSearch = searchValue.trim().toLowerCase();
 
-    const latestReadingBand = useMemo(() => {
-        const latest = getLatestByDate(results);
-        return latest ? getBandScore(latest.score, READING_ACADEMIC_TABLE) : null;
-    }, [results]);
+        return moduleResults.filter((result) => {
+            if (!safeSearch) return true;
 
-    const latestListeningBand = useMemo(() => {
-        const latest = getLatestByDate(listeningResults);
-        return latest ? getBandScore(latest.score, LISTENING_BAND_TABLE) : null;
-    }, [listeningResults]);
+            const haystack = [
+                result.testName,
+                result.moduleType,
+                result.userId?.email,
+                result.userId?.username
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
 
-    if (loading) return <p>Loading...</p>;
+            return haystack.includes(safeSearch);
+        });
+    }, [moduleResults, searchValue]);
 
-    return (
-        <div className="container_acc" style={{ padding: "20px" }}>
-            <div className="detailes" style={{ marginBottom: "30px" }}>
-                <div className="info">
-                    <h1>Name: {user?.name}</h1>
-                    <h1>Lastname: {user?.lastname}</h1>
-                    <h2>Username: {user?.username}</h2>
-                    <h2>Email: {user?.email}</h2>
+    const emptyStateMessage = useMemo(() => {
+        if (selectedModule !== "all" && !moduleResults.length) {
+            return "No results found for this section.";
+        }
+
+        if (searchValue.trim()) {
+            return selectedModule === "all"
+                ? "No results match your search."
+                : "No results match your search in this section.";
+        }
+
+        return "No test results yet.";
+    }, [moduleResults.length, searchValue, selectedModule]);
+
+    const handleToggle = async (resultId) => {
+        const nextExpanded = expandedId === resultId ? "" : resultId;
+        setExpandedId(nextExpanded);
+
+        if (!nextExpanded || detailCache[resultId]) return;
+
+        try {
+            const detail = await fetchResultDetail(resultId);
+            setDetailCache((prev) => ({ ...prev, [resultId]: detail }));
+        } catch (err) {
+            console.error("Failed to load result detail:", err);
+        }
+    };
+
+    if (authLoading || loading) {
+        return (
+            <div className="results-page">
+                <div className="results-shell">
+                    <div className="results-empty">Loading your IELTS result center...</div>
                 </div>
             </div>
+        );
+    }
 
-            {isAiUser ? (
-                <WritingResult
-                    user={user}
-                    readingBand={latestReadingBand}
-                    listeningBand={latestListeningBand}
-                />
-            ) : (
-                <>
-                    {canUseAiWriting ? (
-                        <WritingResult
-                            user={user}
-                            readingBand={latestReadingBand}
-                            listeningBand={latestListeningBand}
-                        />
-                    ) : null}
+    return (
+        <div className="results-page">
+            <div className="results-shell">
+                <section className="results-hero">
+                    <div className="results-hero__copy">
+                        <p className="results-hero__eyebrow">Official Result Center</p>
+                        <h1>{getUserDisplayName(user)}</h1>
+                        <p>
+                            Every completed Reading, Listening, Writing and Speaking
+                            attempt is stored here in an IELTS-style format, newest first.
+                        </p>
 
-                    <div className="results">
-                <h2>My Reading Results</h2>
-                {results.length > 0 ? (
-                    <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                        <thead>
-                            <tr>
-                                <th>Test Name</th>
-                                <th>Raw Score</th>
-                                <th>Band (Academic)</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {results.map((r, i) => (
-                                <tr key={i}>
-                                    <td>{r.testName || r.test?.name || "Unknown Test"}</td>
-                                    <td>{r.score}</td>
-                                    <td>{readingBands[i]?.academic ?? "N/A"}</td>
-                                    <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                        <div className="results-hero__actions">
+                            <span className="results-plan-chip">{planSummary.detail}</span>
+                            {!planSummary.isPro && (
+                                <Link className="results-pill-link results-pill-link--light" to="/upgrade">
+                                    Upgrade to PRO
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+
+                    <aside className="results-plan">
+                        <h2>Result Archive</h2>
+                        <p>
+                            Permanent history, expandable feedback, and a progress chart are
+                            all available in one place.
+                        </p>
+                        <Link className="results-pill-link" to="/read">
+                            Take Another Test
+                        </Link>
+                    </aside>
+                </section>
+
+                <section className="results-score-grid">
+                    <BandCard
+                        title="Reading Band"
+                        value={bands.readingBand}
+                        subtitle="Latest academic reading score"
+                    />
+                    <BandCard
+                        title="Listening Band"
+                        value={bands.listeningBand}
+                        subtitle="Latest listening score"
+                    />
+                    <BandCard
+                        title="Writing Band"
+                        value={bands.writingBand}
+                        subtitle="Latest writing score"
+                    />
+                    <BandCard
+                        title="Speaking Band"
+                        value={bands.speakingBand}
+                        subtitle="Latest speaking score"
+                    />
+                    <BandCard
+                        title="Overall Academic"
+                        value={bands.overallAcademicBand}
+                        subtitle="Based on latest available modules"
+                    />
+                    <BandCard
+                        title="Overall General"
+                        value={bands.overallGeneralBand}
+                        subtitle="Based on latest available modules"
+                    />
+                </section>
+
+                <section className="results-body">
+                    <div className="results-main">
+                        <div className="results-panel-head">
+                            <div>
+                                <p className="results-hero__eyebrow">Test History</p>
+                                <h2>Saved Results</h2>
+                                <p>
+                                    {results.length
+                                        ? `${results.length} result${results.length > 1 ? "s" : ""} stored permanently.`
+                                        : "No test results yet."}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="results-toolbar">
+                            <div className="results-toolbar__filters">
+                                {RESULT_MODULE_OPTIONS.map((filter) => (
+                                    <button
+                                        key={filter.value}
+                                        type="button"
+                                        className={
+                                            selectedModule === filter.value ? "is-active" : ""
+                                        }
+                                        onClick={() => setSelectedModule(filter.value)}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="results-toolbar__search">
+                                <input
+                                    type="search"
+                                    value={searchValue}
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    placeholder="Search inside this section"
+                                />
+                            </div>
+                        </div>
+
+                        {error ? (
+                            <div className="results-empty">{error}</div>
+                        ) : displayedResults.length ? (
+                            displayedResults.map((result) => (
+                                <ResultCard
+                                    key={result._id}
+                                    result={result}
+                                    detail={detailCache[result._id]}
+                                    expanded={expandedId === result._id}
+                                    loadingDetail={
+                                        expandedId === result._id && !detailCache[result._id]
+                                    }
+                                    onToggle={() => handleToggle(result._id)}
+                                />
+                            ))
                         ) : (
-                            <p>You have not completed any tests yet.</p>
+                            <div className="results-empty">{emptyStateMessage}</div>
                         )}
                     </div>
 
-                    <div className="results" style={{ marginTop: "30px" }}>
-                        <h2>My Listening Results</h2>
-                        {listeningResults.length > 0 ? (
-                            <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                                <thead>
-                                    <tr>
-                                        <th>Test Name</th>
-                                        <th>Raw Score</th>
-                                        <th>Band</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {listeningResults.map((r, i) => (
-                                        <tr key={i}>
-                                            <td>{r.testName || r.test?.title || "Listening Test"}</td>
-                                            <td>{r.score}</td>
-                                            <td>{listeningBands[i] ?? "N/A"}</td>
-                                            <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <p>You have no listening results yet.</p>
-                        )}
-                    </div>
-
-                    <div className="results" style={{ marginTop: "30px" }}>
-                        <h2>My Writing Results</h2>
-                        {writingAiResults.length > 0 ? (
-                            <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                                <thead>
-                                    <tr>
-                                        <th>Task</th>
-                                        <th>Raw Score</th>
-                                        <th>Band</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {writingAiResults.map((r, i) => (
-                                        <tr key={i}>
-                                            <td>
-                                                {r.taskType === "overall"
-                                                    ? "overall"
-                                                    : r.taskType || "task2"}
-                                            </td>
-                                            <td>{r.result?.raw_score ?? "—"}</td>
-                                            <td>
-                                                {r.result?.estimated_band ??
-                                                    r.result?.band_score ??
-                                                    "N/A"}
-                                            </td>
-                                            <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : writingResults.length > 0 ? (
-                            <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
-                                <thead>
-                                    <tr>
-                                        <th>Test Name</th>
-                                        <th>Raw Score</th>
-                                        <th>Band</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {writingResults.map((r, i) => (
-                                        <tr key={i}>
-                                            <td>{r.testName || "Writing Test"}</td>
-                                            <td>{r.score}</td>
-                                            <td>{r.score}</td>
-                                            <td>{new Date(r.createdAt).toLocaleString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <p>You have no writing results yet.</p>
-                        )}
-                    </div>
-                </>
-            )}
+                    <HistoryChart points={historyPoints} />
+                </section>
+            </div>
         </div>
     );
 }

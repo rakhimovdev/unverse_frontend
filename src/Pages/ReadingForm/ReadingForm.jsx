@@ -4,6 +4,8 @@ import { FaClock } from "react-icons/fa6";
 import { useParams } from "react-router-dom";
 
 import axios from "../../Api/Axios";
+import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
+import { createAttemptKey } from "../../utils/resultAttempt";
 
 import "./ReadingForm.css";
 
@@ -610,6 +612,8 @@ function ReadingForm() {
                 generalBand: "N/A",
                 bandAvailable: false,
                 hasAnswerKey: false,
+                correctAnswers: [],
+                wrongAnswers: [],
             };
         }
 
@@ -618,37 +622,70 @@ function ReadingForm() {
         let passageCorrect = 0;
         let passageTotal = 0;
         let hasAnswerKey = false;
+        let globalQuestionNumber = 0;
         const passageResults = test.passages.map(() => ({
             correct: 0,
             total: 0
         }));
+        const correctAnswers = [];
+        const wrongAnswers = [];
 
         test.passages.forEach((p, pIndex) => {
             const defs = getQuestionDefs(p.testText || "");
             const answers = userAnswers[pIndex] || [];
-            const correctAnswers = p.questions || [];
+            const answerKey = p.questions || [];
 
             defs.forEach((def, qIndex) => {
+                globalQuestionNumber += 1;
                 const weight = def.type === "multi" ? def.max || 1 : 1;
                 totalQuestions += weight;
                 passageResults[pIndex].total += weight;
                 if (pIndex === activePassage) passageTotal += weight;
 
-                const correctValue = correctAnswers[qIndex]?.value || "";
+                const questionMeta = answerKey[qIndex] || {};
+                const correctValue =
+                    questionMeta.value ||
+                    (Array.isArray(questionMeta.answer)
+                        ? questionMeta.answer.join(" / ")
+                        : "") ||
+                    "";
                 if (correctValue.trim()) hasAnswerKey = true;
 
+                const userValue = answers[qIndex] || "";
                 let earned = 0;
                 if (def.type === "multi") {
-                    earned = getMultiScore(answers[qIndex], correctValue);
+                    earned = getMultiScore(userValue, correctValue);
                     earned = Math.min(earned, weight);
-                } else if (isCorrectAnswer(answers[qIndex], correctValue)) {
+                } else if (isCorrectAnswer(userValue, correctValue)) {
                     earned = 1;
                 }
+
+                const reviewItem = {
+                    questionNumber: globalQuestionNumber,
+                    groupNumber: pIndex + 1,
+                    label: `Passage ${pIndex + 1} · Q${globalQuestionNumber}`,
+                    prompt: questionMeta.question || `Question ${globalQuestionNumber}`,
+                    questionType: def.type,
+                    userAnswer: String(userValue || ""),
+                    correctAnswer: correctValue,
+                    explanation: correctValue
+                        ? `Correct answer: ${correctValue}. Re-read the relevant part of Passage ${pIndex + 1}.`
+                        : "No official answer key was provided for this item."
+                };
 
                 if (earned > 0) {
                     totalCorrect += earned;
                     passageResults[pIndex].correct += earned;
                     if (pIndex === activePassage) passageCorrect += earned;
+                }
+
+                if (earned === weight && weight > 0) {
+                    correctAnswers.push(reviewItem);
+                } else if (
+                    String(userValue || "").trim() ||
+                    String(correctValue || "").trim()
+                ) {
+                    wrongAnswers.push(reviewItem);
                 }
             });
         });
@@ -671,6 +708,8 @@ function ReadingForm() {
             generalBand,
             bandAvailable,
             hasAnswerKey,
+            correctAnswers,
+            wrongAnswers,
         };
     };
 
@@ -687,11 +726,32 @@ function ReadingForm() {
 
         try {
             setSavingScore(true);
+            const attemptKey = createAttemptKey("reading", test._id);
             await axios.post(
                 "/score/add",
                 {
                     testId: test._id,
-                    score: result.totalCorrect
+                    score: result.totalCorrect,
+                    attemptKey,
+                    readingDetails: {
+                        passageScores: result.passageResults.map((item, index) => ({
+                            label: `Passage ${index + 1}`,
+                            correct: item.correct,
+                            total: item.total
+                        })),
+                        rawScore: result.totalCorrect,
+                        rawTotal: result.totalQuestions,
+                        academicBand:
+                            typeof result.academicBand === "number"
+                                ? result.academicBand
+                                : null,
+                        generalBand:
+                            typeof result.generalBand === "number"
+                                ? result.generalBand
+                                : null,
+                        correctAnswers: result.correctAnswers,
+                        wrongAnswers: result.wrongAnswers
+                    }
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -743,151 +803,106 @@ function ReadingForm() {
     const questionNodes = useMemo(() => {
         if (!passage?.testText) return [];
 
-        const regex = new RegExp(MARKER_REGEX);
-        let questionIndex = 0;
-        let nodeKey = 0;
-        let lastIndex = 0;
-        const nodes = [];
-        let match;
+        return renderHtmlWithQuestionTokens({
+            html: passage.testText,
+            parseToken,
+            rootKey: `reading-${activePassage}`,
+            renderToken: ({ parsed, currentIndex, key }) => {
+                if (parsed.kind === "input") {
+                    return (
+                        <input
+                            key={key}
+                            value={userAnswers[activePassage]?.[currentIndex] || ""}
+                            onChange={(e) => handleChange(e.target.value, currentIndex)}
+                        />
+                    );
+                }
 
-        while ((match = regex.exec(passage.testText))) {
-            const rawToken = match[1];
+                if (parsed.kind === "multi") {
+                    const selected = splitMultiValue(
+                        userAnswers[activePassage]?.[currentIndex]
+                    );
 
-            nodes.push(
-                <span
-                    key={`text-${nodeKey++}`}
-                    dangerouslySetInnerHTML={{
-                        __html: passage.testText.slice(lastIndex, match.index),
-                    }}
-                />
-            );
+                    return (
+                        <span key={key} className="preview-multi">
+                            {parsed.options.map((opt, optIndex) => {
+                                const checked = selected.some(
+                                    (item) => item.toLowerCase() === opt.toLowerCase()
+                                );
 
-            const parsed = parseToken(rawToken);
-
-            if (!parsed) {
-                nodes.push(
-                    <span
-                        key={`unknown-${nodeKey++}`}
-                        dangerouslySetInnerHTML={{
-                            __html: passage.testText.slice(match.index, regex.lastIndex),
-                        }}
-                    />
-                );
-                lastIndex = regex.lastIndex;
-                continue;
-            }
-
-            if (parsed.kind === "input") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <input
-                        key={`input-${nodeKey++}`}
-                        value={userAnswers[activePassage]?.[currentIndex] || ""}
-                        onChange={(e) => handleChange(e.target.value, currentIndex)}
-                    />
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "multi") {
-                const currentIndex = questionIndex;
-                const selected = splitMultiValue(
-                    userAnswers[activePassage]?.[currentIndex]
-                );
-                nodes.push(
-                    <span key={`multi-${nodeKey++}`} className="preview-multi">
-                        {parsed.options.map((opt, optIndex) => {
-                            const checked = selected.some(
-                                (item) => item.toLowerCase() === opt.toLowerCase()
-                            );
-                            return (
-                                <label key={`multi-${currentIndex}-${optIndex}`}>
-                                    <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() =>
-                                            handleChange(
-                                                toggleMultiValue(
-                                                    userAnswers[activePassage]?.[
+                                return (
+                                    <label key={`multi-${currentIndex}-${optIndex}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() =>
+                                                handleChange(
+                                                    toggleMultiValue(
+                                                        userAnswers[activePassage]?.[
+                                                            currentIndex
+                                                        ],
+                                                        opt,
+                                                        parsed.max || 2
+                                                    ),
                                                     currentIndex
-                                                    ],
-                                                    opt,
-                                                    parsed.max || 2
-                                                ),
-                                                currentIndex
-                                            )
+                                                )
+                                            }
+                                        />
+                                        {opt}
+                                    </label>
+                                );
+                            })}
+                        </span>
+                    );
+                }
+
+                if (parsed.kind === "select") {
+                    return (
+                        <select
+                            key={key}
+                            value={userAnswers[activePassage]?.[currentIndex] || ""}
+                            onChange={(e) => handleChange(e.target.value, currentIndex)}
+                        >
+                            {parsed.includeEmpty !== false ? (
+                                <option value=""></option>
+                            ) : (
+                                <option value="" disabled hidden></option>
+                            )}
+                            {parsed.options.map((opt, optIndex) => (
+                                <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
+                                    {opt}
+                                </option>
+                            ))}
+                        </select>
+                    );
+                }
+
+                if (parsed.kind === "radio") {
+                    return (
+                        <span key={key}>
+                            {parsed.options.map((opt, optIndex) => (
+                                <label key={`radio-${currentIndex}-${optIndex}`}>
+                                    <input
+                                        type="radio"
+                                        name={`radio-${activePassage}-${currentIndex}`}
+                                        value={opt}
+                                        checked={
+                                            userAnswers[activePassage]?.[currentIndex] === opt
+                                        }
+                                        onChange={(e) =>
+                                            handleChange(e.target.value, currentIndex)
                                         }
                                     />
                                     {opt}
                                 </label>
-                            );
-                        })}
-                    </span>
-                );
-                questionIndex++;
-            }
+                            ))}
+                        </span>
+                    );
+                }
 
-            if (parsed.kind === "select") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <select
-                        key={`select-${nodeKey++}`}
-                        value={userAnswers[activePassage]?.[currentIndex] || ""}
-                        onChange={(e) => handleChange(e.target.value, currentIndex)}
-                    >
-                        {parsed.includeEmpty !== false ? (
-                            <option value=""></option>
-                        ) : (
-                            <option value="" disabled hidden></option>
-                        )}
-                        {parsed.options.map((opt, optIndex) => (
-                            <option key={`select-${currentIndex}-${optIndex}`} value={opt}>
-                                {opt}
-                            </option>
-                        ))}
-                    </select>
-                );
-                questionIndex++;
-            }
-
-            if (parsed.kind === "radio") {
-                const currentIndex = questionIndex;
-                nodes.push(
-                    <span key={`radio-${nodeKey++}`}>
-                        {parsed.options.map((opt, optIndex) => (
-                            <label key={`radio-${currentIndex}-${optIndex}`}>
-                                <input
-                                    type="radio"
-                                    name={`radio-${activePassage}-${currentIndex}`}
-                                    value={opt}
-                                    checked={
-                                        userAnswers[activePassage]?.[currentIndex] === opt
-                                    }
-                                    onChange={(e) =>
-                                        handleChange(e.target.value, currentIndex)
-                                    }
-                                />
-                                {opt}
-                            </label>
-                        ))}
-                    </span>
-                );
-                questionIndex++;
-            }
-
-            lastIndex = regex.lastIndex;
-        }
-
-        nodes.push(
-            <span
-                key={`end-${nodeKey++}`}
-                dangerouslySetInnerHTML={{
-                    __html: passage.testText.slice(lastIndex),
-                }}
-            />
-        );
-
-        return nodes;
+                return null;
+            },
+        });
     }, [passage?.testText, activePassage, userAnswers, handleChange]);
 
     /* ================= SAFE CHECK ================= */
