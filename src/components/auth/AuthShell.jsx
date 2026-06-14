@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 import "./AuthShell.css";
 
 const defaultHighlights = [
-    "JWT session persistence with protected access",
-    "6-digit OTP verification in under 5 minutes",
-    "Google sign-in powered by the official OAuth flow"
+    "Short practice loops that build real IELTS momentum",
+    "Reading, listening, and writing progress in one place",
+    "Clear feedback to help you move toward your target band"
 ];
 
 function AuthShell({
-    badge = "DigiEduSystem Auth",
+    badge = "BandUp Access",
     title,
     subtitle,
     children,
@@ -31,12 +31,14 @@ function AuthShell({
                 >
                     <Link className="auth-brand" to="/">
                         <img
-                            src={`${process.env.PUBLIC_URL}/digiedusystem-logo.png`}
-                            alt="DigiEduSystem logo"
+                            src={`${process.env.PUBLIC_URL}/bandup-icon.svg`}
+                            alt="BandUp icon"
                         />
-                        <div>
-                            <strong>DigiEduSystem</strong>
-                            <span>Smarter language learning platform</span>
+                        <div className="auth-brand__copy">
+                            <strong>
+                                Band<span>Up</span>
+                            </strong>
+                            <small>Practice. Improve. Achieve.</small>
                         </div>
                     </Link>
 
@@ -48,12 +50,12 @@ function AuthShell({
 
                     <div className="auth-stats">
                         <div className="auth-stat">
-                            <span>Modern Security</span>
-                            <strong>JWT + OTP + Google OAuth</strong>
+                            <span>Focused Practice</span>
+                            <strong>One steady flow for reading, listening, and writing</strong>
                         </div>
                         <div className="auth-stat">
-                            <span>Startup Feel</span>
-                            <strong>Fast, responsive, mobile-ready flow</strong>
+                            <span>Band Growth</span>
+                            <strong>Practice. Improve. Achieve.</strong>
                         </div>
                     </div>
 

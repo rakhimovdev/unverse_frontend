@@ -1,15 +1,15 @@
 {
-  "short_name": "DigiEdu",
-  "name": "DigiEduSystem",
+  "short_name": "BandUp",
+  "name": "BandUp",
   "icons": [
     {
-      "src": "digiedusystem-icon.png",
+      "src": "bandup-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#1055a4",
-  "background_color": "#e9f1fb"
+  "theme_color": "#0d42b8",
+  "background_color": "#e7f1ff"
 }

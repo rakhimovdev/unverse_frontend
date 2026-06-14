@@ -1,100 +1,169 @@
-.t_login {
-    position: relative;
-    background-color: var(--u-surface);
-    width: 350px;
-    padding: 24px;
-    border-radius: 16px;
-    border: 1px solid var(--u-border);
-    box-shadow: var(--u-shadow);
-
-    .inputName,
-    .inputEmail,
-    .inputDescription {
-        width: 100%;
-        border: 2px solid var(--yellow-theme-main-color);
-        padding: 16px 12px;
-        transition: all 0.5s ease;
-        position: relative;
-        background-color: transparent;
-        color: var(--yellow-theme-sub-text-color);
-    }
-
-    .nameLabel,
-    .emailLabel,
-    .descriptionLabel {
-        font-weight: 500;
-        position: absolute;
-        top: 7px;
-        left: 12px;
-        transition: all 0.2s ease;
-        color: var(--yellow-theme-sub-text-color);
-        font-size: 16px;
-    }
-
-    .inputName:focus,
-    .inputEmail:focus,
-    .inputDescription:focus {
-        outline: none;
-    }
-
-    .inputName:focus+.nameLabel,
-    .inputName:valid+.nameLabel,
-    .inputEmail:focus+.emailLabel,
-    .inputEmail:valid+.emailLabel,
-    .inputDescription:focus+.descriptionLabel,
-    .inputDescription:valid+.descriptionLabel {
-        font-size: 18px;
-        top: -25px;
-        left: 0px;
-    }
-
-
-
+.t_signin {
+    min-height: calc(100vh - 132px);
+    width: min(1100px, 92%);
+    margin: 0 auto 48px;
+    display: grid;
+    place-items: center;
 }
 
-.t_login .inputName,
-.t_login .inputEmail,
-.t_login .inputDescription {
-    width: 100%;
-    border: 1px solid var(--u-border);
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: var(--u-tint);
-    color: var(--u-ink);
+.teacher-signin__panel {
+    width: min(480px, 100%);
+    padding: 36px 32px;
+    border-radius: 30px;
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.7) 0%, transparent 34%),
+        rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.14);
+    box-shadow: var(--u-shadow-strong);
+    backdrop-filter: blur(14px);
 }
 
-.t_login .nameLabel,
-.t_login .emailLabel,
-.t_login .descriptionLabel {
+.teacher-signin__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.teacher-signin__logo {
+    width: 64px;
+    height: 64px;
+    padding: 4px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(var(--u-primary-rgb), 0.12);
+}
+
+.teacher-signin__brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.teacher-signin__brand-copy strong {
+    font-size: 2.1rem;
+    line-height: 0.92;
+    letter-spacing: -0.06em;
+    color: var(--u-primary-dark);
+}
+
+.teacher-signin__brand-copy strong span {
+    color: var(--u-accent);
+}
+
+.teacher-signin__brand-copy span {
+    font-size: 0.84rem;
     color: var(--u-muted);
+    letter-spacing: 0.06em;
 }
 
-.back-link {
-    text-align: center;
+.teacher-signin__eyebrow {
+    margin-top: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: 12px;
+    font-weight: 700;
     color: var(--u-primary);
 }
 
 .signin-title {
-    text-align: center;
+    margin-top: 12px;
     color: var(--u-ink);
-    font-family: "Fraunces", serif;
+    font-family: var(--u-display);
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    letter-spacing: 0.08em;
+    line-height: 0.95;
+}
+
+.teacher-signin__subtitle {
+    margin-top: 14px;
+    color: var(--u-muted);
+    line-height: 1.7;
 }
 
 .tsignin-form {
-    height: 300px;
-    width: 350px;
-    margin: auto;
-    border: 1px solid var(--u-border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    padding: 10px;
-    border-radius: 16px;
-    background: var(--u-surface);
-    box-shadow: var(--u-shadow);
+    margin-top: 28px;
+    display: grid;
+    gap: 18px;
 }
 
-.inputName {
-    width: 250px;
+.t_login {
+    position: relative;
+}
+
+.t_login .inputName {
+    width: 100%;
+    min-height: 58px;
+    border: 1px solid rgba(var(--u-primary-rgb), 0.18);
+    border-radius: 18px;
+    background: var(--u-tint);
+    color: var(--u-ink);
+    padding: 22px 16px 10px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.t_login .inputName:focus {
+    border-color: var(--u-accent);
+    box-shadow: 0 0 0 4px rgba(30, 183, 255, 0.14);
+    transform: translateY(-1px);
+}
+
+.t_login .nameLabel {
+    position: absolute;
+    top: 18px;
+    left: 16px;
+    color: var(--u-muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    pointer-events: none;
+    transition: all 0.18s ease;
+}
+
+.t_login .inputName:focus + .nameLabel,
+.t_login .inputName:valid + .nameLabel {
+    top: 10px;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--u-primary);
+}
+
+.signin-button {
+    min-height: 56px;
+    border: none;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--u-primary) 0%, var(--u-accent) 100%);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 18px 32px rgba(var(--u-primary-dark-rgb), 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.signin-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 22px 38px rgba(var(--u-primary-dark-rgb), 0.28);
+}
+
+.back-link {
+    margin-top: 24px;
+    font-size: 1rem;
+}
+
+.back-link a {
+    color: var(--u-primary);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.back-link a:hover {
+    color: var(--u-primary-dark);
+}
+
+@media (max-width: 640px) {
+    .teacher-signin__panel {
+        padding: 28px 20px;
+        border-radius: 24px;
+    }
 }

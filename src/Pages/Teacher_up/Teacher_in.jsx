@@ -44,46 +44,63 @@ function Teacher_in() {
 
     return (
         <div className='t_signin'>
-            <h1 className="signin-title">Teacher Sign In</h1>
-
-            <form onSubmit={handleLoginSubmit} className="tsignin-form">
-                <div className='t_login'>
-                    <input
-                        required
-                        name="username"
-                        className="inputName"
-                        type="text"
-                        value={loginData.username}
-                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+            <div className="teacher-signin__panel">
+                <div className="teacher-signin__brand">
+                    <img
+                        className="teacher-signin__logo"
+                        src={`${process.env.PUBLIC_URL}/bandup-icon.svg`}
+                        alt="BandUp icon"
                     />
-                    <label htmlFor="username" className="nameLabel">
-                        User Name
-                    </label>
+                    <div className="teacher-signin__brand-copy">
+                        <strong>
+                            Band<span>Up</span>
+                        </strong>
+                        <span>Practice. Improve. Achieve.</span>
+                    </div>
                 </div>
+                <p className="teacher-signin__eyebrow">Teacher Portal</p>
+                <h1 className="signin-title">Teacher Sign In</h1>
+                <p className="teacher-signin__subtitle">
+                    Manage tests, monitor student progress, and stay in sync with your BandUp dashboard.
+                </p>
 
-                <div className='t_login'>
-                    <input
-                        className="inputName"
-                        type="password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                        required
-                    />
-                    <label htmlFor="password" className="nameLabel">
-                        Password
-                    </label>
-                </div>
+                <form onSubmit={handleLoginSubmit} className="tsignin-form">
+                    <div className='t_login'>
+                        <input
+                            required
+                            name="username"
+                            id="username"
+                            className="inputName"
+                            type="text"
+                            value={loginData.username}
+                            onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                        />
+                        <label htmlFor="username" className="nameLabel">
+                            User Name
+                        </label>
+                    </div>
 
-                <button type="submit" className="signin-button">Log In</button>
+                    <div className='t_login'>
+                        <input
+                            id="password"
+                            className="inputName"
+                            type="password"
+                            value={loginData.password}
+                            onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                            required
+                        />
+                        <label htmlFor="password" className="nameLabel">
+                            Password
+                        </label>
+                    </div>
 
-                {/* <p className="signup-link">
-                    Don't have an account? <Link to="/sign_up">Sign Up</Link>
-                </p> */}
-            </form>
+                    <button type="submit" className="signin-button">Log In</button>
+                </form>
 
-            <h1 className="back-link">
-                <Link to="/">← Back to Home</Link>
-            </h1>
+                <h1 className="back-link">
+                    <Link to="/">← Back to Home</Link>
+                </h1>
+            </div>
         </div>
     );
 }

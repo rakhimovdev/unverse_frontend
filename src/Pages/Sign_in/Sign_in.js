@@ -101,7 +101,7 @@ function SignIn() {
     return (
         <AuthShell
             badge="Secure Access"
-            title="Welcome back to DigiEduSystem"
+            title="Welcome back to BandUp"
             subtitle="Sign in with email or continue with Google to jump straight into your learning dashboard."
             footer={
                 <>
@@ -141,7 +141,7 @@ function SignIn() {
                     <input
                         id="email"
                         type="text"
-                        placeholder="you@digiedu.com or ali001"
+                        placeholder="you@bandup.uz or ali001"
                         value={formData.email}
                         autoComplete="username"
                         onChange={(event) =>

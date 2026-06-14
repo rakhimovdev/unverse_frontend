@@ -277,7 +277,7 @@ function SignUp() {
                         <input
                             id="email"
                             type="email"
-                            placeholder="you@digiedu.com"
+                            placeholder="you@bandup.uz"
                             value={formData.email}
                             autoComplete="email"
                             onChange={(event) =>

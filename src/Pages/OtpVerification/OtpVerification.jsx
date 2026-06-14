@@ -117,7 +117,7 @@ function OtpVerification() {
         <AuthShell
             badge="Verify Email"
             title="Enter the 6-digit code we sent you"
-            subtitle="Complete verification to activate your DigiEduSystem account and continue straight into your dashboard."
+            subtitle="Complete verification to activate your BandUp account and continue straight into your dashboard."
             footer={
                 <>
                     Need a new account? <Link to="/sign_up">Go back to sign up</Link>
@@ -143,7 +143,7 @@ function OtpVerification() {
                     <input
                         id="verify-email"
                         type="email"
-                        placeholder="you@digiedu.com"
+                        placeholder="you@bandup.uz"
                         value={email}
                         autoComplete="email"
                         onChange={(event) => setEmail(event.target.value)}

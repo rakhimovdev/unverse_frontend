@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 340">
+  <g transform="translate(12 16) scale(0.56)">
+    <path
+      fill="#0A2F95"
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M84 72H220C304 72 360 119 360 184C360 229 340 261 302 282C353 304 382 345 382 401C382 483 321 440 222 440H84V72ZM153 144V240H212C250 240 278 223 278 191C278 160 252 144 209 144H153ZM153 288V376H223C270 376 302 353 302 320C302 286 271 264 223 264H153V288Z"
+    />
+    <path
+      fill="#0D4FD3"
+      d="M84 72H217C285 72 331 103 350 153C329 128 292 113 243 113H124V391H84V72Z"
+    />
+    <rect x="122" y="307" width="36" height="108" rx="9" fill="#169BFF"/>
+    <rect x="175" y="270" width="36" height="145" rx="9" fill="#23BCFF"/>
+    <rect x="228" y="231" width="36" height="184" rx="9" fill="#4CD5FF"/>
+    <path
+      d="M110 248C172 243 235 218 295 175C329 151 360 123 387 90"
+      stroke="#23BCFF"
+      stroke-width="20"
+      stroke-linecap="round"
+    />
+    <path
+      d="M367 88L414 77L401 122"
+      stroke="#23BCFF"
+      stroke-width="20"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M94 414C175 421 257 408 335 356"
+      stroke="#169BFF"
+      stroke-width="11"
+      stroke-linecap="round"
+    />
+  </g>
+
+  <text
+    x="308"
+    y="168"
+    fill="#0A2F95"
+    font-family="'Segoe UI', Arial, sans-serif"
+    font-size="136"
+    font-weight="900"
+  >Band</text>
+  <text
+    x="760"
+    y="168"
+    fill="#169BFF"
+    font-family="'Segoe UI', Arial, sans-serif"
+    font-size="136"
+    font-weight="900"
+  >Up</text>
+  <text
+    x="324"
+    y="232"
+    fill="#596A8C"
+    font-family="'Segoe UI', Arial, sans-serif"
+    font-size="42"
+    font-weight="700"
+    letter-spacing="-0.5"
+  >Practice. Improve. Achieve.</text>
+</svg>

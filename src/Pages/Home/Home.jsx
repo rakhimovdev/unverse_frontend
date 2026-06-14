@@ -7,7 +7,7 @@ function Home() {
         <main className="home">
             <section className="hero">
                 <div className="hero__content">
-                    <p className="eyebrow">Universe Language School</p>
+                    <p className="eyebrow">BandUp IELTS Platform</p>
                     <h1>Train for band 9 with a system that builds every skill.</h1>
                     <p className="lead">
                         Short, focused practice. Clear feedback. Real progress you can see. Build reading, listening,
@@ -142,8 +142,8 @@ function Home() {
 
             <footer className="home-footer">
                 <div>
-                    <h3>Universe Language School</h3>
-                    <p>Focused practice for ambitious learners.</p>
+                    <h3>BandUp</h3>
+                    <p>Practice. Improve. Achieve.</p>
                     <br />
                     <br />
                     <h3>This Web Site Created By <Link to="https://myportfolio-wheat-seven.vercel.app/">Rakhimov_dev</Link></h3>

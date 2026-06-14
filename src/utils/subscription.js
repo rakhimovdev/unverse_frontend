@@ -1,6 +1,6 @@
 export const TELEGRAM_USERNAME = "Rakhimov_dev23";
 export const TELEGRAM_UPGRADE_MESSAGE =
-    "Hello, I want to upgrade my DigiEduSystem account to PRO.";
+    "Hello, I want to upgrade my BandUp account to PRO.";
 
 export const buildTelegramUpgradeLink = (
     message = TELEGRAM_UPGRADE_MESSAGE

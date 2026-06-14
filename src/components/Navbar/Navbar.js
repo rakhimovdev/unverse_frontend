@@ -40,13 +40,15 @@ const Navbar = () => {
                 <Link className="brand" to="/">
                     <span className="brand-mark">
                         <img
-                            src={`${process.env.PUBLIC_URL}/digiedusystem-logo.png`}
-                            alt="DigiEduSystem logo"
+                            src={`${process.env.PUBLIC_URL}/bandup-icon.svg`}
+                            alt="BandUp icon"
                         />
                     </span>
                     <div className="brand-text">
-                        <span>DigiEduSystem</span>
-                        <span>Language School</span>
+                        <span>
+                            Band<span className="brand-text__accent">Up</span>
+                        </span>
+                        <span>Practice. Improve. Achieve.</span>
                     </div>
                 </Link>
 

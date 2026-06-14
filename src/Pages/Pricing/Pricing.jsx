@@ -22,7 +22,7 @@ function Pricing() {
         <div className="upgrade-page">
             <section className="upgrade-hero">
                 <div className="upgrade-hero__copy">
-                    <span className="upgrade-hero__eyebrow">DigiEduSystem PRO</span>
+                    <span className="upgrade-hero__eyebrow">BandUp PRO</span>
                     <h1>Upgrade your account without online payment checkout</h1>
                     <p>
                         Choose a duration, message us on Telegram, and the admin will
