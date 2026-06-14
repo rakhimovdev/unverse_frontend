@@ -5,8 +5,10 @@ export default function PaymentSuccess() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        setTimeout(() => navigate('/account'), 3000)
-    }, [])
+        const timeoutId = setTimeout(() => navigate('/account'), 3000)
+
+        return () => window.clearTimeout(timeoutId)
+    }, [navigate])
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen">
