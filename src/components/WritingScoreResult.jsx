@@ -1,12 +1,26 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "../Api/Axios";
+import {
+    formatBand,
+    formatWritingDate,
+    getLatestWritingAttempt,
+    normalizeWritingRecord
+} from "../utils/writingResults";
 import "./WritingScoreResult.css";
+
+const SCORE_ITEMS = [
+    { key: "taskResponse", label: "Task Response" },
+    { key: "coherenceCohesion", label: "Coherence & Cohesion" },
+    { key: "lexicalResource", label: "Lexical Resource" },
+    { key: "grammarRangeAccuracy", label: "Grammar" }
+];
 
 function WritingScoreResult({ user }) {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [loaded, setLoaded] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
 
     const role = user?.role;
     const canView = role === "mooc" || role === "admin";
@@ -42,11 +56,11 @@ function WritingScoreResult({ user }) {
                 const payload = Array.isArray(res.data)
                     ? res.data
                     : Array.isArray(res.data?.result)
-                    ? res.data.result
-                    : [];
+                        ? res.data.result
+                        : [];
 
                 if (!isActive) return;
-                setResults(payload);
+                setResults(payload.map((item) => normalizeWritingRecord(item)));
             } catch (err) {
                 if (!isActive) return;
                 setError(err.response?.data?.message || "Failed to load AI results.");
@@ -67,27 +81,13 @@ function WritingScoreResult({ user }) {
         };
     }, [user, canView]);
 
-    const latest = useMemo(() => {
-        if (!results?.length) return null;
-        const sorted = [...results].sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        return sorted[0];
-    }, [results]);
+    const latestAttempt = useMemo(
+        () => getLatestWritingAttempt(results),
+        [results]
+    );
 
-    const formatBand = (value) => {
-        if (value == null || value === "") return "—";
-        const num = Number(value);
-        if (Number.isNaN(num)) return String(value);
-        return Number.isInteger(num) ? String(num) : num.toFixed(1);
-    };
-
-    const formatDate = (value) => {
-        if (!value) return "—";
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return "—";
-        return date.toLocaleString();
-    };
+    const summaryRecord = latestAttempt.overall || latestAttempt.latestTask;
+    const criteriaSource = latestAttempt.criteriaSource;
 
     if (!user) {
         return (
@@ -111,8 +111,9 @@ function WritingScoreResult({ user }) {
         );
     }
 
-    const bandValue = formatBand(
-        latest?.result?.estimated_band ?? latest?.result?.band_score
+    const overallBand = formatBand(
+        latestAttempt.overall?.scores?.overall ??
+            latestAttempt.latestTask?.scores?.overall
     );
 
     return (
@@ -123,14 +124,14 @@ function WritingScoreResult({ user }) {
                         <p className="writing-score-eyebrow">IELTS Writing Result</p>
                         <h1 className="writing-score-title">Writing Assessment</h1>
                         <p className="writing-score-subtitle">
-                            Official IELTS-style evaluation
+                            Official IELTS criteria with server-side band calculation.
                         </p>
                     </div>
                     <div className="writing-score-band">
                         <div className="writing-score-circle">
-                            <span className="writing-score-value">{bandValue}</span>
+                            <span className="writing-score-value">{overallBand}</span>
                         </div>
-                        <div className="writing-score-caption">Estimated Band Score</div>
+                        <div className="writing-score-caption">Overall Band</div>
                     </div>
                 </div>
 
@@ -138,38 +139,101 @@ function WritingScoreResult({ user }) {
                     <div className="writing-score-spinner" />
                 ) : error ? (
                     <div className="writing-score-error">{error}</div>
-                ) : !latest ? (
+                ) : !summaryRecord ? (
                     <div className="writing-score-empty">No AI results yet.</div>
                 ) : (
                     <>
+                        <div className="writing-score-meta">
+                            <span>{summaryRecord.testName || "Writing Test"}</span>
+                            <span>{formatWritingDate(summaryRecord.createdAt)}</span>
+                            <span>Words: {criteriaSource?.wordCount ?? 0}</span>
+                        </div>
+
+                        <div className="writing-score-grid writing-score-grid--scores">
+                            {SCORE_ITEMS.map((item) => (
+                                <div className="writing-score-card" key={item.key}>
+                                    <h3>{item.label}</h3>
+                                    <p className="writing-score-card__score">
+                                        {formatBand(criteriaSource?.scores?.[item.key])}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
                         <div className="writing-score-grid">
                             <div className="writing-score-card">
-                                <h3>Grammar</h3>
-                                <p>{latest.result?.grammar_feedback || "—"}</p>
+                                <h3>Strengths</h3>
+                                <ul className="writing-score-list">
+                                    {(criteriaSource?.feedback?.strengths || []).map(
+                                        (item, index) => (
+                                            <li key={`${item}-${index}`}>{item}</li>
+                                        )
+                                    )}
+                                    {!criteriaSource?.feedback?.strengths?.length && <li>—</li>}
+                                </ul>
                             </div>
                             <div className="writing-score-card">
-                                <h3>Vocabulary</h3>
-                                <p>{latest.result?.vocabulary_feedback || "—"}</p>
-                            </div>
-                            <div className="writing-score-card">
-                                <h3>Coherence & Cohesion</h3>
-                                <p>{latest.result?.coherence_feedback || "—"}</p>
+                                <h3>Weaknesses</h3>
+                                <ul className="writing-score-list">
+                                    {(criteriaSource?.feedback?.weaknesses || []).map(
+                                        (item, index) => (
+                                            <li key={`${item}-${index}`}>{item}</li>
+                                        )
+                                    )}
+                                    {!criteriaSource?.feedback?.weaknesses?.length && <li>—</li>}
+                                </ul>
                             </div>
                             <div className="writing-score-card">
                                 <h3>Improvement Tips</h3>
-                                <p>{latest.result?.improvement_tips || "—"}</p>
+                                <ul className="writing-score-list">
+                                    {(criteriaSource?.feedback?.improvementTips || []).map(
+                                        (item, index) => (
+                                            <li key={`${item}-${index}`}>{item}</li>
+                                        )
+                                    )}
+                                    {!criteriaSource?.feedback?.improvementTips?.length && <li>—</li>}
+                                </ul>
+                            </div>
+                            <div className="writing-score-card">
+                                <h3>Question</h3>
+                                <p>{criteriaSource?.question || "—"}</p>
                             </div>
                         </div>
+
+                        <button
+                            type="button"
+                            className="writing-score-toggle"
+                            onClick={() => setShowDetails((prev) => !prev)}
+                        >
+                            {showDetails
+                                ? "Hide Detailed Criterion Feedback"
+                                : "Show Detailed Criterion Feedback"}
+                        </button>
+
+                        {showDetails && (
+                            <div className="writing-score-grid">
+                                {SCORE_ITEMS.map((item) => (
+                                    <div className="writing-score-card" key={`${item.key}-detail`}>
+                                        <h3>{item.label} Feedback</h3>
+                                        <p>{criteriaSource?.criterionFeedback?.[item.key] || "—"}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         <div className="writing-score-divider" />
 
                         <div className="writing-score-footer">
                             <span className="writing-score-footer-task">
-                                {latest.taskType === "task1" ? "Task 1" : "Task 2"}
+                                {summaryRecord.taskType === "task1"
+                                    ? "Task 1"
+                                    : summaryRecord.taskType === "task2"
+                                        ? "Task 2"
+                                        : "Combined Writing Result"}
                             </span>
                             <span className="writing-score-footer-dot" />
                             <span className="writing-score-footer-date">
-                                {formatDate(latest.createdAt)}
+                                {formatWritingDate(summaryRecord.createdAt)}
                             </span>
                         </div>
                     </>

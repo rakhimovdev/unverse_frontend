@@ -276,6 +276,10 @@
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
+.result-card__metrics--writing {
+    margin-bottom: 14px;
+}
+
 .result-card__metric {
     padding: 14px;
     border-radius: 18px;
@@ -329,6 +333,10 @@
     margin-bottom: 12px !important;
     color: var(--u-primary-dark) !important;
     font-weight: 700;
+}
+
+.result-card__detail-copy {
+    margin-top: 14px !important;
 }
 
 .result-card__list {

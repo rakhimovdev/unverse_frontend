@@ -29,6 +29,27 @@ const renderFeedbackBlock = (title, items = [], emptyText) => (
     </div>
 );
 
+const renderWritingCriterionMetrics = (task = {}) => {
+    const metricItems = [
+        { label: "Task Response", value: task.taskResponseScore },
+        { label: "Coherence", value: task.coherenceCohesionScore },
+        { label: "Lexical", value: task.lexicalResourceScore },
+        { label: "Grammar", value: task.grammarRangeAccuracyScore },
+        { label: "Overall", value: task.bandScore }
+    ];
+
+    return (
+        <div className="result-card__metrics result-card__metrics--writing">
+            {metricItems.map((item) => (
+                <div className="result-card__metric" key={item.label}>
+                    <span>{item.label}</span>
+                    <strong>{formatBand(item.value)}</strong>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const renderAnswerReviews = (items = [], title, emptyText) => (
     <div className="result-card__detail-panel">
         <h4>{title}</h4>
@@ -220,9 +241,12 @@ function ResultCard({
                 <div className="result-card__details">
                     <div className="result-card__detail-panel">
                         <h4>Task 1 Feedback</h4>
-                        <p className="result-card__detail-band">
-                            Band: {formatBand(task1.bandScore)}
-                        </p>
+                        {renderWritingCriterionMetrics(task1)}
+                        {renderFeedbackBlock(
+                            "Strengths",
+                            task1.strengths,
+                            "No task 1 strengths recorded."
+                        )}
                         {renderFeedbackBlock(
                             "Weaknesses",
                             task1.weaknesses,
@@ -234,27 +258,58 @@ function ResultCard({
                             "No task 1 tips recorded."
                         )}
                         {renderFeedbackBlock(
-                            "Grammar",
-                            task1.grammarFeedback,
+                            "Task Response Feedback",
+                            task1.criterionFeedback?.taskResponse
+                                ? [task1.criterionFeedback.taskResponse]
+                                : [],
+                            "No task response feedback recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Coherence & Cohesion Feedback",
+                            task1.criterionFeedback?.coherenceCohesion
+                                ? [task1.criterionFeedback.coherenceCohesion]
+                                : [],
+                            "No coherence feedback recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Lexical Resource Feedback",
+                            task1.criterionFeedback?.lexicalResource
+                                ? [task1.criterionFeedback.lexicalResource]
+                                : [],
+                            "No lexical feedback recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Grammar Feedback",
+                            task1.criterionFeedback?.grammarRangeAccuracy
+                                ? [task1.criterionFeedback.grammarRangeAccuracy]
+                                : task1.grammarFeedback,
                             "No grammar feedback recorded."
                         )}
                         {renderFeedbackBlock(
-                            "Vocabulary",
+                            "Legacy Vocabulary Notes",
                             task1.vocabularyFeedback,
-                            "No vocabulary feedback recorded."
+                            "No legacy vocabulary notes recorded."
                         )}
                         {renderFeedbackBlock(
-                            "Coherence",
+                            "Legacy Coherence Notes",
                             task1.coherenceFeedback,
-                            "No coherence feedback recorded."
+                            "No legacy coherence notes recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Question",
+                            task1.question || task1.prompt ? [task1.question || task1.prompt] : [],
+                            "Question text is not available."
                         )}
                     </div>
 
                     <div className="result-card__detail-panel">
                         <h4>Task 2 Feedback</h4>
-                        <p className="result-card__detail-band">
-                            Band: {formatBand(task2.bandScore)}
-                        </p>
+                        {renderWritingCriterionMetrics(task2)}
+                        {renderFeedbackBlock(
+                            "Strengths",
+                            task2.strengths,
+                            "No task 2 strengths recorded."
+                        )}
                         {renderFeedbackBlock(
                             "Weaknesses",
                             task2.weaknesses,
@@ -266,25 +321,71 @@ function ResultCard({
                             "No task 2 tips recorded."
                         )}
                         {renderFeedbackBlock(
-                            "Grammar",
-                            task2.grammarFeedback,
+                            "Task Response Feedback",
+                            task2.criterionFeedback?.taskResponse
+                                ? [task2.criterionFeedback.taskResponse]
+                                : [],
+                            "No task response feedback recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Coherence & Cohesion Feedback",
+                            task2.criterionFeedback?.coherenceCohesion
+                                ? [task2.criterionFeedback.coherenceCohesion]
+                                : [],
+                            "No coherence feedback recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Lexical Resource Feedback",
+                            task2.criterionFeedback?.lexicalResource
+                                ? [task2.criterionFeedback.lexicalResource]
+                                : [],
+                            "No lexical feedback recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Grammar Feedback",
+                            task2.criterionFeedback?.grammarRangeAccuracy
+                                ? [task2.criterionFeedback.grammarRangeAccuracy]
+                                : task2.grammarFeedback,
                             "No grammar feedback recorded."
                         )}
                         {renderFeedbackBlock(
-                            "Vocabulary",
+                            "Legacy Vocabulary Notes",
                             task2.vocabularyFeedback,
-                            "No vocabulary feedback recorded."
+                            "No legacy vocabulary notes recorded."
                         )}
                         {renderFeedbackBlock(
-                            "Coherence",
+                            "Legacy Coherence Notes",
                             task2.coherenceFeedback,
-                            "No coherence feedback recorded."
+                            "No legacy coherence notes recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Question",
+                            task2.question || task2.prompt ? [task2.question || task2.prompt] : [],
+                            "Question text is not available."
                         )}
                     </div>
 
                     <div className="result-card__detail-panel result-card__detail-panel--full">
                         <h4>Final AI Feedback</h4>
-                        <p>
+                        <p className="result-card__detail-band">
+                            Overall Band: {formatBand(activeResult.writing?.overallBand)}
+                        </p>
+                        {renderFeedbackBlock(
+                            "Strength Highlights",
+                            [...(task1.strengths || []), ...(task2.strengths || [])],
+                            "No strengths recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Priority Weaknesses",
+                            [...(task1.weaknesses || []), ...(task2.weaknesses || [])],
+                            "No weaknesses recorded."
+                        )}
+                        {renderFeedbackBlock(
+                            "Priority Improvement Tips",
+                            [...(task1.improvementTips || []), ...(task2.improvementTips || [])],
+                            "No improvement tips recorded."
+                        )}
+                        <p className="result-card__detail-copy">
                             {activeResult.writing?.finalSummary ||
                                 "AI summary is not available for this attempt yet."}
                         </p>

@@ -196,7 +196,7 @@ export const buildHistoryPoints = (results = []) =>
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
 export const getResultToggleLabel = (moduleType) => {
-    if (moduleType === "Writing") return "View Improvement Tips";
+    if (moduleType === "Writing") return "View Criterion Feedback";
     if (moduleType === "Speaking") return "View Detailed Feedback";
     return "View Mistakes";
 };

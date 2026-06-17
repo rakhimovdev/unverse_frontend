@@ -144,8 +144,10 @@ function Index() {
             console.log("AI Task2:", aiTask2.data);
 
             const overallBand =
+                aiTask2.data?.overall?.scores?.overall ??
                 aiTask2.data?.overall?.result?.band_score ??
                 aiTask2.data?.overall?.band_score ??
+                aiTask2.data?.result?.scores?.overall ??
                 null;
 
             if (overallBand != null) {

@@ -108,6 +108,10 @@
     gap: 20px;
 }
 
+.writing-score-grid--scores {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .writing-score-card {
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -131,6 +135,51 @@
     font-size: 14.5px;
     white-space: pre-line;
     font-family: "Libre Franklin", sans-serif;
+}
+
+.writing-score-card__score {
+    font-size: 30px !important;
+    font-weight: 700;
+    color: var(--accent) !important;
+}
+
+.writing-score-meta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: "Libre Franklin", sans-serif;
+}
+
+.writing-score-meta span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #f6f8fb;
+    border: 1px solid var(--border);
+}
+
+.writing-score-list {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    color: var(--text);
+    font-size: 14.5px;
+    font-family: "Libre Franklin", sans-serif;
+}
+
+.writing-score-toggle {
+    margin-top: 22px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    background: #ffffff;
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
 }
 
 .writing-score-divider {
@@ -227,6 +276,10 @@
     .writing-score-grid {
         grid-template-columns: 1fr;
     }
+
+    .writing-score-grid--scores {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 520px) {
@@ -236,5 +289,9 @@
 
     .writing-score-title {
         font-size: 26px;
+    }
+
+    .writing-score-grid--scores {
+        grid-template-columns: 1fr;
     }
 }

@@ -94,7 +94,7 @@
 
 .writing-result-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -158,6 +158,81 @@
     gap: 8px;
 }
 
+.writing-result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.writing-result-meta span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    color: #475569;
+    font-size: 13px;
+}
+
+.writing-result-criteria-grid,
+.writing-result-feedback-grid,
+.writing-result-detail-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.writing-result-criteria-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 18px;
+}
+
+.writing-result-criteria-card,
+.writing-result-feedback-panel {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.writing-result-feedback-grid,
+.writing-result-detail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.writing-result-feedback-panel h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #0f172a;
+}
+
+.writing-result-feedback-panel p {
+    margin: 0;
+    color: #334155;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.writing-result-feedback-panel ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    color: #334155;
+    font-size: 14px;
+}
+
+.writing-result-detail-toggle {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid #c1121f;
+    background: #ffffff;
+    color: #c1121f;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 18px;
+}
+
 .writing-result-tips {
     background: #fff6f7;
     border-color: #f0b7bd;
@@ -189,7 +264,10 @@
 }
 
 @media (max-width: 900px) {
-    .writing-result-grid {
+    .writing-result-grid,
+    .writing-result-criteria-grid,
+    .writing-result-feedback-grid,
+    .writing-result-detail-grid {
         grid-template-columns: 1fr;
     }
     .writing-result-card {

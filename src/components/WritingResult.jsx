@@ -1,12 +1,26 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "../Api/Axios";
+import {
+    formatBand,
+    formatWritingDate,
+    getLatestWritingAttempt,
+    normalizeWritingRecord
+} from "../utils/writingResults";
 import "./WritingResult.css";
+
+const SCORE_ITEMS = [
+    { key: "taskResponse", label: "Task Response" },
+    { key: "coherenceCohesion", label: "Coherence & Cohesion" },
+    { key: "lexicalResource", label: "Lexical Resource" },
+    { key: "grammarRangeAccuracy", label: "Grammar" }
+];
 
 function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [loaded, setLoaded] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
 
     const role = user?.role;
     const canView =
@@ -47,7 +61,7 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
                         : [];
 
                 if (!isActive) return;
-                setResults(payload);
+                setResults(payload.map((item) => normalizeWritingRecord(item)));
             } catch (err) {
                 if (!isActive) return;
                 setError(err.response?.data?.message || "No AI result available yet.");
@@ -68,41 +82,22 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
         };
     }, [user, canView]);
 
-    const sortedResults = useMemo(() => {
-        if (!results?.length) return [];
-        return [...results].sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-    }, [results]);
-
-    const latestOverall = useMemo(
-        () => sortedResults.find((item) => item.taskType === "overall") || null,
-        [sortedResults]
+    const latestAttempt = useMemo(
+        () => getLatestWritingAttempt(results),
+        [results]
     );
 
-    const latestFeedback = useMemo(
-        () => sortedResults.find((item) => item.taskType !== "overall") || null,
-        [sortedResults]
-    );
+    const summaryRecord = latestAttempt.overall || latestAttempt.latestTask;
+    const criteriaSource = latestAttempt.criteriaSource;
 
-    const formatBand = (value) => {
-        if (value == null || value === "") return "—";
+    const toBandNumber = (value) => {
         const num = Number(value);
-        if (Number.isNaN(num)) return String(value);
-        return Number.isInteger(num) ? String(num) : num.toFixed(1);
+        return Number.isFinite(num) ? num : null;
     };
 
-    const formatText = (value) => {
-        if (!value) return "—";
-        if (Array.isArray(value)) return value.filter(Boolean).join(" ");
-        return String(value);
-    };
-
-    const formatDate = (value) => {
-        if (!value) return "—";
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return "—";
-        return date.toLocaleString();
+    const roundToHalf = (value) => {
+        if (value == null) return null;
+        return Math.round(value * 2) / 2;
     };
 
     if (!user) {
@@ -127,37 +122,24 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
         );
     }
 
-    const bandValue = formatBand(
-        latestOverall?.result?.estimated_band ??
-            latestOverall?.result?.band_score ??
-            latestFeedback?.result?.estimated_band ??
-            latestFeedback?.result?.band_score
+    const writingBandValue = formatBand(
+        latestAttempt.overall?.scores?.overall ??
+            latestAttempt.latestTask?.scores?.overall
     );
-
-    const numericBand = (value) => {
-        const num = Number(value);
-        return Number.isFinite(num) ? num : null;
-    };
-
-    const roundToHalf = (value) => {
-        if (value == null) return null;
-        return Math.round(value * 2) / 2;
-    };
-
-    const writingBand = bandValue;
-    const readingBandValue = formatBand(readingBand);
-    const listeningBandValue = formatBand(listeningBand);
-    const speakingBandValue = formatBand(speakingBand);
 
     const overallBand = (() => {
         const values = [
-            numericBand(readingBand),
-            numericBand(listeningBand),
-            numericBand(bandValue),
-            numericBand(speakingBand)
-        ].filter((v) => v != null);
-        if (!values.length) return bandValue;
-        const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+            toBandNumber(readingBand),
+            toBandNumber(listeningBand),
+            toBandNumber(
+                latestAttempt.overall?.scores?.overall ??
+                    latestAttempt.latestTask?.scores?.overall
+            ),
+            toBandNumber(speakingBand)
+        ].filter((value) => value != null);
+
+        if (!values.length) return writingBandValue;
+        const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
         return formatBand(roundToHalf(avg));
     })();
 
@@ -180,7 +162,7 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
 
                 {loading ? (
                     <div className="writing-result-spinner" />
-                ) : error || (!latestOverall && !latestFeedback) ? (
+                ) : error || !summaryRecord ? (
                     <div className="writing-result-empty">No AI result available yet.</div>
                 ) : (
                     <>
@@ -195,22 +177,28 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
                         <div className="writing-result-grid">
                             <div className="writing-result-card">
                                 <div className="writing-result-label">Listening</div>
-                                <div className="writing-result-score-md">{listeningBandValue}</div>
+                                <div className="writing-result-score-md">
+                                    {formatBand(listeningBand)}
+                                </div>
                                 <span className="writing-result-arrow">›</span>
                             </div>
                             <div className="writing-result-card">
                                 <div className="writing-result-label">Reading</div>
-                                <div className="writing-result-score-md">{readingBandValue}</div>
+                                <div className="writing-result-score-md">
+                                    {formatBand(readingBand)}
+                                </div>
                                 <span className="writing-result-arrow">›</span>
                             </div>
                             <div className="writing-result-card is-writing">
                                 <div className="writing-result-label">Writing</div>
-                                <div className="writing-result-score-md">{writingBand}</div>
+                                <div className="writing-result-score-md">{writingBandValue}</div>
                                 <span className="writing-result-arrow">›</span>
                             </div>
                             <div className="writing-result-card">
                                 <div className="writing-result-label">Speaking</div>
-                                <div className="writing-result-score-md">{speakingBandValue}</div>
+                                <div className="writing-result-score-md">
+                                    {formatBand(speakingBand)}
+                                </div>
                                 <span className="writing-result-arrow">›</span>
                             </div>
                         </div>
@@ -219,31 +207,90 @@ function WritingResult({ user, readingBand, listeningBand, speakingBand }) {
                             <div className="writing-result-section-header">
                                 <h2>Writing feedback</h2>
                                 <span className="writing-result-date">
-                                    {formatDate(
-                                        latestFeedback?.createdAt || latestOverall?.createdAt
-                                    )}
+                                    {formatWritingDate(summaryRecord.createdAt)}
                                 </span>
                             </div>
-                            <div className="writing-result-feedback">
-                                <div>
-                                    <strong>Grammar:</strong>{" "}
-                                    {formatText(latestFeedback?.result?.grammar_feedback)}
+
+                            <div className="writing-result-meta">
+                                <span>{summaryRecord.testName || "Writing Test"}</span>
+                                <span>
+                                    {summaryRecord.taskType === "overall"
+                                        ? "Task 1 + Task 2"
+                                        : summaryRecord.taskType === "task1"
+                                            ? "Task 1"
+                                            : "Task 2"}
+                                </span>
+                                <span>Words: {criteriaSource?.wordCount ?? 0}</span>
+                            </div>
+
+                            <div className="writing-result-criteria-grid">
+                                {SCORE_ITEMS.map((item) => (
+                                    <div className="writing-result-criteria-card" key={item.key}>
+                                        <div className="writing-result-label">{item.label}</div>
+                                        <div className="writing-result-score-md">
+                                            {formatBand(criteriaSource?.scores?.[item.key])}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="writing-result-feedback-grid">
+                                <div className="writing-result-feedback-panel">
+                                    <h3>Strengths</h3>
+                                    <ul>
+                                        {(criteriaSource?.feedback?.strengths || []).map(
+                                            (item, index) => (
+                                                <li key={`${item}-${index}`}>{item}</li>
+                                            )
+                                        )}
+                                        {!criteriaSource?.feedback?.strengths?.length && <li>—</li>}
+                                    </ul>
                                 </div>
-                                <div>
-                                    <strong>Vocabulary:</strong>{" "}
-                                    {formatText(latestFeedback?.result?.vocabulary_feedback)}
+                                <div className="writing-result-feedback-panel">
+                                    <h3>Weaknesses</h3>
+                                    <ul>
+                                        {(criteriaSource?.feedback?.weaknesses || []).map(
+                                            (item, index) => (
+                                                <li key={`${item}-${index}`}>{item}</li>
+                                            )
+                                        )}
+                                        {!criteriaSource?.feedback?.weaknesses?.length && <li>—</li>}
+                                    </ul>
                                 </div>
-                                <div>
-                                    <strong>Coherence:</strong>{" "}
-                                    {formatText(latestFeedback?.result?.coherence_feedback)}
+                                <div className="writing-result-feedback-panel">
+                                    <h3>Improvement Tips</h3>
+                                    <ul>
+                                        {(criteriaSource?.feedback?.improvementTips || []).map(
+                                            (item, index) => (
+                                                <li key={`${item}-${index}`}>{item}</li>
+                                            )
+                                        )}
+                                        {!criteriaSource?.feedback?.improvementTips?.length && <li>—</li>}
+                                    </ul>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="writing-result-card writing-result-tips">
-                            <div className="writing-result-label">Improvement Tips</div>
-                            <p>{formatText(latestFeedback?.result?.improvement_tips)}</p>
-                        </div>
+                        <button
+                            type="button"
+                            className="writing-result-detail-toggle"
+                            onClick={() => setShowDetails((prev) => !prev)}
+                        >
+                            {showDetails
+                                ? "Hide Detailed Criterion Feedback"
+                                : "Show Detailed Criterion Feedback"}
+                        </button>
+
+                        {showDetails && (
+                            <div className="writing-result-detail-grid">
+                                {SCORE_ITEMS.map((item) => (
+                                    <div className="writing-result-feedback-panel" key={`${item.key}-detail`}>
+                                        <h3>{item.label}</h3>
+                                        <p>{criteriaSource?.criterionFeedback?.[item.key] || "—"}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </>
                 )}
             </div>
