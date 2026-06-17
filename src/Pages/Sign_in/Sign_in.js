@@ -91,7 +91,9 @@ function SignIn() {
         } catch (requestError) {
             setError(
                 requestError.response?.data?.message ||
-                    "Google sign-in failed. Please try again."
+                    (requestError.request
+                        ? "Google sign-in could not reach the server. Make sure the API is running and restart the frontend after env changes."
+                        : "Google sign-in failed. Please try again.")
             );
         } finally {
             setGoogleLoading(false);

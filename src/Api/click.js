@@ -1,13 +1,6 @@
-import axios from 'axios'
-
-const API_URL = process.env.REACT_APP_API_URL
+import Api from "./Axios";
 
 export const createClickPayment = async (planType) => {
-    const token = localStorage.getItem('token')
-    const res = await axios.post(
-        `${API_URL}/api/click/create`,
-        { planType },
-        { headers: { Authorization: `Bearer ${token}` } }
-    )
-    return res.data
-}
+    const res = await Api.post("/api/click/create", { planType });
+    return res.data;
+};
