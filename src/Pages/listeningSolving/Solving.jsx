@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "../../Api/Axios";
+import TestCompletionScreen from "../../components/results/TestCompletionScreen";
 import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
 import { createAttemptKey } from "../../utils/resultAttempt";
 import "./Solving.css";
@@ -345,6 +346,8 @@ function ListeningTest() {
     const [userAnswers, setUserAnswers] = useState([]);
     const [results, setResults] = useState(null);
     const [scoreSummary, setScoreSummary] = useState(null);
+    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+    const [savingScore, setSavingScore] = useState(false);
     const [error, setError] = useState(null);
     const audioRef = useRef(null);
     const [totalAudioSeconds, setTotalAudioSeconds] = useState(0);
@@ -397,6 +400,7 @@ function ListeningTest() {
                 setActivePart(0);
                 setResults(null);
                 setScoreSummary(null);
+                setIsResultModalOpen(false);
 
                 const answers = incomingParts.map((part) => {
                     const defs = part.testText ? getQuestionDefs(part.testText) : [];
@@ -471,6 +475,14 @@ function ListeningTest() {
     const handleSubmit = useCallback(async () => {
         if (!test || results) return;
 
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
+        if (autoSubmitTimerRef.current) {
+            clearTimeout(autoSubmitTimerRef.current);
+            autoSubmitTimerRef.current = null;
+        }
+
         let globalQuestionNumber = 0;
         const correctAnswers = [];
         const wrongAnswers = [];
@@ -525,9 +537,21 @@ function ListeningTest() {
         });
         const totalCorrect = partTotals.reduce((sum, part) => sum + part.correct, 0);
         const totalQuestions = partTotals.reduce((sum, part) => sum + part.total, 0);
-        setScoreSummary({ totalCorrect, totalQuestions, partTotals });
+        const academicBand = totalQuestions === 40 ? getBandScore(totalCorrect) : null;
+        const generalBand = totalQuestions === 40 ? getBandScore(totalCorrect) : null;
+        setScoreSummary({
+            totalCorrect,
+            totalQuestions,
+            partTotals,
+            academicBand,
+            generalBand,
+            correctAnswers,
+            wrongAnswers
+        });
+        setIsResultModalOpen(true);
 
         try {
+            setSavingScore(true);
             const attemptKey = createAttemptKey("listening", test._id);
             await axios.post(
                 "/scorel/add",
@@ -543,8 +567,8 @@ function ListeningTest() {
                         })),
                         rawScore: totalCorrect,
                         rawTotal: totalQuestions,
-                        academicBand: totalQuestions === 40 ? getBandScore(totalCorrect) : null,
-                        generalBand: totalQuestions === 40 ? getBandScore(totalCorrect) : null,
+                        academicBand,
+                        generalBand,
                         correctAnswers,
                         wrongAnswers
                     }
@@ -554,6 +578,8 @@ function ListeningTest() {
             console.log("Score saqlandi ✅");
         } catch (err) {
             console.error("Score saqlashda xato:", err.response?.data || err);
+        } finally {
+            setSavingScore(false);
         }
     }, [test, parts, userAnswers, results]);
 
@@ -738,6 +764,28 @@ function ListeningTest() {
     const shouldAutoSubmitOnEnded = audioUrls.length <= 1;
     const totalAudioLabel =
         totalAudioSeconds > 0 ? formatDuration(totalAudioSeconds) : audioUrls.length ? "Hisoblanmoqda..." : "—";
+    const completedResult = useMemo(() => {
+        if (!scoreSummary || !test) return null;
+
+        return {
+            moduleType: "Listening",
+            testName: test.title || "Listening Test",
+            createdAt: new Date().toISOString(),
+            listening: {
+                sectionScores: scoreSummary.partTotals.map((part, index) => ({
+                    label: `Section ${index + 1}`,
+                    correct: part.correct,
+                    total: part.total
+                })),
+                rawScore: scoreSummary.totalCorrect,
+                rawTotal: scoreSummary.totalQuestions,
+                academicBand: scoreSummary.academicBand,
+                generalBand: scoreSummary.generalBand,
+                correctAnswers: scoreSummary.correctAnswers || [],
+                wrongAnswers: scoreSummary.wrongAnswers || []
+            }
+        };
+    }, [scoreSummary, test]);
 
     useEffect(() => {
         if (!audioRef.current) return;
@@ -755,7 +803,7 @@ function ListeningTest() {
                     <h1>{test.title || "Listening Test"}</h1>
                     <span className="listening-time">Audio time: {totalAudioLabel}</span>
                 </div>
-                <Link to="/listen" className="menu-item">
+                <Link to="/listening" className="menu-item">
                     All IELTS Listening Tests
                 </Link>
             </header>
@@ -883,32 +931,38 @@ function ListeningTest() {
                 )}
             </div>
 
-            {scoreSummary && (
-                <div className="score-box">
-                    <div>
-                        <strong>Total raw score:</strong>{" "}
-                        {scoreSummary.totalCorrect} / {scoreSummary.totalQuestions}
-                    </div>
-                    {scoreSummary.partTotals.length > 0 && (
-                        <div className="score-breakdown">
-                            <strong>Per part:</strong>
-                            <div className="score-breakdown-list">
-                                {scoreSummary.partTotals.map((part, idx) => (
-                                    <span key={`part-score-${idx}`}>
-                                        Part {idx + 1}: {part.correct} / {part.total}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {!results && (
-                <button className="submit-btn" onClick={handleSubmit}>
-                    Javobni yuborish
+            {!results ? (
+                <button className="submit-btn" onClick={handleSubmit} disabled={savingScore}>
+                    {savingScore ? "Saving..." : "Javobni yuborish"}
                 </button>
-            )}
+            ) : completedResult && !isResultModalOpen ? (
+                <button
+                    className="submit-btn"
+                    type="button"
+                    onClick={() => setIsResultModalOpen(true)}
+                >
+                    Natijani ko‘rish
+                </button>
+            ) : null}
+
+            {completedResult && isResultModalOpen ? (
+                <TestCompletionScreen
+                    result={completedResult}
+                    eyebrow="Listening Completed"
+                    title="Your listening result is ready"
+                    description="Test tugagandan keyin natija shu yerning ustida bitta oynada ko‘rsatiladi."
+                    statusText={
+                        savingScore
+                            ? "Natija accountingizga saqlanmoqda."
+                            : "Natija accountingizga saqlandi va sectionlar bo‘yicha review tayyor."
+                    }
+                    onClose={() => setIsResultModalOpen(false)}
+                    primaryActionTo="/account"
+                    primaryActionLabel="Open Result Center"
+                    secondaryActionTo="/listening"
+                    secondaryActionLabel="Take Another Listening Test"
+                />
+            ) : null}
         </div>
     );
 }

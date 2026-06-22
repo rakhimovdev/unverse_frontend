@@ -50,7 +50,12 @@ const renderWritingCriterionMetrics = (task = {}) => {
     );
 };
 
-const renderAnswerReviews = (items = [], title, emptyText) => (
+const renderAnswerReviews = (
+    items = [],
+    title,
+    emptyText,
+    { showExplanation = false } = {}
+) => (
     <div className="result-card__detail-panel">
         <h4>{title}</h4>
         {items.length ? (
@@ -68,9 +73,11 @@ const renderAnswerReviews = (items = [], title, emptyText) => (
                             <p>
                                 <span>Correct answer:</span> {item.correctAnswer || "—"}
                             </p>
-                            <p>
-                                <span>Explanation:</span> {item.explanation || "—"}
-                            </p>
+                            {showExplanation && item.explanation ? (
+                                <p>
+                                    <span>Explanation:</span> {item.explanation}
+                                </p>
+                            ) : null}
                         </div>
                     </article>
                 ))}
@@ -87,7 +94,8 @@ function ResultCard({
     expanded,
     loadingDetail,
     onToggle,
-    adminMode = false
+    adminMode = false,
+    showToggle = true
 }) {
     const activeResult = detail || result;
     const user = activeResult?.userId;
@@ -205,12 +213,14 @@ function ResultCard({
                     {renderAnswerReviews(
                         activeResult.reading?.wrongAnswers || [],
                         "Incorrect Answers",
-                        "No mistakes recorded for this reading attempt."
+                        "No mistakes recorded for this reading attempt.",
+                        { showExplanation: adminMode }
                     )}
                     {renderAnswerReviews(
                         activeResult.reading?.correctAnswers || [],
                         "Correct Answers",
-                        "Correct answer review will appear here after submission."
+                        "Correct answer review will appear here after submission.",
+                        { showExplanation: adminMode }
                     )}
                 </div>
             );
@@ -222,12 +232,14 @@ function ResultCard({
                     {renderAnswerReviews(
                         activeResult.listening?.wrongAnswers || [],
                         "Incorrect Answers",
-                        "No mistakes recorded for this listening attempt."
+                        "No mistakes recorded for this listening attempt.",
+                        { showExplanation: adminMode }
                     )}
                     {renderAnswerReviews(
                         activeResult.listening?.correctAnswers || [],
                         "Correct Answers",
-                        "Correct answer review will appear here after submission."
+                        "Correct answer review will appear here after submission.",
+                        { showExplanation: adminMode }
                     )}
                 </div>
             );
@@ -439,13 +451,17 @@ function ResultCard({
 
                 <div className="result-card__side">
                     <BandBadge value={primaryBand} label="Band" />
-                    <button
-                        type="button"
-                        className="result-card__toggle"
-                        onClick={onToggle}
-                    >
-                        {expanded ? "Hide Details" : getResultToggleLabel(activeResult.moduleType)}
-                    </button>
+                    {showToggle ? (
+                        <button
+                            type="button"
+                            className="result-card__toggle"
+                            onClick={onToggle}
+                        >
+                            {expanded
+                                ? "Hide Details"
+                                : getResultToggleLabel(activeResult.moduleType)}
+                        </button>
+                    ) : null}
                 </div>
             </div>
 

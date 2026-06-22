@@ -4,6 +4,7 @@ import { FaClock } from "react-icons/fa6";
 import { useParams } from "react-router-dom";
 
 import axios from "../../Api/Axios";
+import TestCompletionScreen from "../../components/results/TestCompletionScreen";
 import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
 import { createAttemptKey } from "../../utils/resultAttempt";
 
@@ -497,6 +498,7 @@ function ReadingForm() {
     const [userAnswers, setUserAnswers] = useState([]);
     const [secondsLeft, setSecondsLeft] = useState(3600);
     const [scoreResult, setScoreResult] = useState(null);
+    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [savingScore, setSavingScore] = useState(false);
     const [readingHtml, setReadingHtml] = useState([]);
     const [questionHighlights, setQuestionHighlights] = useState([]);
@@ -533,6 +535,8 @@ function ReadingForm() {
                 });
 
                 setUserAnswers(answers);
+                setScoreResult(null);
+                setIsResultModalOpen(false);
             })
             .catch((err) => {
                 console.log("LOAD ERROR:", err.response?.data || err);
@@ -719,6 +723,7 @@ function ReadingForm() {
         if (!test) return;
         const result = calculateScores();
         setScoreResult(result);
+        setIsResultModalOpen(true);
         if (!result.hasAnswerKey) return;
 
         const token = localStorage.getItem("token");
@@ -904,6 +909,29 @@ function ReadingForm() {
             },
         });
     }, [passage?.testText, activePassage, userAnswers, handleChange]);
+
+    const completedResult = useMemo(() => {
+        if (!scoreResult || !test) return null;
+
+        return {
+            moduleType: "Reading",
+            testName: test.name || "Reading Test",
+            createdAt: new Date().toISOString(),
+            reading: {
+                passageScores: scoreResult.passageResults.map((item, index) => ({
+                    label: `Passage ${index + 1}`,
+                    correct: item.correct,
+                    total: item.total
+                })),
+                rawScore: scoreResult.totalCorrect,
+                rawTotal: scoreResult.totalQuestions,
+                academicBand: scoreResult.academicBand,
+                generalBand: scoreResult.generalBand,
+                correctAnswers: scoreResult.correctAnswers || [],
+                wrongAnswers: scoreResult.wrongAnswers || []
+            }
+        };
+    }, [scoreResult, test]);
 
     /* ================= SAFE CHECK ================= */
 
@@ -1173,59 +1201,39 @@ function ReadingForm() {
                         >
                             {savingScore ? "Saving..." : `Submit Passage ${activePassage + 1}`}
                         </button>
-
-                        {scoreResult && (
-                            <div className="score-box">
-                                {!scoreResult.hasAnswerKey && (
-                                    <div className="score-note">
-                                        No answer key saved for this test yet.
-                                    </div>
-                                )}
-                                <div>
-                                    <strong>Passage raw score:</strong>{" "}
-                                    {scoreResult.passageCorrect} /{" "}
-                                    {scoreResult.passageTotal}
-                                </div>
-                                <div>
-                                    <strong>Total raw score:</strong>{" "}
-                                    {scoreResult.totalCorrect} /{" "}
-                                    {scoreResult.totalQuestions}
-                                </div>
-                                {scoreResult.passageResults.length > 0 && (
-                                    <div className="score-breakdown">
-                                        <strong>Per passage:</strong>
-                                        <div className="score-breakdown-list">
-                                            {scoreResult.passageResults.map((p, idx) => (
-                                                <span key={`passage-score-${idx}`}>
-                                                    Passage {idx + 1}: {p.correct} / {p.total}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                <div>
-                                    <strong>Band (Academic):</strong>{" "}
-                                    {scoreResult.academicBand}
-                                </div>
-                                <div>
-                                    <strong>Band (General Training):</strong>{" "}
-                                    {scoreResult.generalBand}
-                                </div>
-                                {scoreResult.bandAvailable && (
-                                    <div className="score-note">
-                                        Band boundaries are approximate and can vary by test.
-                                    </div>
-                                )}
-                                {!scoreResult.bandAvailable && (
-                                    <div className="score-note">
-                                        Band score requires 40 questions.
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        {completedResult && !isResultModalOpen ? (
+                            <button
+                                className="submit-btn"
+                                type="button"
+                                onClick={() => setIsResultModalOpen(true)}
+                            >
+                                Natijani ko‘rish
+                            </button>
+                        ) : null}
                     </div>
                 </div>
             </div>
+
+            {completedResult && isResultModalOpen ? (
+                <TestCompletionScreen
+                    result={completedResult}
+                    eyebrow="Reading Completed"
+                    title="Your reading result is ready"
+                    description="Test tugagandan keyin natija shu yerning ustida bitta oynada ko‘rsatiladi."
+                    statusText={
+                        savingScore
+                            ? "Natija accountingizga saqlanmoqda."
+                            : scoreResult?.hasAnswerKey
+                                ? "Natija accountingizga saqlandi va batafsil review tayyor."
+                                : "Bu test uchun answer key topilmadi, shuning uchun faqat mavjud hisob ko‘rsatildi."
+                    }
+                    onClose={() => setIsResultModalOpen(false)}
+                    primaryActionTo="/account"
+                    primaryActionLabel="Open Result Center"
+                    secondaryActionTo="/read"
+                    secondaryActionLabel="Take Another Reading Test"
+                />
+            ) : null}
         </div>
     );
 }
