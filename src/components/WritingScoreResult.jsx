@@ -4,23 +4,130 @@ import {
     formatBand,
     formatWritingDate,
     getLatestWritingAttempt,
+    getWritingScoreItems,
     normalizeWritingRecord
 } from "../utils/writingResults";
 import "./WritingScoreResult.css";
 
-const SCORE_ITEMS = [
-    { key: "taskResponse", label: "Task Response" },
-    { key: "coherenceCohesion", label: "Coherence & Cohesion" },
-    { key: "lexicalResource", label: "Lexical Resource" },
-    { key: "grammarRangeAccuracy", label: "Grammar" }
-];
+const renderList = (items = [], emptyText = "—") =>
+    items.length ? (
+        <ul className="writing-score-list">
+            {items.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+            ))}
+        </ul>
+    ) : (
+        <ul className="writing-score-list">
+            <li>{emptyText}</li>
+        </ul>
+    );
+
+const WritingTaskPanel = ({ task }) => {
+    const scoreItems = getWritingScoreItems(task);
+
+    return (
+        <div className="writing-score-card">
+            <h3>{task.taskTypeLabel}</h3>
+            <p>{task.question || "—"}</p>
+            <p>Words: {task.wordCount ?? 0}</p>
+
+            <div className="writing-score-grid writing-score-grid--scores">
+                {scoreItems.map((item) => (
+                    <div className="writing-score-card" key={`${task._id}-${item.key}`}>
+                        <h3>{item.label}</h3>
+                        <p className="writing-score-card__score">
+                            {formatBand(item.value)}
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            <div className="writing-score-grid">
+                <div className="writing-score-card">
+                    <h3>Strengths</h3>
+                    {renderList(task.strengths, "No specific strengths recorded.")}
+                </div>
+                <div className="writing-score-card">
+                    <h3>Weaknesses</h3>
+                    {renderList(task.weaknesses, "No specific weaknesses recorded.")}
+                </div>
+                <div className="writing-score-card">
+                    <h3>Improvement Focus</h3>
+                    {renderList(
+                        task.improvementTips,
+                        "No improvement priorities recorded."
+                    )}
+                </div>
+            </div>
+
+            <div className="writing-score-grid">
+                {scoreItems.map((item) => {
+                    const detail = task.criterionFeedback?.[item.key];
+
+                    return (
+                        <div className="writing-score-card" key={`${task._id}-${item.key}-detail`}>
+                            <h3>
+                                {item.label} Feedback
+                                {detail?.band != null ? ` (Band ${formatBand(detail.band)})` : ""}
+                            </h3>
+                            <p>{detail?.analysis || "No analysis recorded."}</p>
+                            {renderList(detail?.evidence || [], "No evidence quoted.")}
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="writing-score-grid">
+                <div className="writing-score-card">
+                    <h3>Grammar Corrections</h3>
+                    {task.grammarCorrections?.length ? (
+                        <ul className="writing-score-list">
+                            {task.grammarCorrections.map((item, index) => (
+                                <li key={`${item.original}-${index}`}>
+                                    <strong>{item.original}</strong>
+                                    {" -> "}
+                                    <strong>{item.correct}</strong>
+                                    {`: ${item.reason}`}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <ul className="writing-score-list">
+                            <li>No grammar corrections recorded.</li>
+                        </ul>
+                    )}
+                </div>
+                <div className="writing-score-card">
+                    <h3>Vocabulary Suggestions</h3>
+                    {task.vocabularySuggestions?.length ? (
+                        <ul className="writing-score-list">
+                            {task.vocabularySuggestions.map((item, index) => (
+                                <li key={`${item.original}-${index}`}>
+                                    <strong>{item.original}</strong>
+                                    {`: ${item.alternatives.join(", ")}`}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <ul className="writing-score-list">
+                            <li>No vocabulary suggestions recorded.</li>
+                        </ul>
+                    )}
+                </div>
+                <div className="writing-score-card">
+                    <h3>Estimated Examiner Comment</h3>
+                    <p>{task.estimatedExaminerComment || "—"}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 function WritingScoreResult({ user }) {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [loaded, setLoaded] = useState(false);
-    const [showDetails, setShowDetails] = useState(false);
 
     const role = user?.role;
     const canView = role === "mooc" || role === "admin";
@@ -49,7 +156,7 @@ function WritingScoreResult({ user }) {
 
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("/ai/ai-results", {
+                const res = await axios.get("/ai/writing/results", {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
                 });
 
@@ -87,7 +194,7 @@ function WritingScoreResult({ user }) {
     );
 
     const summaryRecord = latestAttempt.overall || latestAttempt.latestTask;
-    const criteriaSource = latestAttempt.criteriaSource;
+    const displayTasks = latestAttempt.displayTasks;
 
     if (!user) {
         return (
@@ -124,7 +231,7 @@ function WritingScoreResult({ user }) {
                         <p className="writing-score-eyebrow">IELTS Writing Result</p>
                         <h1 className="writing-score-title">Writing Assessment</h1>
                         <p className="writing-score-subtitle">
-                            Official IELTS criteria with server-side band calculation.
+                            Official IELTS criteria with evidence-based feedback.
                         </p>
                     </div>
                     <div className="writing-score-band">
@@ -146,96 +253,26 @@ function WritingScoreResult({ user }) {
                         <div className="writing-score-meta">
                             <span>{summaryRecord.testName || "Writing Test"}</span>
                             <span>{formatWritingDate(summaryRecord.createdAt)}</span>
-                            <span>Words: {criteriaSource?.wordCount ?? 0}</span>
-                        </div>
-
-                        <div className="writing-score-grid writing-score-grid--scores">
-                            {SCORE_ITEMS.map((item) => (
-                                <div className="writing-score-card" key={item.key}>
-                                    <h3>{item.label}</h3>
-                                    <p className="writing-score-card__score">
-                                        {formatBand(criteriaSource?.scores?.[item.key])}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="writing-score-grid">
-                            <div className="writing-score-card">
-                                <h3>Strengths</h3>
-                                <ul className="writing-score-list">
-                                    {(criteriaSource?.feedback?.strengths || []).map(
-                                        (item, index) => (
-                                            <li key={`${item}-${index}`}>{item}</li>
-                                        )
-                                    )}
-                                    {!criteriaSource?.feedback?.strengths?.length && <li>—</li>}
-                                </ul>
-                            </div>
-                            <div className="writing-score-card">
-                                <h3>Weaknesses</h3>
-                                <ul className="writing-score-list">
-                                    {(criteriaSource?.feedback?.weaknesses || []).map(
-                                        (item, index) => (
-                                            <li key={`${item}-${index}`}>{item}</li>
-                                        )
-                                    )}
-                                    {!criteriaSource?.feedback?.weaknesses?.length && <li>—</li>}
-                                </ul>
-                            </div>
-                            <div className="writing-score-card">
-                                <h3>Improvement Tips</h3>
-                                <ul className="writing-score-list">
-                                    {(criteriaSource?.feedback?.improvementTips || []).map(
-                                        (item, index) => (
-                                            <li key={`${item}-${index}`}>{item}</li>
-                                        )
-                                    )}
-                                    {!criteriaSource?.feedback?.improvementTips?.length && <li>—</li>}
-                                </ul>
-                            </div>
-                            <div className="writing-score-card">
-                                <h3>Question</h3>
-                                <p>{criteriaSource?.question || "—"}</p>
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="writing-score-toggle"
-                            onClick={() => setShowDetails((prev) => !prev)}
-                        >
-                            {showDetails
-                                ? "Hide Detailed Criterion Feedback"
-                                : "Show Detailed Criterion Feedback"}
-                        </button>
-
-                        {showDetails && (
-                            <div className="writing-score-grid">
-                                {SCORE_ITEMS.map((item) => (
-                                    <div className="writing-score-card" key={`${item.key}-detail`}>
-                                        <h3>{item.label} Feedback</h3>
-                                        <p>{criteriaSource?.criterionFeedback?.[item.key] || "—"}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="writing-score-divider" />
-
-                        <div className="writing-score-footer">
-                            <span className="writing-score-footer-task">
-                                {summaryRecord.taskType === "task1"
-                                    ? "Task 1"
-                                    : summaryRecord.taskType === "task2"
-                                        ? "Task 2"
-                                        : "Combined Writing Result"}
-                            </span>
-                            <span className="writing-score-footer-dot" />
-                            <span className="writing-score-footer-date">
-                                {formatWritingDate(summaryRecord.createdAt)}
+                            <span>
+                                Words:{" "}
+                                {displayTasks.reduce(
+                                    (sum, item) => sum + (Number(item?.wordCount) || 0),
+                                    0
+                                )}
                             </span>
                         </div>
+
+                        {latestAttempt.overall ? (
+                            <div className="writing-score-card">
+                                <h3>Combined Writing Result</h3>
+                                <p>{formatBand(latestAttempt.overall?.scores?.overall)}</p>
+                                <p>{latestAttempt.overall?.estimatedExaminerComment || "—"}</p>
+                            </div>
+                        ) : null}
+
+                        {displayTasks.map((task) => (
+                            <WritingTaskPanel key={task._id || task.taskType} task={task} />
+                        ))}
                     </>
                 )}
             </div>

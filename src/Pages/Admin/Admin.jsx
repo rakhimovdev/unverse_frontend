@@ -704,9 +704,9 @@ function Admin() {
                                                     <tbody>
                                                         {moocScores.writingAi.map((r) => (
                                                             <tr key={r._id}>
-                                                                <td>{r.taskType || "task2"}</td>
-                                                                <td>{r.result?.raw_score ?? "—"}</td>
-                                                                <td>{r.result?.estimated_band ?? "N/A"}</td>
+                                                                <td>{r.taskTypeLabel || r.taskType || "Task 2"}</td>
+                                                                <td>{r.wordCount ?? "—"}</td>
+                                                                <td>{r.scores?.overall ?? "N/A"}</td>
                                                                 <td>{new Date(r.createdAt).toLocaleString()}</td>
                                                             </tr>
                                                         ))}

@@ -13,6 +13,61 @@ const normalizeList = (value) =>
               .filter(Boolean)
         : [];
 
+const uniqueList = (items = []) => {
+    const seen = new Set();
+    const list = [];
+
+    for (const item of items) {
+        const clean = normalizeText(item);
+        const key = clean.toLowerCase();
+        if (!clean || seen.has(key)) continue;
+        seen.add(key);
+        list.push(clean);
+    }
+
+    return list;
+};
+
+const normalizeGrammarCorrections = (value) =>
+    Array.isArray(value)
+        ? value
+              .map((item) => ({
+                  original: normalizeText(item?.original),
+                  correct: normalizeText(item?.correct),
+                  reason: normalizeText(item?.reason)
+              }))
+              .filter((item) => item.original && item.correct && item.reason)
+        : [];
+
+const normalizeVocabularySuggestions = (value) =>
+    Array.isArray(value)
+        ? value
+              .map((item) => ({
+                  original: normalizeText(item?.original),
+                  alternatives: uniqueList(item?.alternatives || [])
+              }))
+              .filter((item) => item.original && item.alternatives.length)
+        : [];
+
+const normalizeCriterionEntry = (value, fallbackBand = null) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+        return {
+            band: toNumber(value.band) ?? fallbackBand,
+            analysis: normalizeText(value.analysis || value.comment || value.feedback),
+            evidence: normalizeList(value.evidence)
+        };
+    }
+
+    const analysis = normalizeText(value);
+    if (!analysis && fallbackBand == null) return null;
+
+    return {
+        band: fallbackBand,
+        analysis,
+        evidence: []
+    };
+};
+
 export const formatBand = (value) => {
     const num = toNumber(value);
     if (num == null) return "—";
@@ -36,28 +91,135 @@ export const formatWritingText = (value) => {
     return clean || "—";
 };
 
+const getTaskTypeLabel = (taskType) => {
+    if (taskType === "task1") return "Task 1";
+    if (taskType === "task2") return "Task 2";
+    return "Overall";
+};
+
+export const getWritingScoreItems = (task = {}) => {
+    const taskType = normalizeText(task?.taskType);
+    const scores = task?.scores || {};
+
+    const common = [
+        { key: "coherence", label: "Coherence & Cohesion", value: scores.coherence },
+        { key: "lexical", label: "Lexical Resource", value: scores.lexical },
+        { key: "grammar", label: "Grammar", value: scores.grammar }
+    ];
+
+    if (taskType === "task1") {
+        return [
+            {
+                key: "taskAchievement",
+                label: "Task Achievement",
+                value: scores.taskAchievement
+            },
+            ...common
+        ];
+    }
+
+    if (taskType === "task2") {
+        return [
+            {
+                key: "taskResponse",
+                label: "Task Response",
+                value: scores.taskResponse
+            },
+            ...common
+        ];
+    }
+
+    return [
+        {
+            key: "taskAchievement",
+            label: "Task 1 Task Achievement",
+            value: scores.taskAchievement
+        },
+        {
+            key: "taskResponse",
+            label: "Task 2 Task Response",
+            value: scores.taskResponse
+        },
+        ...common
+    ];
+};
+
 export const normalizeWritingRecord = (record) => {
     const legacy = record?.result || {};
+    const taskType = normalizeText(record?.taskType);
     const scores = {
+        taskAchievement:
+            toNumber(record?.scores?.taskAchievement) ??
+            (taskType === "task1"
+                ? toNumber(record?.scores?.taskResponse ?? record?.taskResponseScore)
+                : null),
         taskResponse:
             toNumber(record?.scores?.taskResponse) ??
-            toNumber(record?.taskResponseScore),
-        coherenceCohesion:
-            toNumber(record?.scores?.coherenceCohesion) ??
-            toNumber(record?.coherenceCohesionScore),
-        lexicalResource:
-            toNumber(record?.scores?.lexicalResource) ??
-            toNumber(record?.lexicalResourceScore),
-        grammarRangeAccuracy:
-            toNumber(record?.scores?.grammarRangeAccuracy) ??
-            toNumber(record?.grammarRangeAccuracyScore),
+            (taskType === "task2" ? toNumber(record?.taskResponseScore) : null),
+        coherence:
+            toNumber(record?.scores?.coherence) ??
+            toNumber(record?.scores?.coherenceCohesion ?? record?.coherenceCohesionScore),
+        lexical:
+            toNumber(record?.scores?.lexical) ??
+            toNumber(record?.scores?.lexicalResource ?? record?.lexicalResourceScore),
+        grammar:
+            toNumber(record?.scores?.grammar) ??
+            toNumber(record?.scores?.grammarRangeAccuracy ?? record?.grammarRangeAccuracyScore),
         overall:
             toNumber(record?.scores?.overall) ??
             toNumber(legacy?.band_score ?? legacy?.estimated_band)
     };
 
+    const criterionFeedback = {
+        taskAchievement:
+            taskType === "task1" || record?.criterionFeedback?.taskAchievement
+                ? normalizeCriterionEntry(
+                      record?.criterionFeedback?.taskAchievement ??
+                          record?.criterionFeedback?.taskResponse,
+                      scores.taskAchievement
+                  )
+                : null,
+        taskResponse:
+            taskType === "task2" || record?.criterionFeedback?.taskResponse
+                ? normalizeCriterionEntry(
+                      record?.criterionFeedback?.taskResponse,
+                      scores.taskResponse
+                  )
+                : null,
+        coherence: normalizeCriterionEntry(
+            record?.criterionFeedback?.coherence ??
+                record?.criterionFeedback?.coherenceCohesion,
+            scores.coherence
+        ),
+        lexical: normalizeCriterionEntry(
+            record?.criterionFeedback?.lexical ??
+                record?.criterionFeedback?.lexicalResource,
+            scores.lexical
+        ),
+        grammar: normalizeCriterionEntry(
+            record?.criterionFeedback?.grammar ??
+                record?.criterionFeedback?.grammarRangeAccuracy,
+            scores.grammar
+        )
+    };
+
+    const strengths = normalizeList(
+        record?.strengths || record?.feedback?.strengths
+    );
+    const weaknesses = normalizeList(
+        record?.weaknesses || record?.feedback?.weaknesses || legacy?.weaknesses
+    );
+    const improvementTips = uniqueList(
+        record?.improvementTips ||
+            record?.feedback?.improvementTips ||
+            legacy?.improvement_tips ||
+            []
+    );
+
     return {
         ...record,
+        taskType,
+        taskTypeLabel: normalizeText(record?.taskTypeLabel) || getTaskTypeLabel(taskType),
         testName: normalizeText(record?.testName) || "Writing Test",
         question: normalizeText(record?.question || record?.prompt),
         essay: normalizeText(record?.essay || record?.essayText),
@@ -67,35 +229,26 @@ export const normalizeWritingRecord = (record) => {
                 .split(/\s+/)
                 .filter(Boolean).length,
         scores,
+        strengths,
+        weaknesses,
+        improvementTips,
+        criterionFeedback,
+        grammarCorrections: normalizeGrammarCorrections(record?.grammarCorrections),
+        vocabularySuggestions: normalizeVocabularySuggestions(
+            record?.vocabularySuggestions
+        ),
+        estimatedExaminerComment:
+            normalizeText(record?.estimatedExaminerComment) ||
+            normalizeText(legacy?.final_summary),
         feedback: {
-            strengths: normalizeList(record?.feedback?.strengths),
-            weaknesses: normalizeList(record?.feedback?.weaknesses || legacy?.weaknesses),
-            improvementTips: normalizeList(
-                record?.feedback?.improvementTips || legacy?.improvement_tips
-            )
-        },
-        criterionFeedback: {
-            taskResponse:
-                normalizeText(record?.criterionFeedback?.taskResponse) ||
-                normalizeText(legacy?.final_summary),
-            coherenceCohesion:
-                normalizeText(record?.criterionFeedback?.coherenceCohesion) ||
-                normalizeList(legacy?.coherence_feedback).join(" "),
-            lexicalResource:
-                normalizeText(record?.criterionFeedback?.lexicalResource) ||
-                normalizeList(legacy?.vocabulary_feedback).join(" "),
-            grammarRangeAccuracy:
-                normalizeText(record?.criterionFeedback?.grammarRangeAccuracy) ||
-                normalizeList(legacy?.grammar_feedback).join(" ")
+            strengths,
+            weaknesses,
+            improvementTips
         },
         result: {
             ...legacy,
-            band_score:
-                toNumber(legacy?.band_score ?? legacy?.estimated_band) ??
-                toNumber(record?.scores?.overall),
-            estimated_band:
-                toNumber(legacy?.estimated_band ?? legacy?.band_score) ??
-                toNumber(record?.scores?.overall)
+            band_score: toNumber(legacy?.band_score ?? scores.overall) ?? null,
+            estimated_band: toNumber(legacy?.estimated_band ?? scores.overall) ?? null
         }
     };
 };
@@ -117,7 +270,7 @@ export const getLatestWritingAttempt = (results = []) => {
             task1: null,
             task2: null,
             latestTask: null,
-            criteriaSource: null
+            displayTasks: []
         };
     }
 
@@ -135,23 +288,19 @@ export const getLatestWritingAttempt = (results = []) => {
         normalized.find((item) => item.taskType !== "overall") ||
         null;
 
+    const displayTasks =
+        [task1, task2].filter(Boolean).length > 0
+            ? [task1, task2].filter(Boolean)
+            : latestTask
+                ? [latestTask]
+                : [];
+
     return {
         items,
         overall,
         task1,
         task2,
         latestTask,
-        criteriaSource:
-            (overall &&
-                overall.scores &&
-                overall.scores.taskResponse != null &&
-                overall.scores.coherenceCohesion != null &&
-                overall.scores.lexicalResource != null &&
-                overall.scores.grammarRangeAccuracy != null &&
-                overall) ||
-            latestTask ||
-            task2 ||
-            task1 ||
-            overall
+        displayTasks
     };
 };

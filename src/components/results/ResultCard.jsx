@@ -7,6 +7,7 @@ import {
     getResultToggleLabel,
     getUserDisplayName
 } from "../../utils/ieltsResults";
+import { getWritingScoreItems } from "../../utils/writingResults";
 
 const renderList = (items = [], emptyText = "No feedback provided.") => {
     if (!items.length) {
@@ -31,11 +32,11 @@ const renderFeedbackBlock = (title, items = [], emptyText) => (
 
 const renderWritingCriterionMetrics = (task = {}) => {
     const metricItems = [
-        { label: "Task Response", value: task.taskResponseScore },
-        { label: "Coherence", value: task.coherenceCohesionScore },
-        { label: "Lexical", value: task.lexicalResourceScore },
-        { label: "Grammar", value: task.grammarRangeAccuracyScore },
-        { label: "Overall", value: task.bandScore }
+        ...getWritingScoreItems(task).map((item) => ({
+            label: item.label,
+            value: item.value
+        })),
+        { label: "Overall", value: task.bandScore ?? task?.scores?.overall }
     ];
 
     return (
@@ -84,6 +85,63 @@ const renderAnswerReviews = (
             </div>
         ) : (
             <p className="result-card__empty-copy">{emptyText}</p>
+        )}
+    </div>
+);
+
+const renderWritingCriterionFeedback = (task = {}) =>
+    getWritingScoreItems(task).map((item) => {
+        const detail = task.criterionFeedback?.[item.key];
+        return (
+            <div className="result-card__feedback-block" key={`${task.taskType || "writing"}-${item.key}`}>
+                <h5>
+                    {item.label} Feedback
+                    {detail?.band != null ? ` (Band ${formatBand(detail.band)})` : ""}
+                </h5>
+                {detail?.analysis ? (
+                    <p>{detail.analysis}</p>
+                ) : (
+                    <p className="result-card__empty-copy">No analysis recorded.</p>
+                )}
+                {renderList(detail?.evidence || [], "No evidence quoted.")}
+            </div>
+        );
+    });
+
+const renderWritingCorrections = (task = {}) => (
+    <div className="result-card__feedback-block">
+        <h5>Grammar Corrections</h5>
+        {task.grammarCorrections?.length ? (
+            <ul className="result-card__list">
+                {task.grammarCorrections.map((item, index) => (
+                    <li key={`${item.original}-${index}`}>
+                        <strong>{item.original}</strong>
+                        {" -> "}
+                        <strong>{item.correct}</strong>
+                        {`: ${item.reason}`}
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <p className="result-card__empty-copy">No grammar corrections recorded.</p>
+        )}
+    </div>
+);
+
+const renderWritingVocabularySuggestions = (task = {}) => (
+    <div className="result-card__feedback-block">
+        <h5>Vocabulary Suggestions</h5>
+        {task.vocabularySuggestions?.length ? (
+            <ul className="result-card__list">
+                {task.vocabularySuggestions.map((item, index) => (
+                    <li key={`${item.original}-${index}`}>
+                        <strong>{item.original}</strong>
+                        {`: ${item.alternatives.join(", ")}`}
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <p className="result-card__empty-copy">No vocabulary suggestions recorded.</p>
         )}
     </div>
 );
@@ -269,43 +327,15 @@ function ResultCard({
                             task1.improvementTips,
                             "No task 1 tips recorded."
                         )}
+                        {renderWritingCriterionFeedback(task1)}
+                        {renderWritingCorrections(task1)}
+                        {renderWritingVocabularySuggestions(task1)}
                         {renderFeedbackBlock(
-                            "Task Response Feedback",
-                            task1.criterionFeedback?.taskResponse
-                                ? [task1.criterionFeedback.taskResponse]
+                            "Estimated Examiner Comment",
+                            task1.estimatedExaminerComment
+                                ? [task1.estimatedExaminerComment]
                                 : [],
-                            "No task response feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Coherence & Cohesion Feedback",
-                            task1.criterionFeedback?.coherenceCohesion
-                                ? [task1.criterionFeedback.coherenceCohesion]
-                                : [],
-                            "No coherence feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Lexical Resource Feedback",
-                            task1.criterionFeedback?.lexicalResource
-                                ? [task1.criterionFeedback.lexicalResource]
-                                : [],
-                            "No lexical feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Grammar Feedback",
-                            task1.criterionFeedback?.grammarRangeAccuracy
-                                ? [task1.criterionFeedback.grammarRangeAccuracy]
-                                : task1.grammarFeedback,
-                            "No grammar feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Legacy Vocabulary Notes",
-                            task1.vocabularyFeedback,
-                            "No legacy vocabulary notes recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Legacy Coherence Notes",
-                            task1.coherenceFeedback,
-                            "No legacy coherence notes recorded."
+                            "No examiner comment recorded."
                         )}
                         {renderFeedbackBlock(
                             "Question",
@@ -332,43 +362,15 @@ function ResultCard({
                             task2.improvementTips,
                             "No task 2 tips recorded."
                         )}
+                        {renderWritingCriterionFeedback(task2)}
+                        {renderWritingCorrections(task2)}
+                        {renderWritingVocabularySuggestions(task2)}
                         {renderFeedbackBlock(
-                            "Task Response Feedback",
-                            task2.criterionFeedback?.taskResponse
-                                ? [task2.criterionFeedback.taskResponse]
+                            "Estimated Examiner Comment",
+                            task2.estimatedExaminerComment
+                                ? [task2.estimatedExaminerComment]
                                 : [],
-                            "No task response feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Coherence & Cohesion Feedback",
-                            task2.criterionFeedback?.coherenceCohesion
-                                ? [task2.criterionFeedback.coherenceCohesion]
-                                : [],
-                            "No coherence feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Lexical Resource Feedback",
-                            task2.criterionFeedback?.lexicalResource
-                                ? [task2.criterionFeedback.lexicalResource]
-                                : [],
-                            "No lexical feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Grammar Feedback",
-                            task2.criterionFeedback?.grammarRangeAccuracy
-                                ? [task2.criterionFeedback.grammarRangeAccuracy]
-                                : task2.grammarFeedback,
-                            "No grammar feedback recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Legacy Vocabulary Notes",
-                            task2.vocabularyFeedback,
-                            "No legacy vocabulary notes recorded."
-                        )}
-                        {renderFeedbackBlock(
-                            "Legacy Coherence Notes",
-                            task2.coherenceFeedback,
-                            "No legacy coherence notes recorded."
+                            "No examiner comment recorded."
                         )}
                         {renderFeedbackBlock(
                             "Question",

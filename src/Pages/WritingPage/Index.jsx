@@ -145,8 +145,6 @@ function Index() {
 
             const overallBand =
                 aiTask2.data?.overall?.scores?.overall ??
-                aiTask2.data?.overall?.result?.band_score ??
-                aiTask2.data?.overall?.band_score ??
                 aiTask2.data?.result?.scores?.overall ??
                 null;
 
