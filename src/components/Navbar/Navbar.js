@@ -105,7 +105,11 @@ const Navbar = () => {
                         )
                     ) : (
                         <div className="site-nav__actions-group">
-                            <div className="site-nav__profile">
+                            <Link
+                                className="site-nav__profile site-nav__profile-link"
+                                to={accountHref}
+                                aria-label={`${accountLabel} sahifasiga o'tish`}
+                            >
                                 <div className="site-nav__avatar">
                                     {user?.avatar ? (
                                         <img src={user.avatar} alt={displayName} />
@@ -123,7 +127,7 @@ const Navbar = () => {
                                         {planSummary.detail}
                                     </span>
                                 </div>
-                            </div>
+                            </Link>
 
                             {!planSummary.isPro && role !== "admin" && role !== "teacher" && (
                                 <Link className="nav-btn nav-btn--primary" to="/upgrade">
@@ -134,12 +138,6 @@ const Navbar = () => {
                             <button className="nav-btn nav-btn--ghost" onClick={handleLogout}>
                                 Logout
                             </button>
-                            <Link
-                                className="nav-btn nav-btn--ghost"
-                                to={accountHref}
-                            >
-                                {accountLabel}
-                            </Link>
 
                             {role === "teacher" && (
                                 <>

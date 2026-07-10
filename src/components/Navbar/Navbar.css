@@ -2,7 +2,7 @@
 
 .site-nav {
     display: flex;
-    width: min(1180px, 92%);
+    width: min(1380px, 96%);
     margin: 24px auto 12px;
     border-radius: 24px;
     background: var(--u-glass-bg);
@@ -18,7 +18,7 @@
     justify-content: space-between;
     width: 100%;
     padding: 12px 18px;
-    gap: 20px;
+    gap: 14px;
 }
 
 .brand {
@@ -26,6 +26,8 @@
     align-items: center;
     gap: 14px;
     text-decoration: none;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
 .brand-mark {
@@ -78,10 +80,13 @@
 .site-nav__links {
     display: flex;
     align-items: center;
-    gap: 22px;
+    justify-content: center;
+    gap: clamp(12px, 1.4vw, 22px);
     list-style: none;
     font-family: "Manrope", sans-serif;
     font-weight: 600;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .site-nav__link {
@@ -93,6 +98,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .site-nav__link::after {
@@ -119,13 +125,17 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-left: auto;
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 .site-nav__actions-group {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
 .site-nav__profile {
@@ -136,6 +146,18 @@
     border-radius: 999px;
     background: var(--u-glass-elevated);
     border: 1px solid rgba(var(--u-primary-rgb), 0.18);
+    min-width: 0;
+    max-width: min(280px, 100%);
+}
+
+.site-nav__profile-link {
+    text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.site-nav__profile-link:hover {
+    transform: translateY(-1px);
+    border-color: rgba(var(--u-primary-rgb), 0.32);
 }
 
 .site-nav__avatar {
@@ -161,16 +183,23 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .site-nav__profile-copy strong {
     font-size: 13px;
     color: var(--u-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .site-nav__plan {
     font-size: 11px;
     color: var(--u-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .site-nav__plan.is-pro {
@@ -190,6 +219,7 @@
     border: 1px solid transparent;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .nav-btn--primary {
@@ -226,7 +256,33 @@
     background: var(--u-card-bg-strong);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
+    .site-nav {
+        width: min(1240px, 96%);
+    }
+
+    .brand-text span:last-child {
+        display: none;
+    }
+
+    .site-nav__links {
+        gap: 12px;
+    }
+
+    .site-nav__actions-group {
+        gap: 8px;
+    }
+
+    .site-nav__profile {
+        max-width: 220px;
+    }
+
+    .nav-btn {
+        padding: 8px 14px;
+    }
+}
+
+@media (max-width: 1120px) {
     .site-nav__inner {
         flex-wrap: wrap;
         justify-content: center;
@@ -235,22 +291,31 @@
     .site-nav__links {
         flex-wrap: wrap;
         justify-content: center;
+        width: 100%;
     }
 
     .site-nav__actions {
         width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .site-nav__actions-group {
+        flex-wrap: wrap;
         justify-content: center;
     }
 
     .site-nav__profile {
         width: 100%;
         justify-content: center;
+        max-width: 100%;
     }
 }
 
 @media (max-width: 720px) {
     .site-nav {
         margin: 18px auto 10px;
+        width: min(96%, 560px);
     }
 
     .brand-mark {
@@ -269,5 +334,14 @@
 
     .site-nav__links {
         gap: 14px;
+    }
+
+    .site-nav__actions-group,
+    .site-nav__actions {
+        width: 100%;
+    }
+
+    .nav-btn {
+        width: 100%;
     }
 }
