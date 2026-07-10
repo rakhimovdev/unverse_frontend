@@ -26,6 +26,8 @@
   --u-glass-elevated: rgba(255, 255, 255, 0.72);
   --u-control-bg: #ffffff;
   --u-control-bg-soft: #f0f7ff;
+  --u-control-text: #081c52;
+  --u-control-placeholder: #6b7ea7;
   --u-grid-color: rgba(var(--u-primary-rgb), 0.06);
   --u-bg-start: #f8fbff;
   --u-bg-mid: #edf5ff;
@@ -64,6 +66,8 @@ html[data-theme="dark"] {
   --u-glass-elevated: rgba(20, 35, 61, 0.82);
   --u-control-bg: #13203a;
   --u-control-bg-soft: #1a2945;
+  --u-control-text: #edf4ff;
+  --u-control-placeholder: #9eb0d2;
   --u-grid-color: rgba(168, 197, 255, 0.05);
   --u-bg-start: #07101f;
   --u-bg-mid: #0d1830;
@@ -136,11 +140,38 @@ textarea,
 select {
   background: var(--u-control-bg);
   border-color: var(--u-border);
+  color: var(--u-control-text);
+  caret-color: var(--u-control-text);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--u-muted);
+  color: var(--u-control-placeholder);
+  opacity: 1;
+}
+
+select,
+option {
+  color: var(--u-control-text);
+}
+
+option {
+  background: var(--u-control-bg);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--u-control-text);
+  caret-color: var(--u-control-text);
+  box-shadow: 0 0 0 1000px var(--u-control-bg) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 a {
