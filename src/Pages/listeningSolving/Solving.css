@@ -103,6 +103,10 @@
     min-width: 6ch;
     max-width: 100%;
     margin: 0 6px;
+    border: 1px solid var(--u-border);
+    border-radius: 6px;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .listening-question-text input[type="checkbox"],

@@ -51,7 +51,8 @@
     padding: 10px 16px;
     border-radius: 999px;
     border: 1px solid rgba(var(--u-primary-rgb), 0.25);
-    background: #fff;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
     font-size: 14px;
     font-family: inherit;
 }
@@ -174,6 +175,8 @@
     padding: 14px 16px;
     border-radius: 14px;
     border: 1px solid var(--u-border);
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
     font-size: 16px;
     font-family: inherit;
     outline: none;
@@ -191,6 +194,8 @@
     padding: 14px 16px;
     border-radius: 14px;
     border: 1px solid var(--u-border);
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
     font-size: 15px;
     font-family: inherit;
     resize: vertical;
@@ -232,6 +237,8 @@
     padding: 4px 6px;
     border-radius: 6px;
     border: 1px solid var(--u-border);
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
     font-size: 12px;
 }
 
@@ -261,7 +268,8 @@
     font-size: 15px;
     font-family: inherit;
     outline: none;
-    background: #fff;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
     line-height: 1.6;
     white-space: pre-wrap;
 }
@@ -327,6 +335,8 @@
     border: 1px solid var(--u-border);
     border-radius: 6px;
     padding: 4px 6px;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .hint {

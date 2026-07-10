@@ -129,7 +129,8 @@
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid var(--u-border);
-    background: #fff;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .admin-actions {
@@ -209,7 +210,8 @@
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid var(--u-border);
-    background: #fff;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .admin-user-detail {
@@ -399,7 +401,8 @@
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid var(--u-border);
-    background: #fff;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .attendance-actions {

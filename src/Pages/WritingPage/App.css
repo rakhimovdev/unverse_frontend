@@ -193,6 +193,8 @@
     border: 1px solid var(--u-border);
     border-radius: 6px;
     padding: 4px 6px;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .task-text .writing-table-wrap {

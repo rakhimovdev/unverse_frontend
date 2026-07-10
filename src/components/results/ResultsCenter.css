@@ -180,7 +180,7 @@
 .result-card__toggle {
     border: 1px solid var(--u-border);
     border-radius: 999px;
-    background: #fff;
+    background: var(--u-control-bg);
 }
 
 .results-toolbar__filters button {
@@ -201,6 +201,7 @@
     min-height: 40px;
     padding: 0 14px;
     outline: none;
+    color: var(--u-control-text);
 }
 
 .result-card {

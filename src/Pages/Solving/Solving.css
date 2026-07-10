@@ -27,8 +27,14 @@
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid var(--u-border);
-    background: #fff;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
+    caret-color: var(--u-control-text);
     font-size: 14px;
+}
+
+.test-name-input::placeholder {
+    color: var(--u-control-placeholder);
 }
 
 /* ================= PASSAGE TABS ================= */
@@ -266,6 +272,10 @@
     margin-left: 6px;
     padding: 4px 6px;
     font-size: 14px;
+    border: 1px solid var(--u-border);
+    border-radius: 6px;
+    background: var(--u-control-bg);
+    color: var(--u-control-text);
 }
 
 .container-blue input[type="checkbox"],
