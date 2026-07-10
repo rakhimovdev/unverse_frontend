@@ -596,6 +596,8 @@ function AnswerKey({ questions, onAnswersChange }) {
 function ListeningTest() {
     const [title, setTitle] = useState("");
     const [audience, setAudience] = useState("regular");
+    const [audioMode, setAudioMode] = useState("perPart");
+    const [sharedAudioFile, setSharedAudioFile] = useState(null);
     const [activePart, setActivePart] = useState(0);
     const [parts, setParts] = useState(() =>
         Array.from({ length: 4 }, () => createEmptyPart())
@@ -774,6 +776,11 @@ function ListeningTest() {
         });
     };
 
+    const handleSharedAudioChange = (e) => {
+        const file = e.target.files[0] || null;
+        setSharedAudioFile(file);
+    };
+
     const handleClear = () => {
         parts.forEach((part) => {
             if (part.imagePreview) {
@@ -782,6 +789,8 @@ function ListeningTest() {
         });
         setTitle("");
         setAudience("regular");
+        setAudioMode("perPart");
+        setSharedAudioFile(null);
         setActivePart(0);
         setParts(Array.from({ length: 4 }, () => createEmptyPart()));
         setShowPreview(false);
@@ -840,12 +849,19 @@ function ListeningTest() {
             return;
         }
 
-        const missingAudioIndex = updatedParts.findIndex(
-            (part) => !part.audioFile
-        );
-        if (missingAudioIndex !== -1) {
-            alert(`Part ${missingAudioIndex + 1} uchun audio fayl tanlang!`);
-            return;
+        if (audioMode === "shared") {
+            if (!sharedAudioFile) {
+                alert("Barcha partlar uchun bitta audio fayl tanlang!");
+                return;
+            }
+        } else {
+            const missingAudioIndex = updatedParts.findIndex(
+                (part) => !part.audioFile
+            );
+            if (missingAudioIndex !== -1) {
+                alert(`Part ${missingAudioIndex + 1} uchun audio fayl tanlang!`);
+                return;
+            }
         }
 
         setParts(updatedParts);
@@ -859,12 +875,16 @@ function ListeningTest() {
         const formData = new FormData();
         formData.append("title", title);
         formData.append("audience", audience);
+        formData.append("audioMode", audioMode);
         formData.append("parts", JSON.stringify(payloadParts));
+        if (audioMode === "shared" && sharedAudioFile) {
+            formData.append("audio", sharedAudioFile);
+        }
         updatedParts.forEach((part, index) => {
             if (part.imageFile) {
                 formData.append(`imagePart${index}`, part.imageFile);
             }
-            if (part.audioFile) {
+            if (audioMode === "perPart" && part.audioFile) {
                 formData.append(`audioPart${index}`, part.audioFile);
             }
         });
@@ -909,6 +929,61 @@ function ListeningTest() {
                     </select>
                 </div>
 
+                <div className="listening-field">
+                    <label>Audio yuklash turi</label>
+                    <div className="audio-mode-selector">
+                        <label
+                            className={`audio-mode-option ${
+                                audioMode === "shared" ? "active" : ""
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="audio-mode"
+                                value="shared"
+                                checked={audioMode === "shared"}
+                                onChange={(e) => setAudioMode(e.target.value)}
+                            />
+                            <div>
+                                <strong>Hammasiga bitta audio</strong>
+                                <span>Bitta fayl 4 ta part uchun umumiy ishlatiladi.</span>
+                            </div>
+                        </label>
+
+                        <label
+                            className={`audio-mode-option ${
+                                audioMode === "perPart" ? "active" : ""
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="audio-mode"
+                                value="perPart"
+                                checked={audioMode === "perPart"}
+                                onChange={(e) => setAudioMode(e.target.value)}
+                            />
+                            <div>
+                                <strong>Har partga alohida audio</strong>
+                                <span>Har bir part uchun alohida fayl yuklanadi.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {audioMode === "shared" && (
+                    <div className="listening-field">
+                        <label>Barcha partlar uchun audio (majburiy)</label>
+                        <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={handleSharedAudioChange}
+                        />
+                        {sharedAudioFile && (
+                            <p className="file-note">{sharedAudioFile.name}</p>
+                        )}
+                    </div>
+                )}
+
                 <div className="part-tabs">
                     {parts.map((_, i) => (
                         <button
@@ -926,17 +1001,19 @@ function ListeningTest() {
                 </div>
 
                 <div className="part-image-row">
-                    <div className="listening-field">
-                        <label>Part {activePart + 1} audio (majburiy)</label>
-                        <input
-                            type="file"
-                            accept="audio/*"
-                            onChange={(e) => handlePartAudioChange(activePart, e)}
-                        />
-                        {currentPart.audioFile && (
-                            <p className="file-note">{currentPart.audioFile.name}</p>
-                        )}
-                    </div>
+                    {audioMode === "perPart" && (
+                        <div className="listening-field">
+                            <label>Part {activePart + 1} audio (majburiy)</label>
+                            <input
+                                type="file"
+                                accept="audio/*"
+                                onChange={(e) => handlePartAudioChange(activePart, e)}
+                            />
+                            {currentPart.audioFile && (
+                                <p className="file-note">{currentPart.audioFile.name}</p>
+                            )}
+                        </div>
+                    )}
                     <div className="listening-field">
                         <label>Part {activePart + 1} rasm (ixtiyoriy)</label>
                         <input

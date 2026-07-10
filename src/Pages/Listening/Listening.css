@@ -41,6 +41,44 @@
   color: #fff;
 }
 
+.audio-mode-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.audio-mode-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--u-border);
+  background: var(--u-card-bg);
+  cursor: pointer;
+}
+
+.audio-mode-option input {
+  margin-top: 4px;
+}
+
+.audio-mode-option strong {
+  display: block;
+  color: var(--u-ink);
+}
+
+.audio-mode-option span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--u-muted);
+}
+
+.audio-mode-option.active {
+  border-color: rgba(var(--u-primary-rgb), 0.45);
+  box-shadow: 0 12px 28px rgba(var(--u-shadow-rgb), 0.12);
+}
+
 .part-image-row {
   display: flex;
   flex-direction: column;
@@ -64,7 +102,7 @@
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--u-border);
-  background: #fff;
+  background: var(--u-control-bg);
   font-size: 14px;
 }
 
@@ -72,7 +110,7 @@
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--u-border);
-  background: #fff;
+  background: var(--u-control-bg);
   font-size: 14px;
 }
 
@@ -142,7 +180,7 @@
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid var(--u-border);
-  background: #fff;
+  background: var(--u-control-bg);
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -155,7 +193,7 @@
   padding: 4px 8px;
   border-radius: 10px;
   border: 1px solid var(--u-border);
-  background: #fff;
+  background: var(--u-control-bg);
 }
 
 .toolbar-field label {
@@ -231,7 +269,7 @@
   padding: 6px;
   border-radius: 10px;
   border: 1px dashed rgba(59, 130, 246, 0.4);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--u-card-bg);
 }
 
 .listening-table-wrap table {
@@ -257,7 +295,7 @@
   padding: 16px;
   border-radius: 14px;
   border: 1px solid var(--u-border);
-  background: #fff;
+  background: var(--u-card-bg-strong);
   line-height: 1.7;
   white-space: pre-wrap;
 }
@@ -305,7 +343,7 @@
   padding: 14px;
   border-radius: 12px;
   border: 1px solid var(--u-border);
-  background: #fff;
+  background: var(--u-card-bg-strong);
 }
 
 .listening-answer-key h4 {

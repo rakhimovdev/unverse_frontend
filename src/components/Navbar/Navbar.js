@@ -1,6 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { FiMoon, FiSun } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { getStoredRole, getStoredToken } from "../../utils/authStorage";
 import { isAuthExperiencePath, resolveDashboardPath } from "../../utils/authRoutes";
 import { getPlanSummary } from "../../utils/subscription";
@@ -8,6 +10,7 @@ import "./Navbar.css";
 
 const Navbar = () => {
     const { token: authToken, user, logout } = useAuth();
+    const { isDark, toggleTheme } = useTheme();
     const location = useLocation();
     const token = authToken || getStoredToken();
     const role = user?.role || getStoredRole();
@@ -76,6 +79,16 @@ const Navbar = () => {
                 </ul>
 
                 <div className="site-nav__actions">
+                    <button
+                        type="button"
+                        className="nav-btn nav-btn--ghost nav-btn--icon"
+                        onClick={toggleTheme}
+                        aria-label={isDark ? "Light mode yoqish" : "Dark mode yoqish"}
+                    >
+                        {isDark ? <FiSun aria-hidden="true" /> : <FiMoon aria-hidden="true" />}
+                        <span>{isDark ? "Light" : "Dark"}</span>
+                    </button>
+
                     {!isLoggedIn ? (
                         role !== "teacher" && (
                             <>

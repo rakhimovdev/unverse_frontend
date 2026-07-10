@@ -67,7 +67,7 @@
 }
 
 .btn-ghost {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--u-card-bg);
     color: var(--u-ink);
     border-color: rgba(var(--u-primary-rgb), 0.25);
 }
@@ -81,7 +81,7 @@
 }
 
 .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--u-card-bg-strong);
 }
 
 .hero__stats {
@@ -92,7 +92,7 @@
 }
 
 .stat {
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--u-card-bg);
     border: 1px solid rgba(var(--u-primary-rgb), 0.2);
     border-radius: 16px;
     padding: 14px 18px;
@@ -195,7 +195,7 @@
 
 .hero-tile {
     position: absolute;
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--u-card-bg-strong);
     border: 1px solid rgba(var(--u-primary-rgb), 0.2);
     border-radius: 16px;
     padding: 12px 16px;
@@ -252,7 +252,7 @@
 }
 
 .track-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--u-card-bg-strong);
     border-radius: 20px;
     padding: 22px;
     border: 1px solid rgba(var(--u-primary-rgb), 0.2);
@@ -298,7 +298,7 @@
 }
 
 .step {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--u-card-bg);
     border-radius: 20px;
     padding: 22px;
     border: 1px solid rgba(var(--u-primary-rgb), 0.2);
@@ -330,7 +330,7 @@
 .testimonial {
     padding: 22px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.86);
+    background: var(--u-card-bg-strong);
     border: 1px solid rgba(var(--u-primary-rgb), 0.2);
     box-shadow: 0 18px 30px rgba(var(--u-shadow-rgb), 0.12);
     display: flex;
