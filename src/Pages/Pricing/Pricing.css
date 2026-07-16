@@ -1,9 +1,47 @@
 .upgrade-page {
+    --upgrade-page-top: rgba(255, 210, 120, 0.22);
+    --upgrade-page-accent: rgba(var(--u-accent-rgb), 0.16);
+    --upgrade-surface: var(--u-card-bg-strong);
+    --upgrade-surface-soft: var(--u-glass-bg-strong);
+    --upgrade-border: rgba(var(--u-primary-rgb), 0.14);
+    --upgrade-shadow: 0 18px 40px rgba(var(--u-shadow-rgb), 0.12);
+    --upgrade-shadow-strong: 0 24px 52px rgba(var(--u-shadow-rgb), 0.18);
+    --upgrade-eyebrow-bg: rgba(199, 142, 21, 0.14);
+    --upgrade-eyebrow-text: #8a5a00;
+    --upgrade-status-bg: rgba(var(--u-primary-rgb), 0.08);
+    --upgrade-status-text: var(--u-ink);
+    --upgrade-pro-bg: rgba(199, 142, 21, 0.12);
+    --upgrade-pro-text: #7a5100;
+    --upgrade-price-text: #8a5a00;
+    --upgrade-link-bg: rgba(var(--u-primary-rgb), 0.08);
+    --upgrade-link-bg-hover: rgba(var(--u-primary-rgb), 0.14);
+    --upgrade-link-text: var(--u-primary);
     min-height: calc(100vh - 120px);
     padding: 120px 24px 56px;
     background:
-        radial-gradient(circle at top left, rgba(255, 210, 120, 0.28), transparent 32%),
-        linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
+        radial-gradient(circle at top left, var(--upgrade-page-top), transparent 32%),
+        radial-gradient(circle at 88% 8%, var(--upgrade-page-accent), transparent 28%),
+        linear-gradient(180deg, var(--u-bg-start) 0%, var(--u-bg-mid) 58%, var(--u-bg-end) 100%);
+}
+
+html[data-theme="dark"] .upgrade-page {
+    --upgrade-page-top: rgba(255, 198, 88, 0.12);
+    --upgrade-page-accent: rgba(var(--u-accent-rgb), 0.12);
+    --upgrade-surface: rgba(14, 26, 48, 0.9);
+    --upgrade-surface-soft: rgba(18, 31, 54, 0.94);
+    --upgrade-border: rgba(168, 197, 255, 0.14);
+    --upgrade-shadow: 0 22px 48px rgba(var(--u-shadow-rgb), 0.44);
+    --upgrade-shadow-strong: 0 28px 60px rgba(var(--u-shadow-rgb), 0.56);
+    --upgrade-eyebrow-bg: rgba(255, 210, 120, 0.14);
+    --upgrade-eyebrow-text: #ffdba0;
+    --upgrade-status-bg: rgba(var(--u-primary-rgb), 0.16);
+    --upgrade-status-text: #eef5ff;
+    --upgrade-pro-bg: rgba(255, 210, 120, 0.16);
+    --upgrade-pro-text: #ffe7b0;
+    --upgrade-price-text: #ffdba0;
+    --upgrade-link-bg: rgba(var(--u-primary-rgb), 0.18);
+    --upgrade-link-bg-hover: rgba(var(--u-primary-rgb), 0.26);
+    --upgrade-link-text: #dce8ff;
 }
 
 .upgrade-hero,
@@ -24,11 +62,20 @@
 .upgrade-hero__note,
 .upgrade-card,
 .upgrade-footer {
-    background: rgba(255, 255, 255, 0.86);
-    border: 1px solid rgba(var(--u-primary-rgb), 0.14);
+    border: 1px solid var(--upgrade-border);
     border-radius: 24px;
-    box-shadow: 0 18px 40px rgba(var(--u-shadow-rgb), 0.12);
+    box-shadow: var(--upgrade-shadow);
     backdrop-filter: blur(14px);
+}
+
+.upgrade-hero__copy,
+.upgrade-card,
+.upgrade-footer {
+    background: var(--upgrade-surface);
+}
+
+.upgrade-hero__note {
+    background: var(--upgrade-surface-soft);
 }
 
 .upgrade-hero__copy,
@@ -41,8 +88,8 @@
     display: inline-flex;
     padding: 6px 12px;
     border-radius: 999px;
-    background: rgba(199, 142, 21, 0.12);
-    color: #8a5a00;
+    background: var(--upgrade-eyebrow-bg);
+    color: var(--upgrade-eyebrow-text);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -54,11 +101,13 @@
     font-family: var(--u-display);
     font-size: clamp(34px, 4vw, 54px);
     line-height: 1.02;
+    letter-spacing: 0.03em;
     color: var(--u-ink);
 }
 
 .upgrade-hero p,
 .upgrade-hero li,
+.upgrade-card__benefits,
 .upgrade-footer p {
     color: var(--u-muted);
     line-height: 1.6;
@@ -71,13 +120,13 @@
     flex-wrap: wrap;
     padding: 10px 14px;
     border-radius: 16px;
-    background: rgba(var(--u-primary-rgb), 0.08);
-    color: var(--u-ink);
+    background: var(--upgrade-status-bg);
+    color: var(--upgrade-status-text);
 }
 
 .upgrade-status.is-pro {
-    background: rgba(209, 160, 43, 0.12);
-    color: #7a5100;
+    background: var(--upgrade-pro-bg);
+    color: var(--upgrade-pro-text);
 }
 
 .upgrade-hero__note h2 {
@@ -88,6 +137,11 @@
 .upgrade-hero__note ol {
     margin: 0;
     padding-left: 18px;
+}
+
+.upgrade-hero__note li::marker {
+    color: var(--u-primary);
+    font-weight: 700;
 }
 
 .upgrade-grid {
@@ -102,6 +156,19 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.upgrade-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--upgrade-shadow-strong);
+    border-color: rgba(var(--u-primary-rgb), 0.28);
+}
+
+.upgrade-card__top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .upgrade-card__badge {
@@ -109,21 +176,21 @@
     align-self: flex-start;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(var(--u-primary-rgb), 0.08);
+    background: rgba(var(--u-primary-rgb), 0.1);
     color: var(--u-primary);
     font-size: 12px;
     font-weight: 700;
 }
 
 .upgrade-card h2 {
-    margin: 12px 0 6px;
+    margin: 0;
     color: var(--u-ink);
 }
 
 .upgrade-card__price {
     margin: 0;
     font-size: 15px;
-    color: #8a5a00;
+    color: var(--upgrade-price-text);
     font-weight: 700;
 }
 
@@ -133,7 +200,6 @@
     padding: 0;
     display: grid;
     gap: 10px;
-    color: var(--u-muted);
 }
 
 .upgrade-card__benefits li::before {
@@ -157,9 +223,14 @@
 
 .upgrade-card__button {
     margin-top: auto;
-    background: linear-gradient(135deg, #0f4fbf, #2b7cff);
+    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
     color: #fff;
-    box-shadow: 0 12px 24px rgba(15, 79, 191, 0.2);
+    box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.24);
+}
+
+.upgrade-card__button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(var(--u-primary-dark-rgb), 0.32);
 }
 
 .upgrade-footer {
@@ -173,9 +244,17 @@
     margin: 0;
 }
 
+.upgrade-footer strong {
+    color: var(--u-ink);
+}
+
 .upgrade-footer__link {
-    background: rgba(var(--u-primary-rgb), 0.08);
-    color: var(--u-primary);
+    background: var(--upgrade-link-bg);
+    color: var(--upgrade-link-text);
+}
+
+.upgrade-footer__link:hover {
+    background: var(--upgrade-link-bg-hover);
 }
 
 @media (max-width: 1080px) {
@@ -198,6 +277,13 @@
 @media (max-width: 640px) {
     .upgrade-page {
         padding: 108px 16px 40px;
+    }
+
+    .upgrade-hero__copy,
+    .upgrade-hero__note,
+    .upgrade-card,
+    .upgrade-footer {
+        border-radius: 20px;
     }
 
     .upgrade-grid {
