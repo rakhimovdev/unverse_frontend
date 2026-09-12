@@ -426,7 +426,7 @@ function ListeningTest() {
             }
         };
         fetchTest();
-    }, [id, token]);
+    }, [id, token, mode]);
 
     useEffect(() => {
         let isActive = true;
@@ -560,7 +560,6 @@ function ListeningTest() {
             correctAnswers,
             wrongAnswers
         });
-        setIsResultModalOpen(true);
 
         try {
             setSavingScore(true);
@@ -600,6 +599,7 @@ function ListeningTest() {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                 });
                 setComparison(comparisonResponse.data);
+                setIsResultModalOpen(true);
             }
             if (mode === "solving" && savedId) setShowResolvingPrompt(true);
             console.log("Score saqlandi ✅");
@@ -999,11 +999,17 @@ function ListeningTest() {
             {showResolvingPrompt ? (
                 <ResolvingPrompt
                     onYes={() =>
-                        navigate(
-                            `/listening/audio/${id}?mode=resolving&solvingAttemptId=${savedResultId}`
-                        )
+                        (() => {
+                            setShowResolvingPrompt(false);
+                            navigate(
+                                `/listening/audio/${id}?mode=resolving&solvingAttemptId=${savedResultId}`
+                            );
+                        })()
                     }
-                    onNo={() => setShowResolvingPrompt(false)}
+                    onNo={() => {
+                        setShowResolvingPrompt(false);
+                        setIsResultModalOpen(true);
+                    }}
                 />
             ) : null}
         </div>

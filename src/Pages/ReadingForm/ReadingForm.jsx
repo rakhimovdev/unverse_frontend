@@ -545,6 +545,7 @@ function ReadingForm() {
                 });
 
                 setUserAnswers(answers);
+                setSecondsLeft(3600);
                 setScoreResult(null);
                 setIsResultModalOpen(false);
                 setShowResolvingPrompt(false);
@@ -553,7 +554,7 @@ function ReadingForm() {
             .catch((err) => {
                 console.log("LOAD ERROR:", err.response?.data || err);
             });
-    }, [testId, token]);
+    }, [testId, token, mode]);
 
     useEffect(() => {
         setHighlightMenu((prev) =>
@@ -735,7 +736,6 @@ function ReadingForm() {
         if (!test) return;
         const result = calculateScores();
         setScoreResult(result);
-        setIsResultModalOpen(true);
         if (!result.hasAnswerKey) return;
 
         const token = localStorage.getItem("token");
@@ -787,6 +787,7 @@ function ReadingForm() {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                 });
                 setComparison(comparisonResponse.data);
+                setIsResultModalOpen(true);
             }
             if (mode === "solving" && savedId) setShowResolvingPrompt(true);
         } catch (err) {
@@ -1267,11 +1268,17 @@ function ReadingForm() {
             {showResolvingPrompt ? (
                 <ResolvingPrompt
                     onYes={() =>
-                        navigate(
-                            `/reading/${testId}?mode=resolving&solvingAttemptId=${savedResultId}`
-                        )
+                        (() => {
+                            setShowResolvingPrompt(false);
+                            navigate(
+                                `/reading/${testId}?mode=resolving&solvingAttemptId=${savedResultId}`
+                            );
+                        })()
                     }
-                    onNo={() => setShowResolvingPrompt(false)}
+                    onNo={() => {
+                        setShowResolvingPrompt(false);
+                        setIsResultModalOpen(true);
+                    }}
                 />
             ) : null}
         </div>
