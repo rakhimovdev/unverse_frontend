@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import axios from "../../Api/Axios";
 import TestCompletionScreen from "../../components/results/TestCompletionScreen";
+import ResolvingPrompt from "../../components/results/ResolvingPrompt";
 import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
 import { createAttemptKey } from "../../utils/resultAttempt";
 import "./Solving.css";
@@ -339,6 +340,11 @@ const getBandScore = (rawScore) => {
 
 function ListeningTest() {
     const { id } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const query = new URLSearchParams(location.search);
+    const mode = query.get("mode") === "resolving" ? "resolving" : "solving";
+    const solvingAttemptId = query.get("solvingAttemptId");
     const token = localStorage.getItem("token");
     const [test, setTest] = useState(null);
     const [parts, setParts] = useState([]);
@@ -348,6 +354,10 @@ function ListeningTest() {
     const [scoreSummary, setScoreSummary] = useState(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [savingScore, setSavingScore] = useState(false);
+    const [showResolvingPrompt, setShowResolvingPrompt] = useState(false);
+    const [savedResultId, setSavedResultId] = useState(null);
+    const [comparison, setComparison] = useState(null);
+    const startedAtRef = useRef(new Date());
     const [error, setError] = useState(null);
     const audioRef = useRef(null);
     const [totalAudioSeconds, setTotalAudioSeconds] = useState(0);
@@ -401,6 +411,8 @@ function ListeningTest() {
                 setResults(null);
                 setScoreSummary(null);
                 setIsResultModalOpen(false);
+                setShowResolvingPrompt(false);
+                startedAtRef.current = new Date();
 
                 const answers = incomingParts.map((part) => {
                     const defs = part.testText ? getQuestionDefs(part.testText) : [];
@@ -553,12 +565,18 @@ function ListeningTest() {
         try {
             setSavingScore(true);
             const attemptKey = createAttemptKey("listening", test._id);
-            await axios.post(
+            const response = await axios.post(
                 "/scorel/add",
                 {
                     listeningId: test._id,
                     score: totalCorrect,
                     attemptKey,
+                    mode,
+                    solvingAttemptId: mode === "resolving" ? solvingAttemptId : undefined,
+                    startedAt: startedAtRef.current.toISOString(),
+                    completedAt: new Date().toISOString(),
+                    timeSpent: Math.round((Date.now() - startedAtRef.current.getTime()) / 1000),
+                    answers: userAnswers,
                     listeningDetails: {
                         sectionScores: partTotals.map((part, index) => ({
                             label: `Section ${index + 1}`,
@@ -575,13 +593,22 @@ function ListeningTest() {
                 },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
             );
+            const savedId = response.data?.result?._id;
+            setSavedResultId(savedId || null);
+            if (mode === "resolving" && savedId) {
+                const comparisonResponse = await axios.get(`/results/compare/${savedId}`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                });
+                setComparison(comparisonResponse.data);
+            }
+            if (mode === "solving" && savedId) setShowResolvingPrompt(true);
             console.log("Score saqlandi ✅");
         } catch (err) {
             console.error("Score saqlashda xato:", err.response?.data || err);
         } finally {
             setSavingScore(false);
         }
-    }, [test, parts, userAnswers, results]);
+    }, [test, parts, userAnswers, results, mode, solvingAttemptId]);
 
     const startAutoTimer = useCallback(() => {
         if (results) return;
@@ -762,13 +789,15 @@ function ListeningTest() {
     const partResults = results?.[activePart] || [];
     const audioSrc = activePartData?.audioUrl || test?.audioUrl || "";
     const shouldAutoSubmitOnEnded = audioUrls.length <= 1;
-    const totalAudioLabel =
-        totalAudioSeconds > 0 ? formatDuration(totalAudioSeconds) : audioUrls.length ? "Hisoblanmoqda..." : "—";
+    const totalAudioLabel = mode === "resolving"
+        ? "No Time Limit"
+        : totalAudioSeconds > 0 ? formatDuration(totalAudioSeconds) : audioUrls.length ? "Hisoblanmoqda..." : "—";
     const completedResult = useMemo(() => {
         if (!scoreSummary || !test) return null;
 
         return {
             moduleType: "Listening",
+            mode,
             testName: test.title || "Listening Test",
             createdAt: new Date().toISOString(),
             listening: {
@@ -785,7 +814,7 @@ function ListeningTest() {
                 wrongAnswers: scoreSummary.wrongAnswers || []
             }
         };
-    }, [scoreSummary, test]);
+    }, [scoreSummary, test, mode]);
 
     useEffect(() => {
         if (!audioRef.current) return;
@@ -801,7 +830,9 @@ function ListeningTest() {
             <header>
                 <div className="listening-header-left">
                     <h1>{test.title || "Listening Test"}</h1>
-                    <span className="listening-time">Audio time: {totalAudioLabel}</span>
+                    <span className="listening-time">
+                        {mode === "resolving" ? "Resolving Mode · " : "Audio time: "}{totalAudioLabel}
+                    </span>
                 </div>
                 <Link to="/listening" className="menu-item">
                     All IELTS Listening Tests
@@ -829,8 +860,8 @@ function ListeningTest() {
                         key={audioSrc || "no-audio"}
                         ref={audioRef}
                         controls
-                        onEnded={shouldAutoSubmitOnEnded ? handleSubmit : undefined}
-                        onPlay={startAutoTimer}
+                        onEnded={mode === "solving" && shouldAutoSubmitOnEnded ? handleSubmit : undefined}
+                        onPlay={mode === "solving" ? startAutoTimer : undefined}
                     >
                         <source
                             src={audioSrc || undefined}
@@ -961,6 +992,18 @@ function ListeningTest() {
                     primaryActionLabel="Open Result Center"
                     secondaryActionTo="/listening"
                     secondaryActionLabel="Take Another Listening Test"
+                    comparison={comparison}
+                />
+            ) : null}
+
+            {showResolvingPrompt ? (
+                <ResolvingPrompt
+                    onYes={() =>
+                        navigate(
+                            `/listening/audio/${id}?mode=resolving&solvingAttemptId=${savedResultId}`
+                        )
+                    }
+                    onNo={() => setShowResolvingPrompt(false)}
                 />
             ) : null}
         </div>

@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FaClock } from "react-icons/fa6";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import axios from "../../Api/Axios";
 import TestCompletionScreen from "../../components/results/TestCompletionScreen";
+import ResolvingPrompt from "../../components/results/ResolvingPrompt";
 import { renderHtmlWithQuestionTokens } from "../../utils/questionMarkup";
 import { createAttemptKey } from "../../utils/resultAttempt";
 
@@ -489,6 +490,11 @@ const wrapRangeInClass = (container, range, className) => {
 
 function ReadingForm() {
     const { testId } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const query = new URLSearchParams(location.search);
+    const mode = query.get("mode") === "resolving" ? "resolving" : "solving";
+    const solvingAttemptId = query.get("solvingAttemptId");
     const token = localStorage.getItem("token");
 
     /* ================= STATE ================= */
@@ -500,6 +506,10 @@ function ReadingForm() {
     const [scoreResult, setScoreResult] = useState(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [savingScore, setSavingScore] = useState(false);
+    const [showResolvingPrompt, setShowResolvingPrompt] = useState(false);
+    const [savedResultId, setSavedResultId] = useState(null);
+    const [comparison, setComparison] = useState(null);
+    const startedAtRef = useRef(new Date());
     const [readingHtml, setReadingHtml] = useState([]);
     const [questionHighlights, setQuestionHighlights] = useState([]);
     const [highlightMenu, setHighlightMenu] = useState({
@@ -537,6 +547,8 @@ function ReadingForm() {
                 setUserAnswers(answers);
                 setScoreResult(null);
                 setIsResultModalOpen(false);
+                setShowResolvingPrompt(false);
+                startedAtRef.current = new Date();
             })
             .catch((err) => {
                 console.log("LOAD ERROR:", err.response?.data || err);
@@ -577,14 +589,14 @@ function ReadingForm() {
     /* ================= TIMER ================= */
 
     useEffect(() => {
-        if (secondsLeft <= 0) return;
+        if (mode === "resolving" || secondsLeft <= 0) return;
 
         const timer = setInterval(() => {
             setSecondsLeft((prev) => prev - 1);
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [secondsLeft]);
+    }, [secondsLeft, mode]);
 
     /* ================= FORMAT TIME ================= */
 
@@ -732,12 +744,18 @@ function ReadingForm() {
         try {
             setSavingScore(true);
             const attemptKey = createAttemptKey("reading", test._id);
-            await axios.post(
+            const response = await axios.post(
                 "/score/add",
                 {
                     testId: test._id,
                     score: result.totalCorrect,
                     attemptKey,
+                    mode,
+                    solvingAttemptId: mode === "resolving" ? solvingAttemptId : undefined,
+                    startedAt: startedAtRef.current.toISOString(),
+                    completedAt: new Date().toISOString(),
+                    timeSpent: Math.round((Date.now() - startedAtRef.current.getTime()) / 1000),
+                    answers: userAnswers,
                     readingDetails: {
                         passageScores: result.passageResults.map((item, index) => ({
                             label: `Passage ${index + 1}`,
@@ -762,6 +780,15 @@ function ReadingForm() {
                     headers: { Authorization: `Bearer ${token}` }
                 }
             );
+            const savedId = response.data?.result?._id;
+            setSavedResultId(savedId || null);
+            if (mode === "resolving" && savedId) {
+                const comparisonResponse = await axios.get(`/results/compare/${savedId}`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                });
+                setComparison(comparisonResponse.data);
+            }
+            if (mode === "solving" && savedId) setShowResolvingPrompt(true);
         } catch (err) {
             console.error("Score save error:", err.response?.data || err);
         } finally {
@@ -915,6 +942,7 @@ function ReadingForm() {
 
         return {
             moduleType: "Reading",
+            mode,
             testName: test.name || "Reading Test",
             createdAt: new Date().toISOString(),
             reading: {
@@ -931,7 +959,7 @@ function ReadingForm() {
                 wrongAnswers: scoreResult.wrongAnswers || []
             }
         };
-    }, [scoreResult, test]);
+    }, [scoreResult, test, mode]);
 
     /* ================= SAFE CHECK ================= */
 
@@ -1142,7 +1170,7 @@ function ReadingForm() {
 
                 <div className="timer">
                     <FaClock />
-                    {formatTime(secondsLeft)}
+                    {mode === "resolving" ? "No Time Limit" : formatTime(secondsLeft)}
                 </div>
             </header>
 
@@ -1232,6 +1260,18 @@ function ReadingForm() {
                     primaryActionLabel="Open Result Center"
                     secondaryActionTo="/read"
                     secondaryActionLabel="Take Another Reading Test"
+                    comparison={comparison}
+                />
+            ) : null}
+
+            {showResolvingPrompt ? (
+                <ResolvingPrompt
+                    onYes={() =>
+                        navigate(
+                            `/reading/${testId}?mode=resolving&solvingAttemptId=${savedResultId}`
+                        )
+                    }
+                    onNo={() => setShowResolvingPrompt(false)}
                 />
             ) : null}
         </div>

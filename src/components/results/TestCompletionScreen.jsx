@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import ResultCard from "./ResultCard";
+import ResolvingComparison from "./ResolvingComparison";
 import "./ResultsCenter.css";
 import "./TestCompletionScreen.css";
 
@@ -14,7 +15,8 @@ function TestCompletionScreen({
     primaryActionTo = "/account",
     primaryActionLabel = "Open Result Center",
     secondaryActionTo,
-    secondaryActionLabel
+    secondaryActionLabel,
+    comparison
 }) {
     if (!result) return null;
 
@@ -50,6 +52,7 @@ function TestCompletionScreen({
                         showToggle={false}
                     />
                 </div>
+                <ResolvingComparison comparison={comparison} />
 
                 <div className="test-result-modal__actions">
                     <Link

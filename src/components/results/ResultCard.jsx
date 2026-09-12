@@ -439,7 +439,10 @@ function ResultCard({
         <article className="result-card">
             <div className="result-card__top">
                 <div>
-                    <p className="result-card__eyebrow">{activeResult.moduleType}</p>
+                    <p className="result-card__eyebrow">
+                        {activeResult.moduleType}
+                        {activeResult.mode ? ` · ${activeResult.mode}` : ""}
+                    </p>
                     <h3>{activeResult.testName || `${activeResult.moduleType} Test`}</h3>
                     <p className="result-card__date">
                         Completed: {formatDateTime(activeResult.createdAt)}

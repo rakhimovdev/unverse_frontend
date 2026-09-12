@@ -84,6 +84,36 @@
     gap: 10px;
 }
 
+.resolving-comparison {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    border-radius: 0.75rem;
+    background: #f0fdfa;
+}
+
+.resolving-comparison__metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.resolving-comparison__metrics div,
+.resolving-comparison__questions div {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.resolving-comparison__metrics span { font-size: 1.25rem; font-weight: 700; }
+.resolving-comparison__metrics small { color: #475569; }
+.resolving-comparison__questions { display: grid; gap: 0.5rem; margin-top: 1rem; }
+.resolving-comparison__questions div { padding: 0.6rem; border-top: 1px solid #ccfbf1; }
+.resolving-comparison__questions em { color: #0f766e; font-style: normal; font-weight: 600; }
+
+@media (max-width: 640px) {
+    .resolving-comparison__metrics { grid-template-columns: 1fr; }
+}
+
 .test-result-modal__actions .results-pill-link {
     border-color: rgba(16, 85, 164, 0.14);
     background: rgba(16, 85, 164, 0.08);
