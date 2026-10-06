@@ -146,7 +146,7 @@ function Home() {
                     <p>Practice. Improve. Achieve.</p>
                     <br />
                     <br />
-                    <h3>This Web Site Created By <Link to="https://myportfolio-wheat-seven.vercel.app/">Rakhimov_dev</Link></h3>
+                    <h3>This Web Site Created By <a href="https://myportfolio-wheat-seven.vercel.app/">Rakhimov_dev</a></h3>
                 </div>
                 <div className="home-footer__links">
                     <a href="/read">Reading</a>

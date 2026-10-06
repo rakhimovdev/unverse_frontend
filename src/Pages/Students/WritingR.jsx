@@ -1,4 +1,5 @@
 import axios from "../../Api/Axios";
+import { getBackendAssetURL } from "../../config";
 import { useEffect, useState, useCallback } from "react";
 import "./Students.css";
 import "../WritingPage/App.css";
@@ -13,7 +14,7 @@ function WritingR({ timeSlotIds }) {
     const resolveImageSrc = (value) => {
         if (!value) return "";
         if (value.startsWith("http") || value.startsWith("data:")) return value;
-        return `${axios.defaults.baseURL}uploads/${value}`;
+        return getBackendAssetURL(value);
     };
 
     // 📌 Barcha writing response'larni olish

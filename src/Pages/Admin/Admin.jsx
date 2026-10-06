@@ -299,10 +299,6 @@ function Admin() {
         slotStudentsRef.current = slotStudents;
     }, [slotStudents]);
 
-    useEffect(() => {
-        slotStudentsRef.current = slotStudents;
-    }, [slotStudents]);
-
     const handleAddSlot = async (e) => {
         e.preventDefault();
         setActionMsg("");

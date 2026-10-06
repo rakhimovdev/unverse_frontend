@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "../../Api/Axios";
+import { getBackendAssetURL } from "../../config";
 import { createAttemptKey } from "../../utils/resultAttempt";
 import "./App.css";
 
@@ -170,7 +171,7 @@ function Index() {
     const resolveImageSrc = (value) => {
         if (!value) return "";
         if (value.startsWith("http") || value.startsWith("data:")) return value;
-        return `${axios.defaults.baseURL}uploads/${value}`;
+        return getBackendAssetURL(value);
     };
 
     const task1 = {
