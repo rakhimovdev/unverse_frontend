@@ -81,9 +81,9 @@
     margin: 0 auto 16px;
     padding: 12px 16px;
     border-radius: 10px;
-    background: rgba(46, 125, 50, 0.12);
-    color: #245a2a;
-    border: 1px solid rgba(46, 125, 50, 0.2);
+    background: var(--u-success-bg);
+    color: var(--u-success);
+    border: 1px solid var(--u-success-border);
 }
 
 .admin-banner--error {
@@ -95,9 +95,9 @@
 .admin-banner--warning {
     max-width: 100%;
     margin-bottom: 18px;
-    background: rgba(209, 160, 43, 0.12);
-    color: #7a5100;
-    border-color: rgba(209, 160, 43, 0.28);
+    background: var(--u-warning-bg);
+    color: var(--u-warning);
+    border-color: var(--u-warning-border);
 }
 
 .admin-table {
@@ -163,7 +163,7 @@
 .admin-score-table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
+    background: var(--u-surface);
 }
 
 .admin-score-table th,
@@ -237,7 +237,7 @@
 }
 
 .admin-plan-badge.is-pro {
-    color: #8a5a00;
+    color: var(--u-warning);
 }
 
 .admin-stat-grid {
@@ -331,8 +331,8 @@
 }
 
 .time-chip {
-    background: var(--u-primary);
-    color: #fff;
+    background: var(--u-action-bg);
+    color: var(--u-on-primary);
     border: none;
     border-radius: 999px;
     padding: 4px 10px;
@@ -341,15 +341,16 @@
 }
 
 .time-chip:hover {
-    background: var(--u-primary-dark);
+    background: var(--u-action-hover);
 }
 
 .time-chip--checked {
-    background: #2e7d32;
+    background: var(--u-success-action);
+    color: var(--u-on-primary);
 }
 
 .time-chip--checked:hover {
-    background: #1f5d24;
+    background: var(--u-success-action);
 }
 
 .schedule-students {
@@ -457,20 +458,20 @@
 }
 
 .btn--primary {
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     box-shadow: 0 10px 22px rgba(var(--u-primary-dark-rgb), 0.18);
 }
 
 .btn--ghost {
-    background: #fff;
+    background: var(--u-tint);
     border: 1px solid var(--u-border);
     color: var(--u-ink);
 }
 
 .btn--danger {
-    background: var(--u-primary-dark);
-    color: #fff;
+    background: var(--u-danger-action);
+    color: var(--u-on-primary);
 }
 
 .btn--small {

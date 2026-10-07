@@ -10,7 +10,7 @@
 .resolving-prompt__backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(15, 23, 42, 0.62);
+    background: rgba(var(--u-shadow-rgb), 0.72);
 }
 
 .resolving-prompt__panel {
@@ -19,8 +19,9 @@
     max-width: 30rem;
     padding: 2rem;
     border-radius: 1rem;
-    background: #fff;
-    box-shadow: 0 1.5rem 4rem rgba(15, 23, 42, 0.25);
+    background: var(--u-card-bg-strong);
+    color: var(--u-ink);
+    box-shadow: var(--u-shadow-strong);
 }
 
 .resolving-prompt__actions {
@@ -39,8 +40,11 @@
 }
 
 .resolving-prompt__actions button:first-child {
-    color: #fff;
-    background: #0f766e;
+    color: var(--u-on-primary);
+    background: var(--u-success-action);
 }
 
-.resolving-prompt__actions button:last-child { background: #e2e8f0; }
+.resolving-prompt__actions button:last-child {
+    background: var(--u-tint-strong);
+    color: var(--u-ink);
+}

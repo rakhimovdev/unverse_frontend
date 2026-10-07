@@ -14,7 +14,7 @@ export default function PaymentSuccess() {
         <div className="flex flex-col items-center justify-center min-h-screen">
             <div className="text-6xl mb-4">🎉</div>
             <h1 className="text-2xl font-bold mb-2">To'lov muvaffaqiyatli!</h1>
-            <p className="text-gray-500">Pro akkauntingiz faollashtirildi. 3 soniyada yo'naltirilasiz...</p>
+            <p style={{ color: "var(--u-muted)" }}>Pro akkauntingiz faollashtirildi. 3 soniyada yo'naltirilasiz...</p>
         </div>
     )
 }

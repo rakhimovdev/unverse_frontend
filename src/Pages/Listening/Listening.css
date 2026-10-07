@@ -37,8 +37,8 @@
 }
 
 .part-tabs button.active {
-  background: var(--u-primary);
-  color: #fff;
+  background: var(--u-action-bg);
+  color: var(--u-on-primary);
 }
 
 .audio-mode-selector {
@@ -161,8 +161,8 @@
 }
 
 .token-buttons button.copied {
-  background: var(--u-primary);
-  color: #fff;
+  background: var(--u-success-action);
+  color: var(--u-on-primary);
 }
 
 .listening-editor-toolbar {
@@ -268,7 +268,7 @@
   overflow: auto;
   padding: 6px;
   border-radius: 10px;
-  border: 1px dashed rgba(59, 130, 246, 0.4);
+  border: 1px dashed var(--u-border);
   background: var(--u-card-bg);
 }
 
@@ -285,8 +285,8 @@
   padding: 8px 14px;
   border-radius: 10px;
   border: none;
-  background: var(--u-primary);
-  color: #fff;
+  background: var(--u-action-bg);
+  color: var(--u-on-primary);
   cursor: pointer;
 }
 
@@ -393,14 +393,14 @@
   padding: 10px 16px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-  color: #fff;
+  background: var(--u-action-gradient);
+  color: var(--u-on-primary);
   cursor: pointer;
 }
 
 .actions button.ghost {
   background: transparent;
-  color: var(--u-primary-dark);
+  color: var(--u-link);
   border: 1px solid var(--u-border);
 }
 

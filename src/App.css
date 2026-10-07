@@ -1,8 +1,8 @@
 .announcement {
     width: 100%;
-    background: linear-gradient(120deg, var(--u-primary-deep) 0%, var(--u-primary) 55%, var(--u-primary-deep) 100%);
-    color: var(--u-surface);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(120deg, var(--u-hero-start) 0%, var(--u-hero-end) 100%);
+    color: var(--u-on-hero);
+    border-bottom: 1px solid var(--u-hero-border);
     padding: 8px 0;
 }
 
@@ -23,8 +23,8 @@
 .announcement__pill {
     padding: 4px 10px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: var(--u-hero-glass-strong);
+    border: 1px solid var(--u-hero-border);
     font-size: 11px;
     letter-spacing: 0.3em;
 }
@@ -37,8 +37,8 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+    background: var(--u-on-hero);
+    box-shadow: 0 0 8px var(--u-hero-wash);
 }
 
 .announcement__link {

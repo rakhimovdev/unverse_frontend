@@ -35,8 +35,8 @@
 }
 
 .cart button {
-  background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-  color: white;
+  background: var(--u-action-gradient);
+  color: var(--u-on-primary);
   border: none;
   padding: 6px 12px;
   border-radius: 6px;
@@ -44,7 +44,8 @@
 }
 
 .delete-btn {
-  background: var(--u-accent);
+  background: var(--u-danger-action);
+  color: var(--u-on-primary);
 }
 
 .cart button:hover {

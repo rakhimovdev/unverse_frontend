@@ -48,8 +48,8 @@
 }
 
 .signin-button {
-  background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-  color: white;
+  background: var(--u-action-gradient);
+  color: var(--u-on-primary);
   font-weight: bold;
   padding: 12px;
   border: none;
@@ -59,7 +59,7 @@
 }
 
 .signin-button:hover {
-  background: linear-gradient(135deg, var(--u-primary-dark), var(--u-primary-deep));
+  background: var(--u-action-hover);
 }
 
 .signup-link {

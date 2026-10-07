@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const ThemeContext = createContext({
     theme: "light",
@@ -31,22 +31,46 @@ export const ThemeProvider = ({ children }) => {
     const [theme, setTheme] = useState(resolveInitialTheme);
 
     useEffect(() => {
+        if (typeof window.matchMedia !== "function") return undefined;
+
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const handleSystemThemeChange = (event) => {
+            const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+            if (storedTheme !== "dark" && storedTheme !== "light") {
+                setTheme(event.matches ? "dark" : "light");
+            }
+        };
+
+        mediaQuery.addEventListener("change", handleSystemThemeChange);
+        return () => mediaQuery.removeEventListener("change", handleSystemThemeChange);
+    }, []);
+
+    useEffect(() => {
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
-        window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+        const themeColor = getComputedStyle(document.documentElement)
+            .getPropertyValue("--u-bg")
+            .trim();
+        document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+    }, [theme]);
+
+    const updateTheme = useCallback((nextTheme) => {
+        const resolvedTheme = typeof nextTheme === "function" ? nextTheme(theme) : nextTheme;
+        window.localStorage.setItem(THEME_STORAGE_KEY, resolvedTheme);
+        setTheme(resolvedTheme);
     }, [theme]);
 
     const value = useMemo(
         () => ({
             theme,
             isDark: theme === "dark",
-            setTheme,
+            setTheme: updateTheme,
             toggleTheme: () =>
-                setTheme((currentTheme) =>
+                updateTheme((currentTheme) =>
                     currentTheme === "dark" ? "light" : "dark"
                 ),
         }),
-        [theme]
+        [theme, updateTheme]
     );
 
     return (

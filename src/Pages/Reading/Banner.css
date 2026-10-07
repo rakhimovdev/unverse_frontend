@@ -28,7 +28,7 @@
     background-color: var(--u-surface);
     z-index: 100;
     padding: 10px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    box-shadow: inset 0 1px 0 rgba(var(--u-primary-rgb), 0.12);
 }
 
 .banner .left .filter-heading {
@@ -83,8 +83,8 @@
 .banner .left .filter-button {
     width: 100%;
     padding: 10px;
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: white;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     border: none;
     border-radius: 6px;
     font-size: 16px;
@@ -124,7 +124,7 @@
     font-size: 18px;
     border-radius: 10px;
     background-color: var(--u-tint);
-    color: var(--u-primary);
+    color: var(--u-link);
 }
 
 .banner .right .box {
@@ -133,7 +133,7 @@
     font-size: 18px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    color: var(--u-primary);
+    color: var(--u-link);
     gap: 10px;
     padding: 20px;
     border-radius: 15px;
@@ -220,9 +220,9 @@
 }
 
 .banner .right .box .cart .delete-btn:hover {
-    background: var(--u-accent);
-    color: #fff;
-    border-color: var(--u-accent);
+    background: var(--u-danger-action);
+    color: var(--u-on-primary);
+    border-color: var(--u-danger-action);
     animation: shake 0.3s;
     transform: scale(1.08) rotateZ(-2deg);
 }
@@ -231,8 +231,8 @@
 .banner .right .box .cart button:not(.delete-btn) {
     width: auto;
     padding: 7px 18px;
-    background: linear-gradient(90deg, var(--u-primary) 60%, var(--u-primary-dark) 100%);
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     border: none;
     border-radius: 6px;
     font-size: 15px;
@@ -249,7 +249,7 @@
 }
 
 .banner .right .box .cart button:not(.delete-btn):hover {
-    background: linear-gradient(90deg, var(--u-primary-dark) 60%, var(--u-primary-deep) 100%);
+    background: var(--u-action-hover);
     transform: scale(1.09) translateY(-2px);
     box-shadow: 0 6px 18px rgba(var(--u-primary-dark-rgb), 0.3);
 }

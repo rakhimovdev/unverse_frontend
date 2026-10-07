@@ -1,24 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&family=Spectral:wght@500;600;700&display=swap");
 
 .writing-score-shell {
-    background: #ffffff;
+    background: var(--u-bg);
     padding: 32px 16px 48px;
 }
 
 .writing-score-page {
-    --accent: #0056d2;
-    --accent-soft: #eef4ff;
-    --text: #0b1b33;
-    --muted: #55657d;
-    --border: #e2e8f3;
+    --accent: var(--u-link);
+    --accent-soft: var(--u-tint);
+    --text: var(--u-ink);
+    --muted: var(--u-muted);
+    --border: var(--u-border);
 
     max-width: 900px;
     margin: 0 auto;
     padding: 32px;
-    background: #ffffff;
+    background: var(--u-surface);
     border: 1px solid var(--border);
     border-radius: 16px;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+    box-shadow: var(--u-shadow);
     opacity: 0;
     transform: translateY(12px);
     transition: opacity 0.45s ease, transform 0.45s ease;
@@ -84,7 +84,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: inset 0 0 0 4px #ffffff;
+    box-shadow: inset 0 0 0 4px var(--u-surface);
 }
 
 .writing-score-value {
@@ -116,8 +116,8 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 20px;
-    background: #ffffff;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    background: var(--u-card-bg);
+    box-shadow: var(--u-shadow);
 }
 
 .writing-score-card h3 {
@@ -156,7 +156,7 @@
 .writing-score-meta span {
     padding: 8px 12px;
     border-radius: 999px;
-    background: #f6f8fb;
+    background: var(--u-tint);
     border: 1px solid var(--border);
 }
 
@@ -176,7 +176,7 @@
     padding: 0 16px;
     border-radius: 999px;
     border: 1px solid var(--accent);
-    background: #ffffff;
+    background: var(--u-card-bg);
     color: var(--accent);
     font-weight: 700;
     cursor: pointer;
@@ -214,7 +214,7 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    border: 4px solid #e2e8f3;
+    border: 4px solid var(--u-border);
     border-top-color: var(--accent);
     margin: 40px auto;
     animation: writing-score-spin 0.8s linear infinite;
@@ -237,19 +237,19 @@
 }
 
 .writing-score-error {
-    background: #fff1f1;
-    color: #9b2c2c;
-    border: 1px solid #f0c1c1;
+    background: var(--u-danger-bg);
+    color: var(--u-danger);
+    border: 1px solid var(--u-danger-border);
 }
 
 .writing-score-empty {
-    background: #f6f8fb;
+    background: var(--u-tint);
     color: var(--muted);
     border: 1px dashed var(--border);
 }
 
 .writing-score-message {
-    background: #f6f8fb;
+    background: var(--u-tint);
     color: var(--muted);
     border: 1px solid var(--border);
 }

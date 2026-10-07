@@ -19,9 +19,9 @@
     padding: 28px;
     border-radius: 28px;
     background:
-        radial-gradient(circle at top right, rgba(254, 207, 5, 0.22), transparent 36%),
-        linear-gradient(135deg, rgba(5, 53, 133, 0.98), rgba(16, 85, 164, 0.95));
-    color: #fff;
+        radial-gradient(circle at top right, rgba(var(--u-warning-rgb), 0.2), transparent 36%),
+        linear-gradient(135deg, var(--u-hero-start), var(--u-hero-end));
+    color: var(--u-on-hero);
     box-shadow: var(--u-shadow-strong);
 }
 
@@ -32,7 +32,7 @@
     width: 240px;
     height: 240px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--u-hero-glass);
 }
 
 .results-hero__copy {
@@ -60,7 +60,7 @@
 .results-hero__copy p {
     margin: 0;
     max-width: 620px;
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--u-hero-muted);
 }
 
 .results-hero__actions {
@@ -77,24 +77,24 @@
     min-height: 42px;
     padding: 0 16px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    border: 1px solid var(--u-hero-border);
+    background: var(--u-hero-glass);
+    color: var(--u-on-primary);
     text-decoration: none;
     font-weight: 700;
 }
 
 .results-pill-link--light {
-    background: #fff;
-    color: var(--u-primary-dark);
+    background: var(--u-card-bg-strong);
+    color: var(--u-link);
 }
 
 .results-plan {
     padding: 22px;
     border-radius: 24px;
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--u-hero-glass-strong);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid var(--u-hero-border);
 }
 
 .results-plan h2 {
@@ -104,7 +104,7 @@
 
 .results-plan p {
     margin: 0 0 16px;
-    color: rgba(255, 255, 255, 0.84);
+    color: var(--u-hero-muted);
 }
 
 .results-score-grid {
@@ -118,7 +118,7 @@
 .result-card,
 .results-toolbar,
 .results-empty {
-    background: rgba(247, 250, 255, 0.96);
+    background: var(--u-card-bg);
     border: 1px solid var(--u-border);
     box-shadow: var(--u-shadow);
 }
@@ -145,7 +145,7 @@
     align-self: end;
     font-size: clamp(36px, 4vw, 48px);
     font-family: var(--u-display);
-    color: var(--u-primary-dark);
+    color: var(--u-link);
 }
 
 .results-body {
@@ -192,8 +192,8 @@
 }
 
 .results-toolbar__filters button.is-active {
-    background: linear-gradient(135deg, #0f4fbf, #2b7cff);
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
 }
 
 .results-toolbar__search input {
@@ -241,8 +241,8 @@
     gap: 10px;
     padding: 10px 14px;
     border-radius: 999px;
-    background: rgba(16, 85, 164, 0.08);
-    border: 1px solid rgba(16, 85, 164, 0.12);
+    background: var(--u-tint);
+    border: 1px solid var(--u-border);
 }
 
 .result-band-badge__label {
@@ -255,13 +255,13 @@
 
 .result-band-badge__value {
     font-size: 18px;
-    color: var(--u-primary-dark);
+    color: var(--u-link);
 }
 
 .result-card__toggle {
     min-height: 42px;
     padding: 0 16px;
-    color: var(--u-primary-dark);
+    color: var(--u-link);
     font-weight: 700;
     cursor: pointer;
 }
@@ -285,7 +285,7 @@
     padding: 14px;
     border-radius: 18px;
     background: var(--u-tint);
-    border: 1px solid rgba(16, 85, 164, 0.08);
+    border: 1px solid var(--u-border);
 }
 
 .result-card__metric span {
@@ -312,7 +312,7 @@
     padding: 18px;
     border-radius: 20px;
     background: var(--u-tint);
-    border: 1px solid rgba(16, 85, 164, 0.1);
+    border: 1px solid var(--u-border);
 }
 
 .result-card__detail-panel--full {
@@ -332,7 +332,7 @@
 
 .result-card__detail-band {
     margin-bottom: 12px !important;
-    color: var(--u-primary-dark) !important;
+    color: var(--u-link) !important;
     font-weight: 700;
 }
 
@@ -372,9 +372,9 @@
 }
 
 .result-review-card {
-    background: #fff;
+    background: var(--u-card-bg);
     border-radius: 16px;
-    border: 1px solid rgba(16, 85, 164, 0.08);
+    border: 1px solid var(--u-border);
     padding: 16px;
 }
 
@@ -430,7 +430,7 @@
 }
 
 .result-chart__grid {
-    stroke: rgba(16, 85, 164, 0.12);
+    stroke: rgba(var(--u-primary-rgb), 0.28);
     stroke-width: 1;
 }
 
@@ -443,11 +443,11 @@
 }
 
 .result-chart__area {
-    fill: rgba(16, 85, 164, 0.12);
+    fill: rgba(var(--u-primary-rgb), 0.18);
 }
 
 .result-chart__dot {
-    fill: #fff;
+    fill: var(--u-chart-marker);
     stroke: var(--u-accent);
     stroke-width: 3;
 }
@@ -496,7 +496,7 @@
     padding: 18px;
     border-radius: 18px;
     background: var(--u-tint);
-    border: 1px solid rgba(16, 85, 164, 0.1);
+    border: 1px solid var(--u-border);
 }
 
 .results-summary-tile strong {
@@ -504,7 +504,7 @@
     margin-top: 10px;
     font-size: 28px;
     font-family: var(--u-display);
-    color: var(--u-primary-dark);
+    color: var(--u-link);
 }
 
 @media (max-width: 1080px) {

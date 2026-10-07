@@ -11,8 +11,8 @@
     padding: 36px 32px;
     border-radius: 30px;
     background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.7) 0%, transparent 34%),
-        rgba(255, 255, 255, 0.88);
+        radial-gradient(circle at top left, var(--u-glass-elevated) 0%, transparent 34%),
+        var(--u-card-bg-strong);
     border: 1px solid rgba(var(--u-primary-rgb), 0.14);
     box-shadow: var(--u-shadow-strong);
     backdrop-filter: blur(14px);
@@ -29,7 +29,7 @@
     height: 64px;
     padding: 4px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.76);
+    background: var(--u-glass-elevated);
     border: 1px solid rgba(var(--u-primary-rgb), 0.12);
 }
 
@@ -104,7 +104,7 @@
 
 .t_login .inputName:focus {
     border-color: var(--u-accent);
-    box-shadow: 0 0 0 4px rgba(30, 183, 255, 0.14);
+    box-shadow: 0 0 0 4px var(--u-focus-ring);
     transform: translateY(-1px);
 }
 
@@ -132,8 +132,8 @@
     min-height: 56px;
     border: none;
     border-radius: 18px;
-    background: linear-gradient(135deg, var(--u-primary) 0%, var(--u-accent) 100%);
-    color: #ffffff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;

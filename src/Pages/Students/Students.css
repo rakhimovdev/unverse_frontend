@@ -32,8 +32,8 @@
 }
 
 .students-table th {
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: white;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     font-weight: bold;
 }
 
@@ -85,8 +85,8 @@
 
 /* 📌 Tugma */
 .delete-btn1 {
-    background-color: var(--u-accent);
-    color: white;
+    background-color: var(--u-danger-action);
+    color: var(--u-on-primary);
     border: none;
     padding: 4px 10px;
     /* 📌 Ixchamroq bo‘ldi */
@@ -98,12 +98,12 @@
 }
 
 .delete-btn1:hover {
-    background-color: #d94c4c;
+    background-color: var(--u-danger);
 }
 
 .view-btn {
-    background-color: var(--u-primary);
-    color: white;
+    background-color: var(--u-action-bg);
+    color: var(--u-on-primary);
     border: none;
     padding: 4px 10px;
     border-radius: 5px;
@@ -113,7 +113,7 @@
 }
 
 .view-btn:hover {
-    background-color: var(--u-primary-dark);
+    background-color: var(--u-action-hover);
 }
 
 .score-input {
@@ -133,7 +133,7 @@
 .writing-modal {
     position: fixed;
     inset: 0;
-    background: rgba(16, 24, 40, 0.55);
+    background: var(--u-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -149,7 +149,7 @@
     border-radius: 18px;
     padding: 24px;
     position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--u-shadow-strong);
 }
 
 .writing-modal-close {
@@ -192,8 +192,8 @@
 }
 
 .carousel-tabs button.active {
-    background: var(--u-primary);
-    color: white;
+    background: var(--u-action-bg);
+    color: var(--u-on-primary);
 }
 
 .carousel-tabs select {

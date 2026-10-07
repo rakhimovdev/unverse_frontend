@@ -1,18 +1,18 @@
 .upgrade-page {
-    --upgrade-page-top: rgba(255, 210, 120, 0.22);
+    --upgrade-page-top: rgba(var(--u-warning-rgb), 0.22);
     --upgrade-page-accent: rgba(var(--u-accent-rgb), 0.16);
     --upgrade-surface: var(--u-card-bg-strong);
     --upgrade-surface-soft: var(--u-glass-bg-strong);
     --upgrade-border: rgba(var(--u-primary-rgb), 0.14);
     --upgrade-shadow: 0 18px 40px rgba(var(--u-shadow-rgb), 0.12);
     --upgrade-shadow-strong: 0 24px 52px rgba(var(--u-shadow-rgb), 0.18);
-    --upgrade-eyebrow-bg: rgba(199, 142, 21, 0.14);
-    --upgrade-eyebrow-text: #8a5a00;
+    --upgrade-eyebrow-bg: var(--u-warning-bg);
+    --upgrade-eyebrow-text: var(--u-warning);
     --upgrade-status-bg: rgba(var(--u-primary-rgb), 0.08);
     --upgrade-status-text: var(--u-ink);
-    --upgrade-pro-bg: rgba(199, 142, 21, 0.12);
-    --upgrade-pro-text: #7a5100;
-    --upgrade-price-text: #8a5a00;
+    --upgrade-pro-bg: var(--u-warning-bg);
+    --upgrade-pro-text: var(--u-warning);
+    --upgrade-price-text: var(--u-warning);
     --upgrade-link-bg: rgba(var(--u-primary-rgb), 0.08);
     --upgrade-link-bg-hover: rgba(var(--u-primary-rgb), 0.14);
     --upgrade-link-text: var(--u-primary);
@@ -25,23 +25,23 @@
 }
 
 html[data-theme="dark"] .upgrade-page {
-    --upgrade-page-top: rgba(255, 198, 88, 0.12);
+    --upgrade-page-top: rgba(var(--u-warning-rgb), 0.12);
     --upgrade-page-accent: rgba(var(--u-accent-rgb), 0.12);
-    --upgrade-surface: rgba(14, 26, 48, 0.9);
-    --upgrade-surface-soft: rgba(18, 31, 54, 0.94);
-    --upgrade-border: rgba(168, 197, 255, 0.14);
+    --upgrade-surface: var(--u-card-bg);
+    --upgrade-surface-soft: var(--u-card-bg-strong);
+    --upgrade-border: var(--u-border);
     --upgrade-shadow: 0 22px 48px rgba(var(--u-shadow-rgb), 0.44);
     --upgrade-shadow-strong: 0 28px 60px rgba(var(--u-shadow-rgb), 0.56);
-    --upgrade-eyebrow-bg: rgba(255, 210, 120, 0.14);
-    --upgrade-eyebrow-text: #ffdba0;
+    --upgrade-eyebrow-bg: rgba(var(--u-warning-rgb), 0.14);
+    --upgrade-eyebrow-text: var(--u-warning);
     --upgrade-status-bg: rgba(var(--u-primary-rgb), 0.16);
-    --upgrade-status-text: #eef5ff;
-    --upgrade-pro-bg: rgba(255, 210, 120, 0.16);
-    --upgrade-pro-text: #ffe7b0;
-    --upgrade-price-text: #ffdba0;
+    --upgrade-status-text: var(--u-ink);
+    --upgrade-pro-bg: var(--u-warning-bg);
+    --upgrade-pro-text: var(--u-warning);
+    --upgrade-price-text: var(--u-warning);
     --upgrade-link-bg: rgba(var(--u-primary-rgb), 0.18);
     --upgrade-link-bg-hover: rgba(var(--u-primary-rgb), 0.26);
-    --upgrade-link-text: #dce8ff;
+    --upgrade-link-text: var(--u-link);
 }
 
 .upgrade-hero,
@@ -223,8 +223,8 @@ html[data-theme="dark"] .upgrade-page {
 
 .upgrade-card__button {
     margin-top: auto;
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.24);
 }
 

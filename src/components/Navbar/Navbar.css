@@ -114,7 +114,7 @@
 }
 
 .site-nav__link:hover {
-    color: var(--u-primary);
+    color: var(--u-link);
 }
 
 .site-nav__link:hover::after {
@@ -167,8 +167,8 @@
     overflow: hidden;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, var(--u-primary), var(--u-accent));
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     font-size: 13px;
     font-weight: 700;
 }
@@ -203,7 +203,7 @@
 }
 
 .site-nav__plan.is-pro {
-    color: #a16207;
+    color: var(--u-gold);
     font-weight: 700;
 }
 
@@ -223,8 +223,8 @@
 }
 
 .nav-btn--primary {
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: #fdfcff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     box-shadow: 0 10px 22px rgba(var(--u-primary-dark-rgb), 0.25);
 }
 

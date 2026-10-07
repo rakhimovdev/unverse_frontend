@@ -5,8 +5,24 @@
   <meta charset="utf-8" />
   <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/bandup-icon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0d42b8" />
+  <meta name="theme-color" content="#eef2f7" />
   <meta name="description" content="BandUp - Focused IELTS preparation with structured practice and clear progress." />
+  <script>
+    (function () {
+      var savedTheme = null;
+      try {
+        savedTheme = window.localStorage.getItem("bandup-theme");
+      } catch (error) {}
+      var systemPrefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var theme = savedTheme === "dark" || savedTheme === "light"
+        ? savedTheme
+        : systemPrefersDark ? "dark" : "light";
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+      var themeColor = document.querySelector('meta[name="theme-color"]');
+      if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#10151c" : "#eef2f7");
+    })();
+  </script>
   <link rel="apple-touch-icon" href="%PUBLIC_URL%/bandup-icon.png" />
   <!--
       manifest.json provides metadata used when your web app is installed on a

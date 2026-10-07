@@ -822,7 +822,7 @@ function ListeningTest() {
         audioRef.current.currentTime = 0;
     }, [audioSrc]);
 
-    if (error) return <p style={{ color: "red" }}>{error}</p>;
+    if (error) return <p style={{ color: "var(--u-danger)" }}>{error}</p>;
     if (!test) return <p>Loading test...</p>;
 
     return (

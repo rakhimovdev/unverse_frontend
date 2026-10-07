@@ -68,12 +68,12 @@
 }
 
 .correct {
-    color: #16a34a;
+    color: var(--u-success);
     margin-left: 8px;
 }
 
 .wrong {
-    color: #ff6b6b;
+    color: var(--u-danger);
     margin-left: 8px;
 }
 
@@ -110,8 +110,8 @@
 
 /* ===== TABS ===== */
 .passage-tabs button.active {
-    background: var(--u-primary);
-    color: white;
+    background: var(--u-action-bg);
+    color: var(--u-on-primary);
 }
 
 /* ===== BUTTONS ===== */
@@ -120,8 +120,8 @@
     padding: 12px 18px;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 12px 24px rgba(var(--u-primary-dark-rgb), 0.25);
@@ -231,17 +231,20 @@
 
 .reading-half .highlight-yellow,
 .test-half .highlight-yellow {
-    background: #fff3a0;
+    background: var(--u-highlight-yellow);
+    color: var(--u-highlight-yellow-text);
 }
 
 .reading-half .highlight-green,
 .test-half .highlight-green {
-    background: #c9f7d1;
+    background: var(--u-highlight-green);
+    color: var(--u-highlight-green-text);
 }
 
 .reading-half .highlight-blue,
 .test-half .highlight-blue {
-    background: #cfe6ff;
+    background: var(--u-highlight-blue);
+    color: var(--u-highlight-blue-text);
 }
 
 .highlight-toolbar {
@@ -255,7 +258,7 @@
     background: var(--u-surface);
     border: 1px solid var(--u-border);
     border-radius: 10px;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--u-shadow-strong);
 }
 
 .highlight-btn {
@@ -270,28 +273,31 @@
 
 .highlight-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--u-shadow);
 }
 
 .highlight-yellow-btn {
-    background: #fff3a0;
-    border-color: #f2d46b;
+    background: var(--u-highlight-yellow);
+    border-color: var(--u-warning-border);
+    color: var(--u-highlight-yellow-text);
 }
 
 .highlight-green-btn {
-    background: #c9f7d1;
-    border-color: #8cd9a3;
+    background: var(--u-highlight-green);
+    border-color: var(--u-success-border);
+    color: var(--u-highlight-green-text);
 }
 
 .highlight-blue-btn {
-    background: #cfe6ff;
-    border-color: #8bc3ff;
+    background: var(--u-highlight-blue);
+    border-color: var(--u-info-border);
+    color: var(--u-highlight-blue-text);
 }
 
 .highlight-remove-btn {
-    background: #fff;
-    border-color: #ef4444;
-    color: #b91c1c;
+    background: var(--u-card-bg);
+    border-color: var(--u-danger);
+    color: var(--u-danger);
 }
 
 /* ===== QUESTIONS ===== */
@@ -334,19 +340,19 @@
 }
 
 .correct {
-    color: #16a34a;
+    color: var(--u-success);
     margin-left: 8px;
 }
 
 .wrong {
-    color: #ff6b6b;
+    color: var(--u-danger);
     margin-left: 8px;
 }
 
 /* ===== TABS ===== */
 .passage-tabs button.active {
-    background: var(--u-primary);
-    color: white;
+    background: var(--u-action-bg);
+    color: var(--u-on-primary);
 }
 
 /* ===== BUTTON ===== */

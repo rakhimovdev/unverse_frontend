@@ -40,8 +40,8 @@
 }
 
 .listening-part-tabs button.active {
-    background: var(--u-primary);
-    color: #fff;
+    background: var(--u-action-bg);
+    color: var(--u-on-primary);
 }
 
 .media-section {
@@ -138,12 +138,12 @@
 }
 
 .correct {
-    color: #16a34a;
+    color: var(--u-success);
     margin-left: 4px;
 }
 
 .wrong {
-    color: #dc2626;
+    color: var(--u-danger);
     margin-left: 4px;
     font-size: 12px;
 }
@@ -171,8 +171,8 @@
     padding: 10px 16px;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--u-primary), var(--u-primary-dark));
-    color: #fff;
+    background: var(--u-action-gradient);
+    color: var(--u-on-primary);
     cursor: pointer;
 }
 
