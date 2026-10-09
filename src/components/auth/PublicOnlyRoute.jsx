@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { resolveDashboardPath } from "../../utils/authRoutes";
+import { resolvePostLoginPath } from "../../utils/authRoutes";
 import AuthPageLoader from "./AuthPageLoader";
 
 const PublicOnlyRoute = () => {
@@ -17,7 +17,7 @@ const PublicOnlyRoute = () => {
     }
 
     if (isAuthenticated) {
-        return <Navigate to={resolveDashboardPath(user?.role)} replace />;
+        return <Navigate to={resolvePostLoginPath(user)} replace />;
     }
 
     return <Outlet />;

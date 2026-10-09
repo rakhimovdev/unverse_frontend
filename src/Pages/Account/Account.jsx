@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "../../Api/Axios";
 import { fetchResultDetail, fetchUserResults } from "../../Api/results";
 import BandCard from "../../components/results/BandCard";
 import HistoryChart from "../../components/results/HistoryChart";
@@ -17,7 +18,8 @@ import {
 import { getPlanSummary } from "../../utils/subscription";
 
 function Account() {
-    const { user, loading: authLoading, refreshCurrentUser } = useAuth();
+    const navigate = useNavigate();
+    const { user, loading: authLoading, refreshCurrentUser, logout } = useAuth();
     const [results, setResults] = useState([]);
     const [detailCache, setDetailCache] = useState({});
     const [expandedId, setExpandedId] = useState("");
@@ -25,6 +27,8 @@ function Account() {
     const [error, setError] = useState("");
     const [selectedModule, setSelectedModule] = useState("all");
     const [searchValue, setSearchValue] = useState("");
+    const [deletingAccount, setDeletingAccount] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
 
     useEffect(() => {
         let isActive = true;
@@ -110,6 +114,29 @@ function Account() {
             setDetailCache((prev) => ({ ...prev, [resultId]: detail }));
         } catch (err) {
             console.error("Failed to load result detail:", err);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        const confirmed = window.confirm(
+            "Permanently delete your account and learning data? This cannot be undone. Payment transaction records are retained for accounting."
+        );
+        if (!confirmed) return;
+
+        setDeletingAccount(true);
+        setDeleteError("");
+
+        try {
+            await axios.delete("/auth/account");
+            logout();
+            navigate("/", { replace: true });
+        } catch (requestError) {
+            setDeleteError(
+                requestError.response?.data?.message ||
+                    "Your account could not be deleted. Please try again."
+            );
+        } finally {
+            setDeletingAccount(false);
         }
     };
 
@@ -251,6 +278,32 @@ function Account() {
                     </div>
 
                     <HistoryChart points={historyPoints} />
+                </section>
+
+                <section className="account-danger-zone">
+                    <div>
+                        <p className="results-hero__eyebrow">Danger zone</p>
+                        <h2>Delete account</h2>
+                        <p>
+                            Permanently remove your account, saved results, writing
+                            submissions, and attendance records. Shared tests are kept,
+                            but detached from your account. Payment transaction records
+                            are retained for accounting.
+                        </p>
+                    </div>
+                    {deleteError ? (
+                        <div className="results-empty" role="alert">
+                            {deleteError}
+                        </div>
+                    ) : null}
+                    <button
+                        className="account-danger-zone__button"
+                        type="button"
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount}
+                    >
+                        {deletingAccount ? "Deleting account..." : "Delete my account"}
+                    </button>
                 </section>
             </div>
         </div>

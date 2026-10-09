@@ -38,6 +38,7 @@ import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
 import { studentRoles } from './utils/authRoutes';
 import Pricing from './Pages/Pricing/Pricing';
 import PaymentSuccess from './Pages/PaymentSuccess/PaymentSuccess';
+import StudentSetup from './Pages/StudentSetup/StudentSetup';
 
 const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -89,6 +90,7 @@ root.render(
               </Route>
 
               <Route element={<ProtectedRoute roles={studentRoles} />}>
+                <Route path='/student-setup' element={<StudentSetup />} />
                 <Route path='/account' element={<Account />} />
                 <Route path='/dashboard' element={<Account />} />
                 <Route path='/results-center' element={<Account />} />

@@ -4,6 +4,11 @@ export const resolveDashboardPath = (role) => {
     return "/dashboard";
 };
 
+export const resolvePostLoginPath = (user) =>
+    user?.role === "student" && !user.studentType
+        ? "/student-setup"
+        : resolveDashboardPath(user?.role);
+
 export const studentRoles = ["student", "mooc", "mock_user"];
 
 const authExperiencePaths = new Set([

@@ -24,6 +24,14 @@ const ProtectedRoute = ({ roles = [] }) => {
         return <Navigate to="/" replace />;
     }
 
+    if (user?.role === "student" && !user.studentType) {
+        if (location.pathname !== "/student-setup") {
+            return <Navigate to="/student-setup" replace />;
+        }
+    } else if (location.pathname === "/student-setup") {
+        return <Navigate to="/dashboard" replace />;
+    }
+
     return <Outlet />;
 };
 

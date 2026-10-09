@@ -8,7 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import {
     setPendingVerificationEmail
 } from "../../utils/authStorage";
-import { resolveDashboardPath } from "../../utils/authRoutes";
+import { resolvePostLoginPath } from "../../utils/authRoutes";
 
 function SignUp() {
     const navigate = useNavigate();
@@ -125,7 +125,7 @@ function SignUp() {
             token: payload.token,
             user: payload.user
         });
-        navigate(resolveDashboardPath(payload.user?.role), { replace: true });
+        navigate(resolvePostLoginPath(payload.user), { replace: true });
     };
 
     const handleGoogleSignup = async (credential) => {

@@ -67,7 +67,7 @@
   --u-focus: #006c9f;
   --u-focus-inner: #f8fbff;
   --u-selection: #cce8f4;
-  --u-scrollbar: #66768d;
+  --u-scrollbar: #8391a4;
   --u-scrollbar-track: #e7edf4;
   --u-chart-marker: #f8fbff;
   --u-shadow: 0 20px 45px rgba(var(--u-shadow-rgb), 0.18);
@@ -194,13 +194,11 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background-image: repeating-linear-gradient(
-    45deg,
-    var(--u-grid-color) 0px,
-    var(--u-grid-color) 1px,
-    transparent 1px,
-    transparent 14px
-  );
+  background-image: repeating-linear-gradient(45deg,
+      var(--u-grid-color) 0px,
+      var(--u-grid-color) 1px,
+      transparent 1px,
+      transparent 14px);
   opacity: 0.5;
   pointer-events: none;
   z-index: -2;

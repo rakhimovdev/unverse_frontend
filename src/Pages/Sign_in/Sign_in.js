@@ -6,7 +6,7 @@ import AuthShell from "../../components/auth/AuthShell";
 import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 import { useAuth } from "../../context/AuthContext";
 import { setPendingVerificationEmail } from "../../utils/authStorage";
-import { resolveDashboardPath } from "../../utils/authRoutes";
+import { resolvePostLoginPath } from "../../utils/authRoutes";
 
 function SignIn() {
     const navigate = useNavigate();
@@ -33,7 +33,7 @@ function SignIn() {
             token: payload.token,
             user: payload.user
         });
-        navigate(redirectTo || resolveDashboardPath(payload.user?.role), {
+        navigate(redirectTo || resolvePostLoginPath(payload.user), {
             replace: true
         });
     };
